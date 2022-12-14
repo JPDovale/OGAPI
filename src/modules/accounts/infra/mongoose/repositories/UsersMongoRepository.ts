@@ -89,4 +89,19 @@ export class UsersMongoRepository implements IUsersRepository {
       throw new AppError('Internal error', 500)
     }
   }
+
+  async updateAvatar(userId: string, url: string): Promise<void> {
+    if (!userId || !url) {
+      throw new AppError(
+        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
+        409,
+      )
+    }
+
+    try {
+      await UserMongo.findOneAndUpdate({ id: userId }, { avatar: url })
+    } catch (err) {
+      throw new AppError('Internal error', 500)
+    }
+  }
 }

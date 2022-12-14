@@ -22,17 +22,3 @@ export class RateLimiter {
     })
   }
 }
-
-export const rateLimitere = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 10,
-  keyGenerator(req: Request): string {
-    return req.ip
-  },
-  handler(_, res: Response): void {
-    throw new AppError(
-      'Você fez muitas alterações em um período muito curto de tempo. Aguarde e tente novamente mais tarde.',
-      429,
-    )
-  },
-})
