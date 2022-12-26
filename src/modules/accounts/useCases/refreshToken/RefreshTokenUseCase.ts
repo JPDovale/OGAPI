@@ -1,7 +1,8 @@
-import session from 'config/session'
+/* eslint-disable import/no-unresolved */
 import { sign, verify } from 'jsonwebtoken'
 import { inject, injectable } from 'tsyringe'
 
+import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'

@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema({
   age: { type: String, required: true },
   admin: { type: Boolean, default: false, required: false },
   payed: { type: Boolean, default: false, required: false },
+  isInitialized: { type: Boolean, default: false, required: false },
+  code: { type: String, required: false },
   createAt: { type: String, required: true, default: new Date() },
   updateAt: { type: String, required: true, default: new Date() },
 })
@@ -26,6 +28,8 @@ export interface IUserMongo {
   age: string
   admin?: boolean
   payed?: boolean
+  isInitialized?: boolean
+  code?: string
   createAt?: string
   updateAt?: string
 }

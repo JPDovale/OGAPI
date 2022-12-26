@@ -1,8 +1,9 @@
+/* eslint-disable import/no-unresolved */
 import { compareSync } from 'bcryptjs'
-import session from 'config/session'
 import { sign } from 'jsonwebtoken'
 import { inject, injectable } from 'tsyringe'
 
+import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
@@ -15,10 +16,15 @@ interface IRequest {
 
 interface IResponse {
   user: {
+    id: string
     username: string
     email: string
+    avatar: string
+    admin: boolean
+    age: string
+    isInitialized: boolean
+    sex: string
   }
-  token: string
   refreshToken: string
 }
 
@@ -36,8 +42,8 @@ export class CreateSessionUseCase {
   async execute(request: IRequest): Promise<IResponse> {
     const { email, password } = request
     const {
-      expiresInToken,
-      secretToken,
+      // expiresInToken,
+      // secretToken,
       secretRefreshToken,
       expiresInRefreshToken,
       expiresRefreshTokenDays,
@@ -55,18 +61,19 @@ export class CreateSessionUseCase {
       throw new AppError('Email or password incorrect!')
     }
 
-    const token = sign(
-      {
-        admin: userExiste.admin,
-        name: userExiste.username,
-        email: userExiste.email,
-      },
-      secretToken,
-      {
-        subject: userExiste.id,
-        expiresIn: expiresInToken,
-      },
-    )
+    // const token = sign(
+    //   {
+    //     admin: userExiste.admin,
+    //     isInitialized: userExiste.isInitialized,
+    //     name: userExiste.username,
+    //     email: userExiste.email,
+    //   },
+    //   secretToken,
+    //   {
+    //     subject: userExiste.id,
+    //     expiresIn: expiresInToken,
+    //   },
+    // )
 
     const refreshToken = sign(
       {
@@ -93,10 +100,15 @@ export class CreateSessionUseCase {
 
     return {
       user: {
+        id: userExiste.id,
         username: userExiste.username,
         email: userExiste.email,
+        avatar: userExiste.avatar,
+        admin: userExiste.admin,
+        age: userExiste.age,
+        isInitialized: userExiste.isInitialized,
+        sex: userExiste.sex,
       },
-      token,
       refreshToken,
     }
   }

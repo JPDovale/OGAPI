@@ -19,20 +19,25 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
       )
     }
 
-    try {
-      const userToken = new RefreshTokenMongo({
-        id: uuidV4(),
-        userId,
-        expiresDate,
-        refreshToken,
-      })
+    const tokenInAppAlreadyExists = await RefreshTokenMongo.findOne({
+      userId,
+      application: 'OG-web',
+    })
 
-      await userToken.save()
-
-      return userToken
-    } catch (err) {
-      throw new AppError('Internal error', 500)
+    if (tokenInAppAlreadyExists) {
+      await RefreshTokenMongo.findOneAndDelete(tokenInAppAlreadyExists.id)
     }
+
+    const userToken = new RefreshTokenMongo({
+      id: uuidV4(),
+      userId,
+      expiresDate,
+      refreshToken,
+    })
+
+    await userToken.save()
+
+    return userToken
   }
 
   async findByUserIdAndRefreshToken(

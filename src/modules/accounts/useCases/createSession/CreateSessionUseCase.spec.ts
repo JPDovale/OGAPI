@@ -1,5 +1,9 @@
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
 import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
+import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
 import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
@@ -8,11 +12,19 @@ import { CreateSessionUseCase } from './CreateSessionUseCase'
 let createSessionUseCase: CreateSessionUseCase
 let userRepositoryInMemory: UserRepositoryInMemory
 let createUserUseCase: CreateUserUseCase
+let refreshTokenRepository: IRefreshTokenRepository
+let dateProvider: IDateProvider
 
 describe('Create session fou user', () => {
   beforeEach(() => {
     userRepositoryInMemory = new UserRepositoryInMemory()
-    createSessionUseCase = new CreateSessionUseCase(userRepositoryInMemory)
+    refreshTokenRepository = new RefreshTokenRepositoryInMemory()
+    dateProvider = new DayJsDateProvider()
+    createSessionUseCase = new CreateSessionUseCase(
+      userRepositoryInMemory,
+      refreshTokenRepository,
+      dateProvider,
+    )
     createUserUseCase = new CreateUserUseCase(userRepositoryInMemory)
   })
 
@@ -33,7 +45,7 @@ describe('Create session fou user', () => {
       password: newUserTest.password,
     })
 
-    expect(session).toHaveProperty('token')
+    expect(session).toHaveProperty('refreshToken')
   })
 
   it('Should not be able to create session an none existent user', () => {

@@ -41,6 +41,7 @@ export class CreateUserUseCase {
       username: username || name,
     })
 
+
     return newUser
   }
 }

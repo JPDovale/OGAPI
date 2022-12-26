@@ -8,4 +8,8 @@ export interface IUsersRepository {
   findById: (userId: string) => Promise<IUserMongo>
   delete: (id: string) => Promise<void>
   updateAvatar: (userId: string, url: string) => Promise<void>
+  updateUsername: (userId: string, username: string) => Promise<void>
+  findByUsername: (username: string) => Promise<IUserMongo>
+  findByCode: (code: string) => Promise<IUserMongo>
+  getUser: (userId: string, updatedInfos: ICreateUserDTO) => Promise<IUserMongo>
 }

@@ -6,6 +6,8 @@ import { RefreshTokenRepository } from '@modules/accounts/infra/mongoose/reposit
 import { AppError } from '@shared/errors/AppError'
 
 interface IPayload {
+  admin: boolean
+  isInitialized: boolean
   sub: string
 }
 
@@ -25,10 +27,11 @@ export async function ensureAuthenticated(
   const [, token] = authHeader.split(' ')
 
   try {
-    const { sub: userId } = verify(
-      token,
-      session.secretRefreshToken,
-    ) as IPayload
+    const {
+      admin,
+      isInitialized,
+      sub: userId,
+    } = verify(token, session.secretRefreshToken) as IPayload
 
     const user = await refreshTokenRepository.findByUserIdAndRefreshToken(
       userId,
@@ -41,6 +44,8 @@ export async function ensureAuthenticated(
 
     req.user = {
       id: userId,
+      isInitialized,
+      admin,
     }
 
     next()

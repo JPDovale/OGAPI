@@ -5,6 +5,7 @@ const RefreshToken = new mongoose.Schema({
   refreshToken: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   expiresDate: { type: String, required: true },
+  application: { type: String, required: true, default: 'OG-web' },
   createAt: { type: String, required: true, default: new Date() },
 })
 
@@ -13,6 +14,7 @@ export interface IRefreshTokenMongo {
   refreshToken: string
   userId: string
   expiresDate: string
+  application?: 'OG-web' | 'OG-mobile' | string
   createAt?: string
 }
 

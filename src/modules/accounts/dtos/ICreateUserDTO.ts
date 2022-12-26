@@ -5,4 +5,6 @@ export interface ICreateUserDTO {
   sex: string
   age: string
   username: string
+  isInitialized?: boolean
+  code?: string
 }

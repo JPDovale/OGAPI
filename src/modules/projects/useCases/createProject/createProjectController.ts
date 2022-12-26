@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
 
-import { CreateProjectUseCase } from './createProjectUseCase'
+import { CreateProjectUseCase } from './CreateProjectUseCase'
 
 export class CreateProjectController {
   async handle(req: Request, res: Response): Promise<Response> {

@@ -8,7 +8,8 @@ import { IUserMongo, UserMongo } from '../entities/User'
 
 export class UsersMongoRepository implements IUsersRepository {
   async create(dataUserObj: ICreateUserDTO): Promise<IUserMongo> {
-    const { name, email, age, password, sex, username } = dataUserObj
+    const { name, email, age, password, sex, username, isInitialized, code } =
+      dataUserObj
 
     if (!name || !email || !password) {
       throw new AppError(
@@ -26,6 +27,8 @@ export class UsersMongoRepository implements IUsersRepository {
         password,
         sex,
         username,
+        isInitialized,
+        code,
       })
 
       const user = await mocUser.save()
@@ -99,9 +102,47 @@ export class UsersMongoRepository implements IUsersRepository {
     }
 
     try {
-      await UserMongo.findOneAndUpdate({ id: userId }, { avatar: url })
+      await UserMongo.findOneAndUpdate(
+        { id: userId },
+        { avatar: url, updateAt: new Date() },
+      )
     } catch (err) {
       throw new AppError('Internal error', 500)
     }
+  }
+
+  async updateUsername(id: string, username: string): Promise<void> {
+    if (!id || !username) {
+      throw new AppError(
+        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
+        409,
+      )
+    }
+
+    try {
+      await UserMongo.findOneAndUpdate(
+        { id },
+        { username, updateAt: new Date() },
+      )
+    } catch (err) {
+      throw new AppError('Internal error', 500)
+    }
+  }
+
+  async findByUsername(username: string): Promise<IUserMongo> {
+    const userExiste = await UserMongo.findOne({ username })
+    return userExiste
+  }
+
+  async findByCode(code: string): Promise<IUserMongo> {
+    const userExiste = await UserMongo.findOne({ code })
+    return userExiste
+  }
+
+  async getUser(id: string, updatedInfos: ICreateUserDTO): Promise<IUserMongo> {
+    await UserMongo.findOneAndUpdate({ id }, { ...updatedInfos })
+
+    const getUser = await UserMongo.findOne({ id })
+    return getUser
   }
 }

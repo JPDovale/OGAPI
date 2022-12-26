@@ -49,4 +49,13 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     this.users = filteredUsers
   }
+
+  async updateAvatar(userId: string, url: string): Promise<void> {
+    const filteredUsers = this.users.filter((user) => user.id !== userId)
+    const userToUpdate = this.users.find((user) => user.id === userId)
+
+    const updatedUser: IUserMongo = { ...userToUpdate, avatar: url }
+
+    this.users = [...filteredUsers, updatedUser]
+  }
 }

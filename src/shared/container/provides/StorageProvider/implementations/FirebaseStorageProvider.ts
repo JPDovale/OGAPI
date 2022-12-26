@@ -10,7 +10,7 @@ import fs from 'fs'
 import { IStorageProvider } from '../IStorageProvider'
 
 export class FirebaseStorageProvider implements IStorageProvider {
-  async upload(file: Express.Multer.File, toFolder: 'avatar'): Promise<string> {
+  async upload(file: Express.Multer.File, toFolder: string): Promise<string> {
     const storageRef = ref(storage, `${toFolder}/${file.filename}`)
 
     const metadata = {
@@ -26,7 +26,7 @@ export class FirebaseStorageProvider implements IStorageProvider {
     return url
   }
 
-  async delete(filename: string, toFolder: 'avatar'): Promise<void> {
+  async delete(filename: string, toFolder: string): Promise<void> {
     const desertRef = ref(storage, `${toFolder}/${filename}`)
 
     await deleteObject(desertRef)
