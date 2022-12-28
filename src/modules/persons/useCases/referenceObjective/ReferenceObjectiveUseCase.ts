@@ -23,7 +23,7 @@ export class ReferenceObjectiveUseCase {
     projectId: string,
     personId: string,
     refId: string,
-    objetive: IReferenceObjectiveDTO,
+    objective: IReferenceObjectiveDTO,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
@@ -85,9 +85,9 @@ export class ReferenceObjectiveUseCase {
       id: exiteRef.object.id || '',
       title: exiteRef.object.title || '',
       description: exiteRef.object.description || '',
-      avoiders: objetive.avoiders,
-      supporting: objetive.supporting,
-      objectified: objetive.objectified,
+      avoiders: objective.avoiders,
+      supporting: objective.supporting,
+      objectified: objective.objectified,
     }
 
     const updatedObjetives = [...person.objectives, objetiveToIndexOnPerson]

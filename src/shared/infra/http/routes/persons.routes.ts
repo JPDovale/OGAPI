@@ -1,5 +1,6 @@
 import { Router } from 'express'
 
+import { CommentInPersonController } from '@modules/persons/useCases/commentInPerson/CommentInPersonController'
 import { CreateDreamsController } from '@modules/persons/useCases/createDreams/CreateDreamsController'
 import { CreateFearsController } from '@modules/persons/useCases/createFears/CreateFearsController'
 import { CreateObjectivesController } from '@modules/persons/useCases/createObjectives/CreateObjectivesController'
@@ -64,6 +65,7 @@ const referenceWishesController = new ReferenceWisheController()
 const deleteWishesController = new DeleteWisheController()
 const updateWishesController = new UpdateWisheController()
 const updateImagePersonController = new UpdateImagePersonController()
+const commentInPersonController = new CommentInPersonController()
 
 const uploads = new Uploads('persons', 'image')
 
@@ -74,7 +76,7 @@ personsRoutes.get('/', getAllPersonsController.handle)
 personsRoutes.patch('/', updatePersonController.handle)
 personsRoutes.delete('/', deletePersonController.handle)
 personsRoutes.patch(
-  '/:personId',
+  '/update-image/:personId',
   uploads.upload.single('file'),
   updateImagePersonController.handle,
 )
@@ -114,3 +116,5 @@ personsRoutes.post('/wishes', createWishesController.handle)
 personsRoutes.patch('/wishes/reference', referenceWishesController.handle)
 personsRoutes.delete('/wishes', deleteWishesController.handle)
 personsRoutes.patch('/wishes', updateWishesController.handle)
+
+personsRoutes.post('/comments', commentInPersonController.handle)

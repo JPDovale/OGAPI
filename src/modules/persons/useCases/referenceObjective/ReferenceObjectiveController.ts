@@ -9,7 +9,7 @@ export class ReferenceObjectiveController {
   async handle(req: Request, res: Response): Promise<Response> {
     const { id } = req.user
     const { projectId, personId, refId } = req.body
-    const objetive = req.body.objetive as IReferenceObjectiveDTO
+    const objective = req.body.objective as IReferenceObjectiveDTO
     const referenceObjectiveUseCase = container.resolve(
       ReferenceObjectiveUseCase,
     )
@@ -19,11 +19,11 @@ export class ReferenceObjectiveController {
       projectId,
       personId,
       refId,
-      objetive,
+      objective,
     )
 
     return res
       .status(200)
-      .json({ message: 'Referencia criada com sucesso', person: personUpdated })
+      .json({ success: 'Referencia criada com sucesso', person: personUpdated })
   }
 }

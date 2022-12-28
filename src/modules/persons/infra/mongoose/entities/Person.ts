@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
+
 import { IAppearance } from './Appearance'
 import { ICouple } from './Couple'
 import { IDream } from './Dream'
@@ -30,6 +32,7 @@ const PersonSchema = new mongoose.Schema({
   image: { type: String, default: '' },
   createAt: { type: String, default: new Date() },
   updateAt: { type: String, default: new Date() },
+  comments: { type: Array, default: [] },
 })
 
 export interface IPersonMongo {
@@ -53,6 +56,7 @@ export interface IPersonMongo {
   image?: string
   createAt?: string
   updateAt?: string
+  comments?: IComment[]
 }
 
 export const PersonMongo = mongoose.model('Person', PersonSchema)
