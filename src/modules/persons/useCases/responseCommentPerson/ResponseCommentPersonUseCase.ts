@@ -53,11 +53,8 @@ export class ResponseCommentPersonUseCase {
       responses: [newResponse, ...comment.responses],
     }
 
-    const updatedPerson: IPersonMongo = {
-      ...person,
-      comments: [updatedComment, ...filteredComments],
-    }
+    const updatedComments: IComment[] = [updatedComment, ...filteredComments]
 
-    await this.personsRepository.updatePerson(personId, updatedPerson)
+    await this.personsRepository.updateCommentsPerson(personId, updatedComments)
   }
 }

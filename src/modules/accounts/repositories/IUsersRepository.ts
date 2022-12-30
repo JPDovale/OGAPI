@@ -1,4 +1,5 @@
 import { ICreateUserDTO } from '../dtos/ICreateUserDTO'
+import { INotification } from '../infra/mongoose/entities/Notification'
 import { IUserMongo } from '../infra/mongoose/entities/User'
 
 export interface IUsersRepository {
@@ -12,4 +13,8 @@ export interface IUsersRepository {
   findByUsername: (username: string) => Promise<IUserMongo>
   findByCode: (code: string) => Promise<IUserMongo>
   getUser: (userId: string, updatedInfos: ICreateUserDTO) => Promise<IUserMongo>
+  updateNotifications: (
+    userId: string,
+    notifications: INotification[],
+  ) => Promise<void>
 }

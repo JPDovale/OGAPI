@@ -4,6 +4,7 @@ import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { AppError } from '@shared/errors/AppError'
 
+import { INotification } from '../entities/Notification'
 import { IUserMongo, UserMongo } from '../entities/User'
 
 export class UsersMongoRepository implements IUsersRepository {
@@ -144,5 +145,12 @@ export class UsersMongoRepository implements IUsersRepository {
 
     const getUser = await UserMongo.findOne({ id })
     return getUser
+  }
+
+  async updateNotifications(
+    id: string,
+    notifications: INotification[],
+  ): Promise<void> {
+    await UserMongo.findOneAndUpdate({ id }, { notifications })
   }
 }

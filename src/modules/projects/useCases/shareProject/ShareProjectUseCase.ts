@@ -1,5 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
+import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { ISharedWhitUsers } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
@@ -44,6 +45,9 @@ export class ShareProjectUseCase {
         401,
       )
     }
+    const userCreatorOfProject = await this.usersRepository.findById(
+      project.createdPerUser,
+    )
 
     const notAlreadyShared = users.filter((user) => {
       const shared = project.users.find((u) => u.email === user.email)
@@ -62,6 +66,21 @@ export class ShareProjectUseCase {
       notAlreadyShared.map(async (user) => {
         const userExist = await this.usersRepository.findByEmail(user.email)
         if (userExist) {
+          const newNotification = new Notification({
+            title: 'Projeto compartilhado',
+            content: `${userCreatorOfProject.name} acabou de compartilhar o projeto "${project.name}" com você. Acesse a aba de compartilhados para ver.`,
+          })
+
+          const notificationsUpdated = [
+            newNotification,
+            ...userExist.notifications,
+          ]
+
+          await this.usersRepository.updateNotifications(
+            userExist.id,
+            notificationsUpdated,
+          )
+
           return userExist
         } else {
           errors.push({

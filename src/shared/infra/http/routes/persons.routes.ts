@@ -22,6 +22,7 @@ import { ReferenceObjectiveController } from '@modules/persons/useCases/referenc
 import { ReferencePersonalityController } from '@modules/persons/useCases/referencePersonality/ReferencePersonalityController'
 import { ReferenceValueController } from '@modules/persons/useCases/referenceValue/ReferenceValueController'
 import { ReferenceWisheController } from '@modules/persons/useCases/referenceWishe/ReferenceFearController'
+import { ResponseCommentPersonController } from '@modules/persons/useCases/responseCommentPerson/ResponseCommentPersonController'
 import { UpdateDreamController } from '@modules/persons/useCases/updateDream/UpdateDreamController'
 import { UpdateFearController } from '@modules/persons/useCases/updateFear/UpdateFearController'
 import { UpdateImagePersonController } from '@modules/persons/useCases/updateImagePerson/UpdateImagePersonController'
@@ -66,13 +67,14 @@ const deleteWishesController = new DeleteWisheController()
 const updateWishesController = new UpdateWisheController()
 const updateImagePersonController = new UpdateImagePersonController()
 const commentInPersonController = new CommentInPersonController()
+const responseCommentPersonController = new ResponseCommentPersonController()
 
 const uploads = new Uploads('persons', 'image')
 
 personsRoutes.use(ensureAuthenticated)
 
 personsRoutes.post('/', createPersonController.handle)
-personsRoutes.get('/', getAllPersonsController.handle)
+personsRoutes.get('/:projectId', getAllPersonsController.handle)
 personsRoutes.patch('/', updatePersonController.handle)
 personsRoutes.delete('/', deletePersonController.handle)
 personsRoutes.patch(
@@ -118,3 +120,4 @@ personsRoutes.delete('/wishes', deleteWishesController.handle)
 personsRoutes.patch('/wishes', updateWishesController.handle)
 
 personsRoutes.post('/comments', commentInPersonController.handle)
+personsRoutes.post('/comments/response', responseCommentPersonController.handle)

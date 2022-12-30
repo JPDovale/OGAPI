@@ -29,6 +29,7 @@ const PersonSchema = new mongoose.Schema({
   couples: { type: Array<ICouple>, default: [] },
   values: { type: Array<IValue>, default: [] },
   wishes: { type: Array<IWishe>, default: [] },
+  traumas: { type: Array<ITrauma>, default: [] },
   image: { type: String, default: '' },
   createAt: { type: String, default: new Date() },
   updateAt: { type: String, default: new Date() },

@@ -10,10 +10,9 @@ export class GetAllPersonsUseCase {
     private readonly personsRepository: IPersonsRepository,
   ) {}
 
-  async execute(userId: string): Promise<IPersonMongo[]> {
-    const allPersonsThisUser = await this.personsRepository.getAllPerUser(
-      userId,
-    )
+  async execute(userId: string, projectId: string): Promise<IPersonMongo[]> {
+    const allPersonsThisUser =
+      await this.personsRepository.getPersonsPerProject(projectId)
     return allPersonsThisUser
   }
 }

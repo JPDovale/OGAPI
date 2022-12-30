@@ -5,7 +5,7 @@ import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponse
 
 import { ResponseCommentPersonUseCase } from './ResponseCommentPersonUseCase'
 
-export class ResponseCommentPlotProjectController {
+export class ResponseCommentPersonController {
   async handle(req: Request, res: Response): Promise<Response> {
     const { id } = req.user
     const response = req.body.response as IResponseCommentPlotProjectDTO

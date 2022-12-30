@@ -18,6 +18,6 @@ export class ReferenceDreamController {
 
     return res
       .status(200)
-      .json({ message: 'Referencia criada com sucesso', person: personUpdated })
+      .json({ success: 'Referencia criada com sucesso', person: personUpdated })
   }
 }

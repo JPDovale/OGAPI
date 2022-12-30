@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+import { INotification } from './Notification'
+
 const UserSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -15,6 +17,7 @@ const UserSchema = new mongoose.Schema({
   code: { type: String, required: false },
   createAt: { type: String, required: true, default: new Date() },
   updateAt: { type: String, required: true, default: new Date() },
+  notifications: { type: Array<INotification>, default: [] },
 })
 
 export interface IUserMongo {
@@ -32,6 +35,7 @@ export interface IUserMongo {
   code?: string
   createAt?: string
   updateAt?: string
+  notifications?: INotification[]
 }
 
 export const UserMongo = mongoose.model('User', UserSchema)

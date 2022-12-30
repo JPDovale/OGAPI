@@ -9,7 +9,7 @@ export class CommentInPersonController {
   async handle(req: Request, res: Response): Promise<Response> {
     const { id } = req.user
     const comment = req.body.comment as ICommentPlotProjectDTO
-    const personId = req.body.projectId
+    const personId = req.body.personId
 
     const commentInPlotProjectUseCase = container.resolve(
       CommentInPersonUseCase,

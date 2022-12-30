@@ -2,6 +2,7 @@ import { v4 as uuidV4 } from 'uuid'
 
 import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 
 import { IDream } from '../entities/Dream'
 import { IFear } from '../entities/Fear'
@@ -125,5 +126,24 @@ export class PersonsMongoRepository implements IPersonsRepository {
       { id },
       { image: url, updateAt: new Date() },
     )
+  }
+
+  async updateCommentsPerson(
+    id: string,
+    comments: IComment[],
+  ): Promise<IPersonMongo> {
+    await PersonMongo.findOneAndUpdate(
+      { id },
+      { comments, id, updateAt: new Date() },
+    )
+    const updatedPerson = await PersonMongo.findOne({ id })
+    return updatedPerson
+  }
+
+  async getPersonsPerProject(projectId: string): Promise<IPersonMongo[]> {
+    const personsThisProject = await PersonMongo.find({
+      defaultProject: projectId,
+    })
+    return personsThisProject
   }
 }

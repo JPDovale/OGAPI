@@ -3,7 +3,10 @@ import { container, inject, injectable } from 'tsyringe'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
-import { Comment } from '@modules/projects/infra/mongoose/entities/Comment'
+import {
+  Comment,
+  IComment,
+} from '@modules/projects/infra/mongoose/entities/Comment'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 
 @injectable()
@@ -37,11 +40,8 @@ export class CommentInPersonUseCase {
       userAvata: user.avatar,
     })
 
-    const personUpdated: IPersonMongo = {
-      ...person,
-      comments: [newComment, ...person.comments],
-    }
+    const comments: IComment[] = [{ ...newComment }, ...person.comments]
 
-    await this.personsRepository.updatePerson(personId, personUpdated)
+    await this.personsRepository.updateCommentsPerson(personId, comments)
   }
 }
