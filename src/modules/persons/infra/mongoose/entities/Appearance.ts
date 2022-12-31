@@ -1,33 +1,19 @@
 import { v4 as uuidV4 } from 'uuid'
 
-interface ICharacter {
+export interface IAppearance {
+  id?: string
   title: string
   description: string
 }
 
-export class Character {
+export class Appearance {
   id: string
   title: string
   description: string
 
-  constructor(character: ICharacter) {
+  constructor(newAppearance: IAppearance) {
     this.id = uuidV4()
-    this.title = character.title
-    this.description = character.description
-  }
-}
-
-export interface IAppearance {
-  character?: ICharacter[]
-  images?: string[]
-}
-
-export class Appearance {
-  character: ICharacter[]
-  images: string[]
-
-  constructor(appearance: IAppearance) {
-    this.character = appearance.character || []
-    this.images = appearance.images || []
+    this.title = newAppearance.title
+    this.description = newAppearance.description
   }
 }

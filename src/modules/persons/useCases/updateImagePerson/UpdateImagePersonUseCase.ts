@@ -17,7 +17,7 @@ export class UpdateImagePersonUseCase {
     userId: string,
     personId: string,
     file: Express.Multer.File,
-  ): Promise<void> {
+  ): Promise<string> {
     const person = await this.personsRepository.findById(personId)
 
     if (person.image) {
@@ -30,5 +30,6 @@ export class UpdateImagePersonUseCase {
 
     await this.personsRepository.updateImage(url, personId)
     fs.rmSync(file.path)
+    return url
   }
 }

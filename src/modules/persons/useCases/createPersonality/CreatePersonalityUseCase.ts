@@ -13,7 +13,7 @@ import { AppError } from '@shared/errors/AppError'
 
 interface IError {
   at: string
-  message: string
+  errorMessage: string
 }
 
 interface IResponse {
@@ -57,7 +57,7 @@ export class CreatePersonalityUseCase {
       if (existePersonality) {
         errors.push({
           at: p.title,
-          message:
+          errorMessage:
             'já exite uma característica de personalidade com o mesmo nome para esse personagem',
         })
 
@@ -78,7 +78,7 @@ export class CreatePersonalityUseCase {
           if (existeRef) {
             errors.push({
               at: p.title,
-              message:
+              errorMessage:
                 'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
             })
 

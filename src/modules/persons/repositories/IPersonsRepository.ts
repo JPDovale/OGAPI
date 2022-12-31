@@ -1,11 +1,13 @@
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 
 import { ICreatePersonDTO } from '../dtos/ICreatePersonDTO'
+import { IAppearance } from '../infra/mongoose/entities/Appearance'
 import { IDream } from '../infra/mongoose/entities/Dream'
 import { IFear } from '../infra/mongoose/entities/Fear'
 import { IObjective } from '../infra/mongoose/entities/Objective'
 import { IPersonMongo } from '../infra/mongoose/entities/Person'
 import { IPersonality } from '../infra/mongoose/entities/Personality'
+import { ITrauma } from '../infra/mongoose/entities/Trauma'
 import { IValue } from '../infra/mongoose/entities/Value'
 import { IWishe } from '../infra/mongoose/entities/Wishe'
 
@@ -40,4 +42,9 @@ export interface IPersonsRepository {
     comments: IComment[],
   ) => Promise<IPersonMongo>
   getPersonsPerProject: (projectId: string) => Promise<IPersonMongo[]>
+  updateAppearance: (
+    personId: string,
+    appearance: IAppearance[],
+  ) => Promise<IPersonMongo>
+  updateTraumas: (personId: string, traumas: ITrauma[]) => Promise<IPersonMongo>
 }

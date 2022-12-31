@@ -1,34 +1,42 @@
 import { Router } from 'express'
 
 import { CommentInPersonController } from '@modules/persons/useCases/commentInPerson/CommentInPersonController'
+import { CreateAppearancesController } from '@modules/persons/useCases/createAppearance/CreateDreamsController'
 import { CreateDreamsController } from '@modules/persons/useCases/createDreams/CreateDreamsController'
 import { CreateFearsController } from '@modules/persons/useCases/createFears/CreateFearsController'
 import { CreateObjectivesController } from '@modules/persons/useCases/createObjectives/CreateObjectivesController'
 import { CreatePersonController } from '@modules/persons/useCases/createPerson/CreatePersonController'
 import { CreatePersonalityController } from '@modules/persons/useCases/createPersonality/CreatePersonalityController'
+import { CreateTraumaController } from '@modules/persons/useCases/createTraumas/CreateTraumasController'
 import { CreateValuesController } from '@modules/persons/useCases/createValues/CreateValuesController'
 import { CreateWishesController } from '@modules/persons/useCases/createWishes/CreateWishesController'
+import { DeleteAppearanceController } from '@modules/persons/useCases/deleteAppearance/DeleteAppearanceController'
 import { DeleteDreamController } from '@modules/persons/useCases/deleteDream/DeleteDreamController'
 import { DeleteFearController } from '@modules/persons/useCases/deleteFear/DeleteFearController'
 import { DeleteObjectiveController } from '@modules/persons/useCases/deleteObjective/DeleteObjectiveController'
 import { DeletePersonController } from '@modules/persons/useCases/deletePerson/DeletePersonController'
 import { DeletePersonalityController } from '@modules/persons/useCases/deletePersonality/DeletePersonalityController'
+import { DeleteTraumaController } from '@modules/persons/useCases/deleteTrauma/DeleteTraumaController'
 import { DeleteValuesController } from '@modules/persons/useCases/deleteValue/DeleteValueController'
 import { DeleteWisheController } from '@modules/persons/useCases/deleteWishe/DeleteWisheController'
 import { GetAllPersonsController } from '@modules/persons/useCases/getAllPersons/GetAllPersonsController'
+import { ReferenceAppearanceController } from '@modules/persons/useCases/referenceAppearance/ReferenceAppearanceController'
 import { ReferenceDreamController } from '@modules/persons/useCases/referenceDream/ReferenceDreamController'
 import { ReferenceFearController } from '@modules/persons/useCases/referenceFear/ReferenceFearController'
 import { ReferenceObjectiveController } from '@modules/persons/useCases/referenceObjective/ReferenceObjectiveController'
 import { ReferencePersonalityController } from '@modules/persons/useCases/referencePersonality/ReferencePersonalityController'
+import { ReferenceTraumaController } from '@modules/persons/useCases/referenceTrauma/ReferenceTraumaController'
 import { ReferenceValueController } from '@modules/persons/useCases/referenceValue/ReferenceValueController'
 import { ReferenceWisheController } from '@modules/persons/useCases/referenceWishe/ReferenceFearController'
 import { ResponseCommentPersonController } from '@modules/persons/useCases/responseCommentPerson/ResponseCommentPersonController'
+import { UpdateAppearanceController } from '@modules/persons/useCases/updateAppearance/UpdateAppearanceController'
 import { UpdateDreamController } from '@modules/persons/useCases/updateDream/UpdateDreamController'
 import { UpdateFearController } from '@modules/persons/useCases/updateFear/UpdateFearController'
 import { UpdateImagePersonController } from '@modules/persons/useCases/updateImagePerson/UpdateImagePersonController'
 import { UpdateObjectiveController } from '@modules/persons/useCases/updateObjective/UpdateObjectiveController'
 import { UpdatePersonController } from '@modules/persons/useCases/updatePerson/UpdatePersonController'
 import { UpdatePersonalityController } from '@modules/persons/useCases/updatePersonality/UpdatePersonalityController'
+import { UpdateTraumaController } from '@modules/persons/useCases/updateTrauma/UpdateTraumaController'
 import { UpdateValueController } from '@modules/persons/useCases/updateValue/UpdateValueController'
 import { UpdateWisheController } from '@modules/persons/useCases/updateWishe/UpdateWisheController'
 
@@ -68,6 +76,14 @@ const updateWishesController = new UpdateWisheController()
 const updateImagePersonController = new UpdateImagePersonController()
 const commentInPersonController = new CommentInPersonController()
 const responseCommentPersonController = new ResponseCommentPersonController()
+const createAppearancesController = new CreateAppearancesController()
+const referenceAppearanceController = new ReferenceAppearanceController()
+const updateAppearanceController = new UpdateAppearanceController()
+const deleteAppearanceController = new DeleteAppearanceController()
+const createTraumaController = new CreateTraumaController()
+const referenceTraumaController = new ReferenceTraumaController()
+const deleteTraumaController = new DeleteTraumaController()
+const updateTraumaController = new UpdateTraumaController()
 
 const uploads = new Uploads('persons', 'image')
 
@@ -118,6 +134,19 @@ personsRoutes.post('/wishes', createWishesController.handle)
 personsRoutes.patch('/wishes/reference', referenceWishesController.handle)
 personsRoutes.delete('/wishes', deleteWishesController.handle)
 personsRoutes.patch('/wishes', updateWishesController.handle)
+
+personsRoutes.post('/appearance', createAppearancesController.handle)
+personsRoutes.patch(
+  '/appearance/reference',
+  referenceAppearanceController.handle,
+)
+personsRoutes.delete('/appearance', deleteAppearanceController.handle)
+personsRoutes.patch('/appearance', updateAppearanceController.handle)
+
+personsRoutes.post('/traumas', createTraumaController.handle)
+personsRoutes.patch('/traumas/reference', referenceTraumaController.handle)
+personsRoutes.delete('/traumas', deleteTraumaController.handle)
+personsRoutes.patch('/traumas', updateTraumaController.handle)
 
 personsRoutes.post('/comments', commentInPersonController.handle)
 personsRoutes.post('/comments/response', responseCommentPersonController.handle)

@@ -10,7 +10,7 @@ import { AppError } from '@shared/errors/AppError'
 
 interface IError {
   at: string
-  message: string
+  errorMessage: string
 }
 
 interface IResponse {
@@ -54,7 +54,8 @@ export class CreateFearUseCase {
       if (existeFear) {
         errors.push({
           at: fear.title,
-          message: 'já exite um "medo" com o mesmo nome para esse personagem',
+          errorMessage:
+            'já exite um "medo" com o mesmo nome para esse personagem',
         })
 
         return false
@@ -72,7 +73,7 @@ export class CreateFearUseCase {
           if (existeRef) {
             errors.push({
               at: fear.title,
-              message:
+              errorMessage:
                 'Você já criou um medo com esse nome para outro personagem... Caso o medo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o medo.',
             })
 

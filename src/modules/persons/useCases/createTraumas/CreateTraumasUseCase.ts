@@ -1,7 +1,10 @@
 import { container, inject, injectable } from 'tsyringe'
 
-import { IDream, Dream } from '@modules/persons/infra/mongoose/entities/Dream'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import {
+  ITrauma,
+  Trauma,
+} from '@modules/persons/infra/mongoose/entities/Trauma'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
@@ -19,7 +22,7 @@ interface IResponse {
 }
 
 @injectable()
-export class CreateDreamUseCase {
+export class CreateTraumaUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
@@ -28,16 +31,14 @@ export class CreateDreamUseCase {
   ) {}
 
   async execute(
+    trauma: ITrauma[],
     userId: string,
     projectId: string,
     personId: string,
-    dreams: IDream[],
   ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError('O personagem não existe', 404)
-    }
+    if (!person) throw new AppError('O personagem não existe.', 404)
 
     const permissionToEditProject = container.resolve(PermissionToEditProject)
     const { project } = await permissionToEditProject.verify(
@@ -48,60 +49,61 @@ export class CreateDreamUseCase {
 
     const errors: IError[] = []
 
-    const unExitesDreamsToThisPerson = dreams.filter((dream) => {
-      const existeDream = person.dreams.find((obj) => obj.title === dream.title)
+    const unExitesTraumaToThisPerson = trauma.filter((p) => {
+      const existeTrauma = person.traumas.find((obj) => obj.title === p.title)
 
-      if (existeDream) {
+      if (existeTrauma) {
         errors.push({
-          at: dream.title,
+          at: p.title,
           errorMessage:
-            'já exite um "sonho" com o mesmo nome para esse personagem',
+            'já exite um trauma com o mesmo nome para esse personagem',
         })
 
         return false
       } else return true
     })
 
-    const tagDreams = project.tags.find((tag) => tag.type === 'persons/dreams')
+    const tagTrauma = project.tags.find((tag) => tag.type === 'persons/traumas')
 
-    const unExitesDreams = tagDreams
-      ? unExitesDreamsToThisPerson.filter((dream) => {
-          const existeRef = tagDreams.refs.find(
-            (ref) => ref.object.title === dream.title,
+    const unExitesTrauma = tagTrauma
+      ? unExitesTraumaToThisPerson.filter((p) => {
+          const existeRef = tagTrauma.refs.find(
+            (ref) => ref.object.title === p.title,
           )
 
           if (existeRef) {
             errors.push({
-              at: dream.title,
+              at: p.title,
               errorMessage:
-                'Você já criou um sonho com esse nome para outro personagem... Caso o sonho seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o sonho.',
+                'Você já criou um trauma com esse nome para outro personagem... Caso o trauma seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o trauma.',
             })
 
             return false
           } else return true
         })
-      : unExitesDreamsToThisPerson
+      : unExitesTraumaToThisPerson
 
-    const newDreams = unExitesDreams.map((dream) => {
-      const newDream = new Dream({
-        description: dream.description,
-        title: dream.title,
+    const newTrauma = unExitesTrauma.map((trauma) => {
+      const newTrauma = new Trauma({
+        title: trauma.title,
+        consequences: trauma.consequences,
+        description: trauma.description,
       })
 
-      return { ...newDream }
+      return { ...newTrauma }
     })
 
-    const updatedDreams = [...newDreams, ...person.dreams]
-    const updatedPerson = await this.personsRepository.updateDreams(
+    const updateTraumas = [...newTrauma, ...person.traumas]
+    const updatedPerson = await this.personsRepository.updateTraumas(
       personId,
-      updatedDreams,
+      updateTraumas,
     )
 
     const tagsToProject = container.resolve(TagsToProject)
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
-      'persons/dreams',
-      newDreams,
+      'persons/traumas',
+      newTrauma,
       [personId],
       project.name,
     )

@@ -1,5 +1,7 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
+import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import { Comment } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
@@ -11,6 +13,8 @@ export class CommentInPlotProjectUseCase {
   constructor(
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
+    @inject('UsersRepository')
+    private readonly usersRepository: IUsersRepository,
   ) {}
 
   async execute(
@@ -38,6 +42,30 @@ export class CommentInPlotProjectUseCase {
       ...project.plot,
       comments: [newComment, ...project.plot.comments],
     }
+
+    await Promise.all(
+      project.users.map(async (u) => {
+        if (u.id === newComment.userId) return
+        const userToNotify = await this.usersRepository.findById(u.id)
+
+        if (userToNotify) {
+          const newNotification = new Notification({
+            title: `${user.username} comentou`,
+            content: `${user.username} comentou no projeto ${project.name} em |${newComment.to}: ${newComment.content}`,
+          })
+
+          const notificationsUpdated = [
+            newNotification,
+            ...userToNotify.notifications,
+          ]
+
+          await this.usersRepository.updateNotifications(
+            userToNotify.id,
+            notificationsUpdated,
+          )
+        }
+      }),
+    )
 
     await this.projectsRepository.updatePlot(projectId, plotUpdated)
   }

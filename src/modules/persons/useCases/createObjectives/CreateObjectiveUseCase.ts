@@ -13,7 +13,7 @@ import { AppError } from '@shared/errors/AppError'
 
 interface IError {
   at: string
-  message: string
+  errorMessage: string
 }
 
 interface IResponse {
@@ -59,7 +59,8 @@ export class CreateObjectiveUseCase {
       if (existeObjective) {
         errors.push({
           at: objective.title,
-          message: 'já exite um objetivo com o mesmo nome para esse personagem',
+          errorMessage:
+            'já exite um objetivo com o mesmo nome para esse personagem',
         })
 
         return false
@@ -79,7 +80,7 @@ export class CreateObjectiveUseCase {
           if (existeRef) {
             errors.push({
               at: objective.title,
-              message:
+              errorMessage:
                 'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
             })
 

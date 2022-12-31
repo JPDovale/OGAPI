@@ -10,7 +10,7 @@ import { AppError } from '@shared/errors/AppError'
 
 interface IError {
   at: string
-  message: string
+  errorMessage: string
 }
 
 interface IResponse {
@@ -54,7 +54,8 @@ export class CreateValueUseCase {
       if (existeValue) {
         errors.push({
           at: value.title,
-          message: 'já exite um "valor" com o mesmo nome para esse personagem',
+          errorMessage:
+            'já exite um "valor" com o mesmo nome para esse personagem',
         })
 
         return false
@@ -72,7 +73,7 @@ export class CreateValueUseCase {
           if (existeRef) {
             errors.push({
               at: value.title,
-              message:
+              errorMessage:
                 'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
             })
 

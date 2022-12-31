@@ -4,11 +4,13 @@ import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 
+import { IAppearance } from '../entities/Appearance'
 import { IDream } from '../entities/Dream'
 import { IFear } from '../entities/Fear'
 import { Objective } from '../entities/Objective'
 import { IPersonMongo, PersonMongo } from '../entities/Person'
 import { IPersonality } from '../entities/Personality'
+import { ITrauma } from '../entities/Trauma'
 import { IValue } from '../entities/Value'
 import { IWishe } from '../entities/Wishe'
 
@@ -145,5 +147,26 @@ export class PersonsMongoRepository implements IPersonsRepository {
       defaultProject: projectId,
     })
     return personsThisProject
+  }
+
+  async updateAppearance(
+    id: string,
+    appearance: IAppearance[],
+  ): Promise<IPersonMongo> {
+    await PersonMongo.findOneAndUpdate(
+      { id },
+      { appearance, id, updateAt: new Date() },
+    )
+    const updatedPerson = await PersonMongo.findOne({ id })
+    return updatedPerson
+  }
+
+  async updateTraumas(id: string, traumas: ITrauma[]): Promise<IPersonMongo> {
+    await PersonMongo.findOneAndUpdate(
+      { id },
+      { traumas, id, updateAt: new Date() },
+    )
+    const updatedPerson = await PersonMongo.findOne({ id })
+    return updatedPerson
   }
 }

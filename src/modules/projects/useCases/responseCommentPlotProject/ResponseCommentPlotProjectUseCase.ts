@@ -1,14 +1,13 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
+import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
 import {
   Comment,
   Response,
 } from '@modules/projects/infra/mongoose/entities/Comment'
-import {
-  IPlotProject,
-  PlotProject,
-} from '@modules/projects/infra/mongoose/entities/Plot'
+import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 
@@ -17,6 +16,8 @@ export class ResponseCommentPlotProjectUseCase {
   constructor(
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
+    @inject('UsersRepository')
+    private readonly usersRepository: IUsersRepository,
   ) {}
 
   async execute(
@@ -50,6 +51,53 @@ export class ResponseCommentPlotProjectUseCase {
     const updatedComment: Comment = {
       ...comment,
       responses: [newResponse, ...comment.responses],
+    }
+
+    if (newResponse.userId !== comment.userId) {
+      const userToNotify = await this.usersRepository.findById(comment.userId)
+
+      const newNotification = new Notification({
+        title: `${user.username} respondeu seu comentário`,
+        content: `${user.username} respondeu seu comentário em |${comment.to}: ${newResponse.content}`,
+      })
+
+      const notificationsUpdated = [
+        newNotification,
+        ...userToNotify.notifications,
+      ]
+
+      await this.usersRepository.updateNotifications(
+        userToNotify.id,
+        notificationsUpdated,
+      )
+    } else {
+      const responses = updatedComment.responses.filter(
+        (response) => response.userId !== comment.userId,
+      )
+      const usersToNotify = responses.filter(
+        (response, i, self) => i === self.indexOf(response),
+      )
+
+      await Promise.all(
+        usersToNotify.map(async (u) => {
+          const userToNotify = await this.usersRepository.findById(u.userId)
+
+          const newNotification = new Notification({
+            title: `${user.username} respondeu ao próprio comentário`,
+            content: `${user.username} respondeu ao próprio comentário em |${comment.to}: ${newResponse.content}`,
+          })
+
+          const notificationsUpdated = [
+            newNotification,
+            ...userToNotify.notifications,
+          ]
+
+          await this.usersRepository.updateNotifications(
+            userToNotify.id,
+            notificationsUpdated,
+          )
+        }),
+      )
     }
 
     const updatedPlot: IPlotProject = {

@@ -10,7 +10,7 @@ import { AppError } from '@shared/errors/AppError'
 
 interface IError {
   at: string
-  message: string
+  errorMessage: string
 }
 
 interface IResponse {
@@ -54,7 +54,8 @@ export class CreateWisheUseCase {
       if (existeWishe) {
         errors.push({
           at: wishe.title,
-          message: 'já exite um "desejo" com o mesmo nome para esse personagem',
+          errorMessage:
+            'já exite um "desejo" com o mesmo nome para esse personagem',
         })
 
         return false
@@ -72,7 +73,7 @@ export class CreateWisheUseCase {
           if (existeRef) {
             errors.push({
               at: wishe.title,
-              message:
+              errorMessage:
                 'Você já criou um desejo com esse nome para outro personagem... Caso o desejo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o desejo.',
             })
 

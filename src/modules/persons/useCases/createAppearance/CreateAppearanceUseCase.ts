@@ -1,6 +1,9 @@
 import { container, inject, injectable } from 'tsyringe'
 
-import { IDream, Dream } from '@modules/persons/infra/mongoose/entities/Dream'
+import {
+  IAppearance,
+  Appearance,
+} from '@modules/persons/infra/mongoose/entities/Appearance'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
@@ -19,7 +22,7 @@ interface IResponse {
 }
 
 @injectable()
-export class CreateDreamUseCase {
+export class CreateAppearanceUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
@@ -31,7 +34,7 @@ export class CreateDreamUseCase {
     userId: string,
     projectId: string,
     personId: string,
-    dreams: IDream[],
+    appearance: IAppearance[],
   ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
@@ -48,25 +51,29 @@ export class CreateDreamUseCase {
 
     const errors: IError[] = []
 
-    const unExitesDreamsToThisPerson = dreams.filter((dream) => {
-      const existeDream = person.dreams.find((obj) => obj.title === dream.title)
+    const unExitesAppearancesToThisPerson = appearance.filter((dream) => {
+      const existeAppearance = person.appearance.find(
+        (obj) => obj.title === dream.title,
+      )
 
-      if (existeDream) {
+      if (existeAppearance) {
         errors.push({
           at: dream.title,
           errorMessage:
-            'já exite um "sonho" com o mesmo nome para esse personagem',
+            'já exite uma"característica de aparência" com o mesmo nome para esse personagem',
         })
 
         return false
       } else return true
     })
 
-    const tagDreams = project.tags.find((tag) => tag.type === 'persons/dreams')
+    const tagAppearances = project.tags.find(
+      (tag) => tag.type === 'persons/appearance',
+    )
 
-    const unExitesDreams = tagDreams
-      ? unExitesDreamsToThisPerson.filter((dream) => {
-          const existeRef = tagDreams.refs.find(
+    const unExitesAppearances = tagAppearances
+      ? unExitesAppearancesToThisPerson.filter((dream) => {
+          const existeRef = tagAppearances.refs.find(
             (ref) => ref.object.title === dream.title,
           )
 
@@ -74,34 +81,34 @@ export class CreateDreamUseCase {
             errors.push({
               at: dream.title,
               errorMessage:
-                'Você já criou um sonho com esse nome para outro personagem... Caso o sonho seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o sonho.',
+                'Você já criou uma característica de aparência com esse nome para outro personagem... Caso a característica de aparência seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para a característica de aparência.',
             })
 
             return false
           } else return true
         })
-      : unExitesDreamsToThisPerson
+      : unExitesAppearancesToThisPerson
 
-    const newDreams = unExitesDreams.map((dream) => {
-      const newDream = new Dream({
+    const newAppearances = unExitesAppearances.map((dream) => {
+      const newAppearance = new Appearance({
         description: dream.description,
         title: dream.title,
       })
 
-      return { ...newDream }
+      return { ...newAppearance }
     })
 
-    const updatedDreams = [...newDreams, ...person.dreams]
-    const updatedPerson = await this.personsRepository.updateDreams(
+    const updatedAppearances = [...newAppearances, ...person.appearance]
+    const updatedPerson = await this.personsRepository.updateAppearance(
       personId,
-      updatedDreams,
+      updatedAppearances,
     )
 
     const tagsToProject = container.resolve(TagsToProject)
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
-      'persons/dreams',
-      newDreams,
+      'persons/appearance',
+      newAppearances,
       [personId],
       project.name,
     )
