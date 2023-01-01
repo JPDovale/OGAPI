@@ -22,8 +22,6 @@ export class ReferenceObjectiveController {
       objective,
     )
 
-    return res
-      .status(200)
-      .json({ success: 'Referencia criada com sucesso', person: personUpdated })
+    return res.status(200).json(personUpdated)
   }
 }

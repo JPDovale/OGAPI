@@ -11,6 +11,6 @@ export class DeleteObjectiveController {
     const deleteObjectiveUseCase = container.resolve(DeleteObjectiveUseCase)
     await deleteObjectiveUseCase.execute(id, personId, objectiveId)
 
-    return res.status(200).json({ message: 'Objetivo deletado' })
+    return res.status(200).json({ success: 'Objetivo deletado' })
   }
 }

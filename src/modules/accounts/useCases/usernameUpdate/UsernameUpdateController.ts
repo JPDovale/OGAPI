@@ -12,6 +12,6 @@ export class UsernameUpdateController {
 
     await usernameUpdateUseCase.execute(newUsername, id)
 
-    return res.status(200).json({ message: 'Nome de usuário alterado' })
+    return res.status(200).json({ success: 'Nome de usuário alterado' })
   }
 }

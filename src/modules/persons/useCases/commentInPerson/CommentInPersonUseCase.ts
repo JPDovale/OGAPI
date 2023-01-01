@@ -20,7 +20,7 @@ export class CommentInPersonUseCase {
     userId: string,
     personId: string,
     comment: ICommentPlotProjectDTO,
-  ): Promise<void> {
+  ): Promise<IPersonMongo> {
     const { content, to } = comment
 
     const person = await this.personsRepository.findById(personId)
@@ -42,6 +42,10 @@ export class CommentInPersonUseCase {
 
     const comments: IComment[] = [{ ...newComment }, ...person.comments]
 
-    await this.personsRepository.updateCommentsPerson(personId, comments)
+    const updatedPerson = await this.personsRepository.updateCommentsPerson(
+      personId,
+      comments,
+    )
+    return updatedPerson
   }
 }

@@ -18,7 +18,7 @@ export class ImageUpdateUseCase {
     userId: string,
     projectId: string,
     file: Express.Multer.File,
-  ): Promise<void> {
+  ): Promise<string> {
     const permissionToEditProject = container.resolve(PermissionToEditProject)
     const { project } = await permissionToEditProject.verify(
       userId,
@@ -36,5 +36,6 @@ export class ImageUpdateUseCase {
 
     await this.projectsRepository.updateImage(url, projectId)
     fs.rmSync(file.path)
+    return url
   }
 }

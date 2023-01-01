@@ -22,8 +22,6 @@ export class ReferencePersonalityController {
       personality,
     )
 
-    return res
-      .status(200)
-      .json({ message: 'Referencia criada com sucesso', person: personUpdated })
+    return res.status(200).json(personUpdated)
   }
 }

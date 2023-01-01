@@ -11,6 +11,6 @@ export class DeleteDreamController {
     const deleteDreamUseCase = container.resolve(DeleteDreamUseCase)
     await deleteDreamUseCase.execute(id, personId, dreamId)
 
-    return res.status(200).json({ message: 'Objetivo deletado' })
+    return res.status(200).json({ success: 'Objetivo deletado' })
   }
 }

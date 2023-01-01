@@ -12,6 +12,6 @@ export class CreateUserPerAdminController {
     )
     await createUserPerAdminUseCase.execute({ name, username })
 
-    return res.status(201).json({ message: 'Usuário criado' })
+    return res.status(201).json({ success: 'Usuário criado' })
   }
 }

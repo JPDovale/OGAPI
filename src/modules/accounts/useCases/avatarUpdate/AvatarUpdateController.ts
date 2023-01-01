@@ -10,6 +10,6 @@ export class AvatarUpdateController {
 
     await avatarUpdateUseCase.execute(req.file, id)
 
-    return res.status(200).json({ message: 'Imagem alterada com sucesso' })
+    return res.status(200).json({ success: 'Imagem alterada com sucesso' })
   }
 }

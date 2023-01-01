@@ -12,6 +12,6 @@ export class DeleteUserController {
 
     await deleteUserUseCase.execute(id || user.id)
 
-    return res.status(202).json({ message: 'User deleted' })
+    return res.status(202).json({ success: 'User deleted' })
   }
 }

@@ -11,6 +11,6 @@ export class DeletePersonController {
     const deletePersonUseCase = container.resolve(DeletePersonUseCase)
     await deletePersonUseCase.execute(id, personId)
 
-    return res.status(200).json({ message: 'Personagem deletado com sucesso' })
+    return res.status(200).json({ success: 'Personagem deletado com sucesso' })
   }
 }

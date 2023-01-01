@@ -11,6 +11,6 @@ export class DeleteWisheController {
     const deleteWisheUseCase = container.resolve(DeleteWisheUseCase)
     await deleteWisheUseCase.execute(id, personId, WisheId)
 
-    return res.status(200).json({ message: 'Medo deletado' })
+    return res.status(200).json({ success: 'Medo deletado' })
   }
 }

@@ -14,13 +14,13 @@ export class ResponseCommentPersonController {
     const responseCommentPersonUseCase = container.resolve(
       ResponseCommentPersonUseCase,
     )
-    await responseCommentPersonUseCase.execute(
+    const person = await responseCommentPersonUseCase.execute(
       id,
       personId,
       commentId,
       response,
     )
 
-    return res.status(200).json()
+    return res.status(200).json(person)
   }
 }

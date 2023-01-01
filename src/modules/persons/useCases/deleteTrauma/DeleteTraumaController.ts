@@ -13,6 +13,6 @@ export class DeleteTraumaController {
 
     return res
       .status(200)
-      .json({ message: 'Característica de personalidade deletada' })
+      .json({ success: 'Característica de personalidade deletada' })
   }
 }

@@ -11,6 +11,6 @@ export class DeleteFearController {
     const deleteFearUseCase = container.resolve(DeleteFearUseCase)
     await deleteFearUseCase.execute(id, personId, fearId)
 
-    return res.status(200).json({ message: 'Medo deletado' })
+    return res.status(200).json({ success: 'Medo deletado' })
   }
 }

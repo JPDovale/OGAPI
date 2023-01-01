@@ -11,6 +11,6 @@ export class DeleteValuesController {
     const deleteValuesUseCase = container.resolve(DeleteValueUseCase)
     await deleteValuesUseCase.execute(id, personId, valueId)
 
-    return res.status(200).json({ message: 'Valor deletado' })
+    return res.status(200).json({ success: 'Valor deletado' })
   }
 }
