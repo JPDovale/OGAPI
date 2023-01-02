@@ -16,10 +16,10 @@ interface IError {
   errorMessage: string
 }
 
-interface IResponse {
-  updatedPerson: IPersonMongo
-  errors?: IError[]
-}
+// interface IResponse {
+//   updatedPerson: IPersonMongo
+//   errors?: IError[]
+// }
 
 @injectable()
 export class CreatePersonalityUseCase {
@@ -35,7 +35,7 @@ export class CreatePersonalityUseCase {
     userId: string,
     projectId: string,
     personId: string,
-  ): Promise<IResponse> {
+  ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) throw new AppError('O personagem não existe.', 404)
@@ -117,6 +117,6 @@ export class CreatePersonalityUseCase {
       tags,
     )
 
-    return { updatedPerson, errors }
+    return updatedPerson
   }
 }

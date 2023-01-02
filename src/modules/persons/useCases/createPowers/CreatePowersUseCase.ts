@@ -1,10 +1,7 @@
 import { container, inject, injectable } from 'tsyringe'
 
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import {
-  ITrauma,
-  Trauma,
-} from '@modules/persons/infra/mongoose/entities/Trauma'
+import { IPower, Power } from '@modules/persons/infra/mongoose/entities/Power'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
@@ -22,7 +19,7 @@ interface IError {
 // }
 
 @injectable()
-export class CreateTraumaUseCase {
+export class CreatePowerUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
@@ -31,14 +28,16 @@ export class CreateTraumaUseCase {
   ) {}
 
   async execute(
-    trauma: ITrauma[],
     userId: string,
     projectId: string,
     personId: string,
+    powers: IPower[],
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) throw new AppError('O personagem não existe.', 404)
+    if (!person) {
+      throw new AppError('O personagem não existe', 404)
+    }
 
     const permissionToEditProject = container.resolve(PermissionToEditProject)
     const { project } = await permissionToEditProject.verify(
@@ -49,61 +48,60 @@ export class CreateTraumaUseCase {
 
     const errors: IError[] = []
 
-    const unExitesTraumaToThisPerson = trauma.filter((p) => {
-      const existeTrauma = person.traumas.find((obj) => obj.title === p.title)
+    const unExitesPowersToThisPerson = powers.filter((power) => {
+      const existePower = person.powers.find((obj) => obj.title === power.title)
 
-      if (existeTrauma) {
+      if (existePower) {
         errors.push({
-          at: p.title,
+          at: power.title,
           errorMessage:
-            'já exite um trauma com o mesmo nome para esse personagem',
+            'já exite um "medo" com o mesmo nome para esse personagem',
         })
 
         return false
       } else return true
     })
 
-    const tagTrauma = project.tags.find((tag) => tag.type === 'persons/traumas')
+    const tagPowers = project.tags.find((tag) => tag.type === 'persons/powers')
 
-    const unExitesTrauma = tagTrauma
-      ? unExitesTraumaToThisPerson.filter((p) => {
-          const existeRef = tagTrauma.refs.find(
-            (ref) => ref.object.title === p.title,
+    const unExitesPowers = tagPowers
+      ? unExitesPowersToThisPerson.filter((power) => {
+          const existeRef = tagPowers.refs.find(
+            (ref) => ref.object.title === power.title,
           )
 
           if (existeRef) {
             errors.push({
-              at: p.title,
+              at: power.title,
               errorMessage:
-                'Você já criou um trauma com esse nome para outro personagem... Caso o trauma seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o trauma.',
+                'Você já criou um medo com esse nome para outro personagem... Caso o medo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o medo.',
             })
 
             return false
           } else return true
         })
-      : unExitesTraumaToThisPerson
+      : unExitesPowersToThisPerson
 
-    const newTrauma = unExitesTrauma.map((trauma) => {
-      const newTrauma = new Trauma({
-        title: trauma.title,
-        consequences: trauma.consequences,
-        description: trauma.description,
+    const newPowers = unExitesPowers.map((power) => {
+      const newPower = new Power({
+        description: power.description,
+        title: power.title,
       })
 
-      return { ...newTrauma }
+      return { ...newPower }
     })
 
-    const updateTraumas = [...newTrauma, ...person.traumas]
-    const updatedPerson = await this.personsRepository.updateTraumas(
+    const updatedPowers = [...newPowers, ...person.powers]
+    const updatedPerson = await this.personsRepository.updatePowers(
       personId,
-      updateTraumas,
+      updatedPowers,
     )
 
     const tagsToProject = container.resolve(TagsToProject)
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
-      'persons/traumas',
-      newTrauma,
+      'persons/powers',
+      newPowers,
       [personId],
       project.name,
     )

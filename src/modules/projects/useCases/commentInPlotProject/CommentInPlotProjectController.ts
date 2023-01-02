@@ -14,8 +14,12 @@ export class CommentInPlotProjectController {
     const commentInPlotProjectUseCase = container.resolve(
       CommentInPlotProjectUseCase,
     )
-    await commentInPlotProjectUseCase.execute(id, projectId, comment)
+    const updatedProject = await commentInPlotProjectUseCase.execute(
+      id,
+      projectId,
+      comment,
+    )
 
-    return res.status(200).json()
+    return res.status(200).json(updatedProject)
   }
 }

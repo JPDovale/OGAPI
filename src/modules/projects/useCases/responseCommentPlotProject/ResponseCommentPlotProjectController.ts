@@ -14,13 +14,13 @@ export class ResponseCommentPlotProjectController {
     const responseCommentPlotProjectUseCase = container.resolve(
       ResponseCommentPlotProjectUseCase,
     )
-    await responseCommentPlotProjectUseCase.execute(
+    const updatedProject = await responseCommentPlotProjectUseCase.execute(
       id,
       projectId,
       commentId,
       response,
     )
 
-    return res.status(200).json()
+    return res.status(200).json(updatedProject)
   }
 }

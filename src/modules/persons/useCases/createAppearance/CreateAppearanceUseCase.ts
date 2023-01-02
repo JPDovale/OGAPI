@@ -16,10 +16,10 @@ interface IError {
   errorMessage: string
 }
 
-interface IResponse {
-  updatedPerson: IPersonMongo
-  errors?: IError[]
-}
+// interface IResponse {
+//   updatedPerson: IPersonMongo
+//   errors?: IError[]
+// }
 
 @injectable()
 export class CreateAppearanceUseCase {
@@ -35,7 +35,7 @@ export class CreateAppearanceUseCase {
     projectId: string,
     personId: string,
     appearance: IAppearance[],
-  ): Promise<IResponse> {
+  ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -118,6 +118,6 @@ export class CreateAppearanceUseCase {
       tags,
     )
 
-    return { updatedPerson, errors }
+    return updatedPerson
   }
 }

@@ -16,10 +16,10 @@ interface IError {
   errorMessage: string
 }
 
-interface IResponse {
-  updatedPerson: IPersonMongo
-  errors?: IError[]
-}
+// interface IResponse {
+//   updatedPerson: IPersonMongo
+//   errors?: IError[]
+// }
 
 @injectable()
 export class CreateObjectiveUseCase {
@@ -35,7 +35,7 @@ export class CreateObjectiveUseCase {
     projectId: string,
     personId: string,
     objectives: IObjective[],
-  ): Promise<IResponse> {
+  ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -121,6 +121,6 @@ export class CreateObjectiveUseCase {
       tags,
     )
 
-    return { updatedPerson, errors }
+    return updatedPerson
   }
 }

@@ -9,8 +9,12 @@ export class DeleteObjectiveController {
     const { personId, objectiveId } = req.body
 
     const deleteObjectiveUseCase = container.resolve(DeleteObjectiveUseCase)
-    await deleteObjectiveUseCase.execute(id, personId, objectiveId)
+    const updatedPerson = await deleteObjectiveUseCase.execute(
+      id,
+      personId,
+      objectiveId,
+    )
 
-    return res.status(200).json({ success: 'Objetivo deletado' })
+    return res.status(200).json(updatedPerson)
   }
 }

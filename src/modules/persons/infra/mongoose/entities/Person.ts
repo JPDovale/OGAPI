@@ -8,6 +8,7 @@ import { IDream } from './Dream'
 import { IFear } from './Fear'
 import { IObjective } from './Objective'
 import { IPersonality } from './Personality'
+import { IPower } from './Power'
 import { ITrauma } from './Trauma'
 import { IValue } from './Value'
 import { IWishe } from './Wishe'
@@ -23,9 +24,9 @@ const PersonSchema = new mongoose.Schema({
   objectives: { type: Array<IObjective>, default: [] },
   personality: { type: Array<IPersonality>, default: [] },
   appearance: { type: Array<IAppearance>, default: [] },
-  powers: { type: Array<string>, default: [] },
   dreams: { type: Array<IDream>, default: [] },
   fears: { type: Array<IFear>, default: [] },
+  powers: { type: Array<IPower>, default: [] },
   couples: { type: Array<ICouple>, default: [] },
   values: { type: Array<IValue>, default: [] },
   wishes: { type: Array<IWishe>, default: [] },
@@ -47,7 +48,7 @@ export interface IPersonMongo {
   objectives?: IObjective[]
   personality?: IPersonality[]
   appearance?: IAppearance[]
-  powers?: string[]
+  powers?: IPower[]
   dreams?: IDream[]
   fears?: IFear[]
   wishes?: IWishe[]

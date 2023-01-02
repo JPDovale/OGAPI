@@ -9,8 +9,12 @@ export class DeleteValuesController {
     const { personId, valueId } = req.body
 
     const deleteValuesUseCase = container.resolve(DeleteValueUseCase)
-    await deleteValuesUseCase.execute(id, personId, valueId)
+    const updatedPerson = await deleteValuesUseCase.execute(
+      id,
+      personId,
+      valueId,
+    )
 
-    return res.status(200).json({ success: 'Valor deletado' })
+    return res.status(200).json(updatedPerson)
   }
 }

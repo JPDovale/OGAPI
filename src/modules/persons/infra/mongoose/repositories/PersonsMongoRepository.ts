@@ -5,11 +5,13 @@ import { IPersonsRepository } from '@modules/persons/repositories/IPersonsReposi
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 
 import { IAppearance } from '../entities/Appearance'
+import { ICouple } from '../entities/Couple'
 import { IDream } from '../entities/Dream'
 import { IFear } from '../entities/Fear'
 import { Objective } from '../entities/Objective'
 import { IPersonMongo, PersonMongo } from '../entities/Person'
 import { IPersonality } from '../entities/Personality'
+import { IPower } from '../entities/Power'
 import { ITrauma } from '../entities/Trauma'
 import { IValue } from '../entities/Value'
 import { IWishe } from '../entities/Wishe'
@@ -165,6 +167,24 @@ export class PersonsMongoRepository implements IPersonsRepository {
     await PersonMongo.findOneAndUpdate(
       { id },
       { traumas, id, updateAt: new Date() },
+    )
+    const updatedPerson = await PersonMongo.findOne({ id })
+    return updatedPerson
+  }
+
+  async updatePowers(id: string, powers: IPower[]): Promise<IPersonMongo> {
+    await PersonMongo.findOneAndUpdate(
+      { id },
+      { powers, id, updateAt: new Date() },
+    )
+    const updatedPerson = await PersonMongo.findOne({ id })
+    return updatedPerson
+  }
+
+  async updateCouples(id: string, couples: ICouple[]): Promise<IPersonMongo> {
+    await PersonMongo.findOneAndUpdate(
+      { id },
+      { couples, id, updateAt: new Date() },
     )
     const updatedPerson = await PersonMongo.findOne({ id })
     return updatedPerson

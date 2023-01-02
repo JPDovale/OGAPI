@@ -9,8 +9,12 @@ export class DeleteDreamController {
     const { personId, dreamId } = req.body
 
     const deleteDreamUseCase = container.resolve(DeleteDreamUseCase)
-    await deleteDreamUseCase.execute(id, personId, dreamId)
+    const updatedPerson = await deleteDreamUseCase.execute(
+      id,
+      personId,
+      dreamId,
+    )
 
-    return res.status(200).json({ success: 'Objetivo deletado' })
+    return res.status(200).json(updatedPerson)
   }
 }

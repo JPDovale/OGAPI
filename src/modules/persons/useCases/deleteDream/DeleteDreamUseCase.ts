@@ -1,5 +1,6 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
@@ -19,7 +20,7 @@ export class DeleteDreamUseCase {
     userId: string,
     personId: string,
     dreamId: string,
-  ): Promise<void> {
+  ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
     const permissionToEditProject = container.resolve(PermissionToEditProject)
     const { project } = await permissionToEditProject.verify(
@@ -51,6 +52,10 @@ export class DeleteDreamUseCase {
 
     await this.projectRepository.updateTag(project.id, tags)
 
-    await this.personsRepository.updateDreams(personId, filteredDreams)
+    const updatedPerson = await this.personsRepository.updateDreams(
+      personId,
+      filteredDreams,
+    )
+    return updatedPerson
   }
 }

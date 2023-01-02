@@ -5,6 +5,7 @@ import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepositor
 import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import { Comment } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 
@@ -21,7 +22,7 @@ export class CommentInPlotProjectUseCase {
     userId: string,
     projectId: string,
     comment: ICommentPlotProjectDTO,
-  ): Promise<void> {
+  ): Promise<IProjectMongo> {
     const { content, to } = comment
     const permissionToComment = container.resolve(PermissionToEditProject)
     const { project, user } = await permissionToComment.verify(
@@ -67,6 +68,10 @@ export class CommentInPlotProjectUseCase {
       }),
     )
 
-    await this.projectsRepository.updatePlot(projectId, plotUpdated)
+    const updatedProject = await this.projectsRepository.updatePlot(
+      projectId,
+      plotUpdated,
+    )
+    return updatedProject
   }
 }

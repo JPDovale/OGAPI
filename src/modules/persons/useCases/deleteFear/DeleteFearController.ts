@@ -9,8 +9,8 @@ export class DeleteFearController {
     const { personId, fearId } = req.body
 
     const deleteFearUseCase = container.resolve(DeleteFearUseCase)
-    await deleteFearUseCase.execute(id, personId, fearId)
+    const updatedPerson = await deleteFearUseCase.execute(id, personId, fearId)
 
-    return res.status(200).json({ success: 'Medo deletado' })
+    return res.status(200).json(updatedPerson)
   }
 }

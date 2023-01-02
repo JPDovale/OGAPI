@@ -8,7 +8,7 @@ import { PermissionToEditProject } from '@modules/projects/services/verify/Permi
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()
-export class DeleteObjectiveUseCase {
+export class DeletePowerUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
@@ -19,7 +19,7 @@ export class DeleteObjectiveUseCase {
   async execute(
     userId: string,
     personId: string,
-    objectiveId: string,
+    powerId: string,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
     const permissionToEditProject = container.resolve(PermissionToEditProject)
@@ -40,24 +40,22 @@ export class DeleteObjectiveUseCase {
       )
     }
 
-    const filteredObjectives = person.objectives.filter(
-      (objective) => objective.id !== objectiveId,
-    )
+    const filteredPowers = person.powers.filter((power) => power.id !== powerId)
 
     const tagsToProject = container.resolve(TagsToProject)
     const tags = await tagsToProject.deleteReferenceTag(
-      'persons/objectives',
-      objectiveId,
+      'persons/powers',
+      powerId,
       personId,
       project.tags,
     )
 
     await this.projectRepository.updateTag(project.id, tags)
 
-    const updatedPerson = await this.personsRepository.updateObjectives(
+    const updatePerson = await this.personsRepository.updatePowers(
       personId,
-      filteredObjectives,
+      filteredPowers,
     )
-    return updatedPerson
+    return updatePerson
   }
 }

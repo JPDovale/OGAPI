@@ -8,6 +8,7 @@ import {
   Response,
 } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 
@@ -25,7 +26,7 @@ export class ResponseCommentPlotProjectUseCase {
     projectId: string,
     commentId: string,
     response: IResponseCommentPlotProjectDTO,
-  ): Promise<void> {
+  ): Promise<IProjectMongo> {
     const { content } = response
     const permissionToComment = container.resolve(PermissionToEditProject)
     const { project, user } = await permissionToComment.verify(
@@ -105,6 +106,10 @@ export class ResponseCommentPlotProjectUseCase {
       comments: [updatedComment, ...filteredComments],
     }
 
-    await this.projectsRepository.updatePlot(projectId, updatedPlot)
+    const updatedProject = await this.projectsRepository.updatePlot(
+      projectId,
+      updatedPlot,
+    )
+    return updatedProject
   }
 }

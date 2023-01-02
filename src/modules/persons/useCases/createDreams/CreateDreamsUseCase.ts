@@ -13,10 +13,10 @@ interface IError {
   errorMessage: string
 }
 
-interface IResponse {
-  updatedPerson: IPersonMongo
-  errors?: IError[]
-}
+// interface IResponse {
+//   updatedPerson: IPersonMongo
+//   errors?: IError[]
+// }
 
 @injectable()
 export class CreateDreamUseCase {
@@ -32,7 +32,7 @@ export class CreateDreamUseCase {
     projectId: string,
     personId: string,
     dreams: IDream[],
-  ): Promise<IResponse> {
+  ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -111,6 +111,6 @@ export class CreateDreamUseCase {
       tags,
     )
 
-    return { updatedPerson, errors }
+    return updatedPerson
   }
 }

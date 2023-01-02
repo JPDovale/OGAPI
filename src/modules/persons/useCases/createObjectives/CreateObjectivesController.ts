@@ -20,6 +20,6 @@ export class CreateObjectivesController {
       objectives,
     )
 
-    return res.status(201).json(updatedPerson.updatedPerson)
+    return res.status(201).json(updatedPerson)
   }
 }

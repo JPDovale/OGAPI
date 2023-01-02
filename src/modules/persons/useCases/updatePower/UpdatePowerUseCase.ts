@@ -1,6 +1,8 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { IPower } from '@modules/persons/infra/mongoose/entities/Power'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
@@ -8,7 +10,7 @@ import { PermissionToEditProject } from '@modules/projects/services/verify/Permi
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()
-export class DeleteObjectiveUseCase {
+export class UpdatePowerUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
@@ -19,7 +21,8 @@ export class DeleteObjectiveUseCase {
   async execute(
     userId: string,
     personId: string,
-    objectiveId: string,
+    powerId: string,
+    power: IUpdateBaseDTO,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
     const permissionToEditProject = container.resolve(PermissionToEditProject)
@@ -40,24 +43,31 @@ export class DeleteObjectiveUseCase {
       )
     }
 
-    const filteredObjectives = person.objectives.filter(
-      (objective) => objective.id !== objectiveId,
+    const filteredPowers = person.powers.filter((power) => power.id !== powerId)
+    const powerToUpdate = person.powers.find((power) => power.id === powerId)
+
+    const updatedPower: IPower = {
+      ...powerToUpdate,
+      ...power,
+    }
+
+    const updatedPowers = [...filteredPowers, updatedPower]
+
+    const updatedPerson = await this.personsRepository.updatePowers(
+      personId,
+      updatedPowers,
     )
 
     const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.deleteReferenceTag(
-      'persons/objectives',
-      objectiveId,
-      personId,
+    const tags = await tagsToProject.updatePersonsTagsObject(
+      'persons/powers',
+      powerId,
+      { title: power.title, description: power.description },
       project.tags,
     )
 
     await this.projectRepository.updateTag(project.id, tags)
 
-    const updatedPerson = await this.personsRepository.updateObjectives(
-      personId,
-      filteredObjectives,
-    )
     return updatedPerson
   }
 }
