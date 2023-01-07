@@ -32,34 +32,40 @@ export class CreateProjectUseCase {
     const { id } = user
     const { name, private: priv, type, password } = project
 
-    if (
-      type !== 'rpg' &&
-      type !== 'book' &&
-      type !== 'gameplay' &&
-      type !== 'roadMap'
-    ) {
-      throw new AppError('Type of project is invalid', 401)
-    }
-
     const infoUser = await this.usersRepository.findById(id)
 
-    const newProject = await this.projectsRepository.create({
-      name,
-      private: priv,
-      type,
-      password,
-      createdPerUser: id,
-      users: [
-        {
-          id,
-          permission: 'edit',
-          email: infoUser.email,
-          username: infoUser.username,
-        },
-      ],
-      plot: new PlotProject({}),
-    })
+    if (!infoUser)
+      throw new AppError({
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
+      })
 
-    return newProject
+    try {
+      const newProject = await this.projectsRepository.create({
+        name,
+        private: priv,
+        type,
+        password,
+        createdPerUser: id,
+        users: [
+          {
+            id,
+            permission: 'edit',
+          },
+        ],
+        plot: new PlotProject({}),
+      })
+
+      return newProject
+    } catch (err) {
+      console.log(err)
+
+      throw new AppError({
+        title: 'Internal error',
+        message: 'Try again later.',
+        statusCode: 500,
+      })
+    }
   }
 }

@@ -11,8 +11,8 @@ export class UpdateImagePersonController {
 
     const imageUpdateUseCase = container.resolve(UpdateImagePersonUseCase)
 
-    const url = await imageUpdateUseCase.execute(id, personId, file)
+    const personUpdated = await imageUpdateUseCase.execute(id, personId, file)
 
-    return res.status(200).json({ url })
+    return res.status(200).json(personUpdated)
   }
 }

@@ -1,6 +1,8 @@
 import mongoose from 'mongoose'
 
+import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
+import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
 
 import { IAppearance } from './Appearance'
 import { ICouple } from './Couple'
@@ -12,6 +14,8 @@ import { IPower } from './Power'
 import { ITrauma } from './Trauma'
 import { IValue } from './Value'
 import { IWishe } from './Wishe'
+
+const dateProvider = new DayJsDateProvider()
 
 const PersonSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, replace: false },
@@ -31,9 +35,9 @@ const PersonSchema = new mongoose.Schema({
   values: { type: Array<IValue>, default: [] },
   wishes: { type: Array<IWishe>, default: [] },
   traumas: { type: Array<ITrauma>, default: [] },
-  image: { type: String, default: '' },
-  createAt: { type: String, default: new Date() },
-  updateAt: { type: String, default: new Date() },
+  image: { type: Object, default: {} },
+  createAt: { type: String, default: dateProvider.getDate(new Date()) },
+  updateAt: { type: String, default: dateProvider.getDate(new Date()) },
   comments: { type: Array, default: [] },
 })
 
@@ -55,7 +59,7 @@ export interface IPersonMongo {
   traumas?: ITrauma[]
   couples?: ICouple[]
   values?: IValue[]
-  image?: string
+  image?: IAvatar
   createAt?: string
   updateAt?: string
   comments?: IComment[]

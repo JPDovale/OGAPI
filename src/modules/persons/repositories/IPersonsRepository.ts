@@ -1,3 +1,4 @@
+import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 
 import { ICreatePersonDTO } from '../dtos/ICreatePersonDTO'
@@ -38,7 +39,7 @@ export interface IPersonsRepository {
   updateDreams: (personId: string, dreams: IDream[]) => Promise<IPersonMongo>
   updateFears: (personId: string, dreams: IFear[]) => Promise<IPersonMongo>
   updateWishes: (personId: string, dreams: IWishe[]) => Promise<IPersonMongo>
-  updateImage: (url: string, personId: string) => Promise<void>
+  updateImage: (image: IAvatar, personId: string) => Promise<IPersonMongo>
   updateCommentsPerson: (
     personId: string,
     comments: IComment[],
@@ -51,4 +52,6 @@ export interface IPersonsRepository {
   updateTraumas: (personId: string, traumas: ITrauma[]) => Promise<IPersonMongo>
   updatePowers: (personId: string, powers: IPower[]) => Promise<IPersonMongo>
   updateCouples: (personId: string, powers: ICouple[]) => Promise<IPersonMongo>
+  deletePerUserId: (userId: string) => Promise<void>
+  deletePerProjectId: (projectId: string) => Promise<void>
 }

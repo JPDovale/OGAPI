@@ -1,18 +1,26 @@
+import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
+import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { AppError } from '@shared/errors/AppError'
+import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 
 import {
   IProjectMongo,
   ISharedWhitUsers,
   ProjectMongo,
 } from '../entities/Project'
-import { ITagMongo } from '../entities/Tag'
+import { ITag } from '../entities/Tag'
 
+@injectable()
 export class ProjectsMongoRepository implements IProjectsRepository {
+  constructor(
+    @inject('DateProvider')
+    private readonly dateProvider: IDateProvider,
+  ) {}
+
   async create(dataProjectObj: ICreateProjectDTO): Promise<IProjectMongo> {
     const {
       createdPerUser,
@@ -54,94 +62,52 @@ export class ProjectsMongoRepository implements IProjectsRepository {
   }
 
   async findById(id: string): Promise<IProjectMongo> {
-    if (!id) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
-
     const project = await ProjectMongo.findOne({ id })
     return project
   }
 
-  async addUsers(users: ISharedWhitUsers[], id: string): Promise<void> {
-    if (!users) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
-
+  async addUsers(
+    users: ISharedWhitUsers[],
+    id: string,
+  ): Promise<IProjectMongo> {
     await ProjectMongo.findOneAndUpdate({ id }, { users })
+
+    const updatedProject = await ProjectMongo.findOne({ id })
+    return updatedProject
   }
 
-  async updateImage(url: string, id: string): Promise<void> {
-    if (!url || !id) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
-
+  async updateImage(image: IAvatar, id: string): Promise<IProjectMongo> {
     await ProjectMongo.findOneAndUpdate(
       { id },
-      { image: url, updateAt: new Date() },
+      { image, updateAt: this.dateProvider.getDate(new Date()) },
     )
+    const updatedProject = await ProjectMongo.findOne({ id })
+    return updatedProject
   }
 
   async delete(id: string): Promise<void> {
-    if (!id) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
-
-    try {
-      await ProjectMongo.findOneAndDelete({ id })
-    } catch (err) {
-      throw new AppError('Não foi possível deletar o projeto', 500)
-    }
+    await ProjectMongo.findOneAndDelete({ id })
   }
 
   async updatePlot(id: string, plot: IUpdatePlotDTO): Promise<IProjectMongo> {
-    if (!id || !plot) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
+    await ProjectMongo.findOneAndUpdate(
+      { id },
+      { plot, updateAt: this.dateProvider.getDate(new Date()) },
+    )
 
-    try {
-      await ProjectMongo.findOneAndUpdate(
-        { id },
-        { plot, updateAt: new Date() },
-      )
+    const updatedProject = await ProjectMongo.findOne({ id })
 
-      const updatedProject = await ProjectMongo.findOne({ id })
-
-      return updatedProject
-    } catch (err) {
-      throw new AppError('Não foi possível atualizar o projeto', 500)
-    }
+    return updatedProject
   }
 
-  async updateTag(id: string, tags: ITagMongo[]): Promise<void> {
-    if (!id || !tags) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
+  async updateTag(id: string, tags: ITag[]): Promise<void> {
+    await ProjectMongo.findOneAndUpdate(
+      { id },
+      { tags, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+  }
 
-    try {
-      await ProjectMongo.findOneAndUpdate(
-        { id },
-        { tags, updateAt: new Date() },
-      )
-    } catch (err) {
-      throw new AppError('Não foi possível atualizar as tags do projeto', 500)
-    }
+  async deletePerUserId(userId: string): Promise<void> {
+    await ProjectMongo.deleteMany({ createdPerUser: userId })
   }
 }

@@ -6,6 +6,7 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
@@ -15,17 +16,9 @@ interface IRequest {
 }
 
 interface IResponse {
-  user: {
-    id: string
-    username: string
-    email: string
-    avatar: string
-    admin: boolean
-    age: string
-    isInitialized: boolean
-    sex: string
-  }
+  user: IUserInfosResponse
   refreshToken: string
+  token: string
 }
 
 @injectable()
@@ -39,11 +32,10 @@ export class CreateSessionUseCase {
     private readonly dateProvider: IDateProvider,
   ) {}
 
-  async execute(request: IRequest): Promise<IResponse> {
-    const { email, password } = request
+  async execute({ email, password }: IRequest): Promise<IResponse> {
     const {
-      // expiresInToken,
-      // secretToken,
+      expiresInToken,
+      secretToken,
       secretRefreshToken,
       expiresInRefreshToken,
       expiresRefreshTokenDays,
@@ -51,29 +43,35 @@ export class CreateSessionUseCase {
 
     const userExiste = await this.userRepository.findByEmail(email)
 
-    if (!userExiste) {
-      throw new AppError('Email or password incorrect!')
-    }
+    if (!userExiste)
+      throw new AppError({
+        title: 'Email ou senha incorretos.',
+        message:
+          'O email ou a senha que você informou são inválidos. Verifique as informações e tente de novo.',
+      })
 
     const passwordCorrect = compareSync(password, userExiste.password)
 
-    if (!passwordCorrect) {
-      throw new AppError('Email or password incorrect!')
-    }
+    if (!passwordCorrect)
+      throw new AppError({
+        title: 'Email ou senha incorretos.',
+        message:
+          'O email ou a senha que você informou são inválidos. Verifique as informações e tente de novo.',
+      })
 
-    // const token = sign(
-    //   {
-    //     admin: userExiste.admin,
-    //     isInitialized: userExiste.isInitialized,
-    //     name: userExiste.username,
-    //     email: userExiste.email,
-    //   },
-    //   secretToken,
-    //   {
-    //     subject: userExiste.id,
-    //     expiresIn: expiresInToken,
-    //   },
-    // )
+    const token = sign(
+      {
+        admin: userExiste.admin,
+        isInitialized: userExiste.isInitialized,
+        name: userExiste.username,
+        email: userExiste.email,
+      },
+      secretToken,
+      {
+        subject: userExiste.id,
+        expiresIn: expiresInToken,
+      },
+    )
 
     const refreshToken = sign(
       {
@@ -88,9 +86,9 @@ export class CreateSessionUseCase {
       },
     )
 
-    const expiresDate = this.dateProvider
-      .addDays(expiresRefreshTokenDays)
-      .toString()
+    const expiresDate = this.dateProvider.getDate(
+      this.dateProvider.addDays(expiresRefreshTokenDays),
+    )
 
     await this.refreshTokenRepository.create({
       expiresDate,
@@ -104,12 +102,15 @@ export class CreateSessionUseCase {
         username: userExiste.username,
         email: userExiste.email,
         avatar: userExiste.avatar,
-        admin: userExiste.admin,
         age: userExiste.age,
-        isInitialized: userExiste.isInitialized,
         sex: userExiste.sex,
+        createAt: userExiste.createAt,
+        updateAt: userExiste.updateAt,
+        notifications: userExiste.notifications,
+        isInitialized: userExiste.isInitialized,
       },
       refreshToken,
+      token,
     }
   }
 }

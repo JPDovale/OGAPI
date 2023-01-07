@@ -1,6 +1,7 @@
-import { injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import { IRef, ITag, Tag } from '@modules/projects/infra/mongoose/entities/Tag'
+import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
 interface IObject {
@@ -11,6 +12,10 @@ interface IObject {
 
 @injectable()
 export class TagsToProject {
+  constructor(
+    @inject('DateProvider') private readonly dateProvider: IDateProvider,
+  ) {}
+
   async createOrUpdate(
     projectTags: ITag[],
     type: string,
@@ -55,7 +60,7 @@ export class TagsToProject {
       const updateTagType: ITag = {
         ...tagExiste,
         refs: [...tagExiste.refs, ...newRefs],
-        updateAt: new Date().toString(),
+        updateAt: this.dateProvider.getDate(new Date()).toString(),
       }
 
       tags = [updateTagType, ...tags]
@@ -98,7 +103,7 @@ export class TagsToProject {
       const updateTagType: ITag = {
         ...tagExiste,
         refs,
-        updateAt: new Date().toString(),
+        updateAt: this.dateProvider.getDate(new Date()).toString(),
       }
 
       tags = [updateTagType, ...tags]
@@ -122,10 +127,11 @@ export class TagsToProject {
     )
 
     if (!reference)
-      throw new AppError(
-        'Impossível verificar a origem das tags do projeto',
-        404,
-      )
+      throw new AppError({
+        title: 'Impossível verificar a origem das tags do projeto',
+        message: `Impossível verificar a origem das tags do projeto`,
+        statusCode: 404,
+      })
 
     const updatedReferenceObject: IRef = {
       ...reference,

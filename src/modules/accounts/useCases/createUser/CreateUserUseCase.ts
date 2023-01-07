@@ -27,21 +27,34 @@ export class CreateUserUseCase {
     const userAlreadyExiste = await this.usersRepository.findByEmail(email)
 
     if (userAlreadyExiste) {
-      throw new AppError('Usuário já existente. Tente fazer login')
+      throw new AppError({
+        title: 'O usuário já existe.',
+        message:
+          'Localizamos um usuário já cadastrado com esse e-mail. Por favor, tente fazer login.',
+      })
     }
 
     const passwordHash = hashSync(password, 8)
 
-    const newUser = await this.usersRepository.create({
-      name,
-      email,
-      password: passwordHash,
-      age: age || 'uncharacterized',
-      sex: sex || 'uncharacterized',
-      username: username || name,
-    })
+    try {
+      const newUser = await this.usersRepository.create({
+        name,
+        email,
+        password: passwordHash,
+        age: age || 'uncharacterized',
+        sex: sex || 'uncharacterized',
+        username: username || name,
+      })
 
+      return newUser
+    } catch (err) {
+      console.log(err)
 
-    return newUser
+      throw new AppError({
+        title: 'Internal error',
+        message: 'Try again later.',
+        statusCode: 500,
+      })
+    }
   }
 }

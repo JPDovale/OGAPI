@@ -1,5 +1,8 @@
 import { v4 as uuidV4 } from 'uuid'
 
+import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+
+const dateProvider = new DayJsDateProvider()
 export interface ITag {
   id?: string
   type: string
@@ -33,7 +36,7 @@ export class Tag {
     this.type = tag.type
     this.refs = tag.refs
     this.origPath = tag.origPath
-    this.createAt = tag.createAt || new Date().toString()
-    this.updateAt = tag.updateAt || new Date().toString()
+    this.createAt = tag.createAt || dateProvider.getDate(new Date())
+    this.updateAt = tag.updateAt || dateProvider.getDate(new Date())
   }
 }

@@ -2,18 +2,13 @@ import { inject, injectable } from 'tsyringe'
 
 import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
-import { ISharedWhitUsers } from '@modules/projects/infra/mongoose/entities/Project'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
 
 interface IUserRequest {
   email: string
   permission: 'view' | 'edit' | 'comment'
-}
-
-interface IResponseError {
-  error: string
-  email: string
 }
 
 @injectable()
@@ -26,91 +21,86 @@ export class ShareProjectUseCase {
   ) {}
 
   async execute(
-    users: IUserRequest[],
+    userToShare: IUserRequest,
     projectId: string,
     userId: string,
-  ): Promise<IResponseError[]> {
-    const errors: IResponseError[] = []
+  ): Promise<IProjectMongo> {
     const project = await this.projectsRepository.findById(projectId)
 
-    if (!project) {
-      throw new AppError('O projeto não existe', 404)
-    }
+    if (!project)
+      throw new AppError({
+        title: 'Projeto não encontrado.',
+        message: 'Parece que esse projeto não existe na nossa base de dados...',
+        statusCode: 404,
+      })
 
     const thisProjectAreFromUser = project.createdPerUser === userId
 
     if (!thisProjectAreFromUser) {
-      throw new AppError(
-        'Você não tem permissão para compartilhar esse projeto, pois ele é de propriedade de outro usuário.',
-        401,
-      )
+      throw new AppError({
+        title: 'Acesso negado!',
+        message: 'Você não tem permissão para alterar o projeto.',
+        statusCode: 401,
+      })
     }
+
+    if (project.users.length >= 5) {
+      throw new AppError({
+        title: 'Limite de compartilhamento',
+        message:
+          'Você pode compartilhar o projeto com apenas 5 pessoas ao mesmo tempo.',
+      })
+    }
+
     const userCreatorOfProject = await this.usersRepository.findById(
       project.createdPerUser,
     )
 
-    const notAlreadyShared = users.filter((user) => {
-      const shared = project.users.find((u) => u.email === user.email)
-      if (!shared) {
-        return true
-      } else {
-        errors.push({
-          email: shared.email,
-          error: 'Esse usuário já tem acesso ao projeto',
-        })
-        return false
-      }
-    })
+    const isShared = project.users.find((u) => u.email === userToShare.email)
 
-    const usersToAdd = await Promise.all(
-      notAlreadyShared.map(async (user) => {
-        const userExist = await this.usersRepository.findByEmail(user.email)
-        if (userExist) {
-          const newNotification = new Notification({
-            title: 'Projeto compartilhado',
-            content: `${userCreatorOfProject.name} acabou de compartilhar o projeto "${project.name}" com você. Acesse a aba de compartilhados para ver.`,
-          })
+    if (isShared)
+      throw new AppError({
+        title: 'Esse usuário já tem acesso ao projeto...',
+        message:
+          'Você está tentando adicionar um usuário que já tem acesso ao projeto... Caso queira alterar a permissão, vá até as configurações do projeto.',
+      })
 
-          const notificationsUpdated = [
-            newNotification,
-            ...userExist.notifications,
-          ]
+    const userExist = await this.usersRepository.findByEmail(userToShare.email)
 
-          await this.usersRepository.updateNotifications(
-            userExist.id,
-            notificationsUpdated,
-          )
+    if (!userExist)
+      throw new AppError({
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
+      })
 
-          return userExist
-        } else {
-          errors.push({
-            email: user.email,
-            error: 'Usuário não encontrado',
-          })
-          return null
-        }
-      }),
+    const addUser = {
+      email: userExist.email,
+      id: userExist.id,
+      permission: userToShare.permission,
+    }
+
+    const usersAdded = [...project.users, addUser]
+
+    const updatedProject = await this.projectsRepository.addUsers(
+      usersAdded,
+      projectId,
     )
 
-    const validUsersToAdd = usersToAdd.filter((u) => u !== null)
-
-    const usersAdded: ISharedWhitUsers[] = [...project.users]
-
-    validUsersToAdd.forEach((user) => {
-      const userToAdd = users.find((u) => u.email === user.email)
-
-      const addUser = {
-        email: user.email,
-        id: user.id,
-        permission: userToAdd.permission,
-        username: user.username,
-      }
-
-      usersAdded.push(addUser)
+    const newNotification = new Notification({
+      title: 'Projeto compartilhado',
+      content: `${userCreatorOfProject.name} acabou de compartilhar o projeto "${project.name}" com você. Acesse os projetos compartilhados para ver.`,
+      projectId,
+      sendedPerUser: userId,
     })
 
-    await this.projectsRepository.addUsers(usersAdded, projectId)
+    const notificationsUpdated = [newNotification, ...userExist.notifications]
 
-    return errors
+    await this.usersRepository.updateNotifications(
+      userExist.id,
+      notificationsUpdated,
+    )
+
+    return updatedProject
   }
 }

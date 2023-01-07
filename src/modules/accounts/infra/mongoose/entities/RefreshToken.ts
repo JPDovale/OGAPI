@@ -1,12 +1,20 @@
 import mongoose from 'mongoose'
 
+import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+
+const dateProvider = new DayJsDateProvider()
+
 const RefreshToken = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  refreshToken: { type: String, required: true, unique: true },
+  id: { type: String, required: true },
+  refreshToken: { type: String, required: true },
   userId: { type: String, required: true },
   expiresDate: { type: String, required: true },
   application: { type: String, required: true, default: 'OG-web' },
-  createAt: { type: String, required: true, default: new Date() },
+  createAt: {
+    type: String,
+    required: true,
+    default: dateProvider.getDate(new Date()),
+  },
 })
 
 export interface IRefreshTokenMongo {

@@ -1,6 +1,9 @@
 import { inject, injectable } from 'tsyringe'
 
+import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
 import { AppError } from '@shared/errors/AppError'
 
@@ -11,24 +14,41 @@ export class DeleteUserUseCase {
     private readonly usersRepository: IUsersRepository,
     @inject('StorageProvider')
     private readonly storageProvider: IStorageProvider,
+    @inject('ProjectsRepository')
+    private readonly projectsRepository: IProjectsRepository,
+    @inject('PersonsRepository')
+    private readonly personsRepository: IPersonsRepository,
+    @inject('RefreshTokenRepository')
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
   ) {}
 
   async execute(id: string): Promise<void> {
     const user = await this.usersRepository.findById(id)
 
-    if (!user) {
-      throw new AppError('Usuário não encontrado', 404)
-    }
+    if (!user)
+      throw new AppError({
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
+      })
 
     try {
       await this.usersRepository.delete(id)
-      if (user.avatar) {
-        const destruct = user.avatar.split('F')[1]
-        const filename = destruct.split('?')[0]
-        await this.storageProvider.delete(filename, 'avatar')
+      await this.projectsRepository.deletePerUserId(id)
+      await this.personsRepository.deletePerUserId(id)
+      await this.refreshTokenRepository.deletePerUserId(id)
+
+      if (user.avatar.fileName) {
+        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
       }
     } catch (err) {
-      throw new AppError('Não foi possível deletar o usuário', 500)
+      console.log(err)
+
+      throw new AppError({
+        title: 'Internal error',
+        message: 'Try again later.',
+        statusCode: 500,
+      })
     }
   }
 }

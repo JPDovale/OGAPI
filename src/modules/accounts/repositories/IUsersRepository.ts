@@ -1,4 +1,5 @@
 import { ICreateUserDTO } from '../dtos/ICreateUserDTO'
+import { IAvatar } from '../infra/mongoose/entities/Avatar'
 import { INotification } from '../infra/mongoose/entities/Notification'
 import { IUserMongo } from '../infra/mongoose/entities/User'
 
@@ -8,8 +9,8 @@ export interface IUsersRepository {
   create: (dataUserObj: ICreateUserDTO) => Promise<IUserMongo>
   findById: (userId: string) => Promise<IUserMongo>
   delete: (id: string) => Promise<void>
-  updateAvatar: (userId: string, url: string) => Promise<void>
-  updateUsername: (userId: string, username: string) => Promise<void>
+  updateAvatar: (userId: string, url: IAvatar) => Promise<IUserMongo>
+  updateUsername: (userId: string, username: string) => Promise<IUserMongo>
   findByUsername: (username: string) => Promise<IUserMongo>
   findByCode: (code: string) => Promise<IUserMongo>
   getUser: (userId: string, updatedInfos: ICreateUserDTO) => Promise<IUserMongo>
