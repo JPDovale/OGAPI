@@ -10,7 +10,14 @@ export interface IUsersRepository {
   findById: (userId: string) => Promise<IUserMongo>
   delete: (id: string) => Promise<void>
   updateAvatar: (userId: string, url: IAvatar) => Promise<IUserMongo>
-  updateUsername: (userId: string, username: string) => Promise<IUserMongo>
+  updateUser: (
+    userId: string,
+    username: string,
+    name: string,
+    email: string,
+    age: string,
+    sex: string,
+  ) => Promise<IUserMongo>
   findByUsername: (username: string) => Promise<IUserMongo>
   findByCode: (code: string) => Promise<IUserMongo>
   getUser: (userId: string, updatedInfos: ICreateUserDTO) => Promise<IUserMongo>
@@ -18,4 +25,5 @@ export interface IUsersRepository {
     userId: string,
     notifications: INotification[],
   ) => Promise<void>
+  updatePassword: (userId: string, password: string) => Promise<void>
 }

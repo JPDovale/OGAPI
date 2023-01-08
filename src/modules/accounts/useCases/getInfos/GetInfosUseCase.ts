@@ -31,6 +31,8 @@ export class GetInfosUseCase {
       id: user.id,
       notifications: user.notifications,
       updateAt: user.updateAt,
+      name: user.name,
+      isInitialized: user.isInitialized,
     }
 
     return response

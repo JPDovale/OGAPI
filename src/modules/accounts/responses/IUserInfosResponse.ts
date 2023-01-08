@@ -12,4 +12,5 @@ export interface IUserInfosResponse {
   updateAt: string
   notifications: INotification[]
   isInitialized: boolean
+  name: string
 }

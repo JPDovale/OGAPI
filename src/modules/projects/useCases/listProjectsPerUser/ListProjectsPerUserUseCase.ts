@@ -58,6 +58,9 @@ export class ListProjectsPerUserUseCase {
             username: user.username,
             createAt: user.createAt,
             updateAt: user.updateAt,
+            isInitialized: user.isInitialized,
+            name: user.name,
+            notifications: user.notifications,
           }
 
           usersInfos.push(infoUser)

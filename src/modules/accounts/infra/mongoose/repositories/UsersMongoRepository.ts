@@ -67,10 +67,24 @@ export class UsersMongoRepository implements IUsersRepository {
     return updatedUser
   }
 
-  async updateUsername(id: string, username: string): Promise<IUserMongo> {
+  async updateUser(
+    id: string,
+    username: string,
+    name: string,
+    email: string,
+    age: string,
+    sex: string,
+  ): Promise<IUserMongo> {
     await UserMongo.findOneAndUpdate(
       { id },
-      { username, updateAt: this.dateProvider.getDate(new Date()) },
+      {
+        username,
+        name,
+        email,
+        age,
+        sex,
+        updateAt: this.dateProvider.getDate(new Date()),
+      },
     )
 
     const updatedUser = await UserMongo.findOne({ id })
@@ -99,5 +113,12 @@ export class UsersMongoRepository implements IUsersRepository {
     notifications: INotification[],
   ): Promise<void> {
     await UserMongo.findOneAndUpdate({ id }, { notifications })
+  }
+
+  async updatePassword(id: string, password: string): Promise<void> {
+    await UserMongo.findOneAndUpdate(
+      { id },
+      { password, updateAt: this.dateProvider.getDate(new Date()) },
+    )
   }
 }

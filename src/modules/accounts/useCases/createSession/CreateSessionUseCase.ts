@@ -108,6 +108,7 @@ export class CreateSessionUseCase {
         updateAt: userExiste.updateAt,
         notifications: userExiste.notifications,
         isInitialized: userExiste.isInitialized,
+        name: userExiste.name,
       },
       refreshToken,
       token,

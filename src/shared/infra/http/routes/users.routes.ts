@@ -7,7 +7,8 @@ import { DeleteUserController } from '@modules/accounts/useCases/deleteUser/Dele
 import { GetInfosController } from '@modules/accounts/useCases/getInfos/GetInfosController'
 import { GetUserPerCodeController } from '@modules/accounts/useCases/getUserPerCode/GetUserPerCodeController'
 import { ListUsersController } from '@modules/accounts/useCases/listUsers/ListUsersController'
-import { UsernameUpdateController } from '@modules/accounts/useCases/usernameUpdate/UsernameUpdateController'
+import { PasswordUpdateController } from '@modules/accounts/useCases/passwordUpdate/PasswordUpdateController'
+import { UserUpdateController } from '@modules/accounts/useCases/userUpdate/UserUpdateController'
 
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated'
 import { Uploads } from '../middlewares/upload'
@@ -19,10 +20,11 @@ const listUsersController = new ListUsersController()
 const createUserController = new CreateUserController()
 const deleteUserController = new DeleteUserController()
 const avatarUpdateController = new AvatarUpdateController()
-const usernameUpdateController = new UsernameUpdateController()
+const userUpdateController = new UserUpdateController()
 const createUserPerAdminController = new CreateUserPerAdminController()
 const getUserPerCodeController = new GetUserPerCodeController()
 const getInfosController = new GetInfosController()
+const passwordUpdateController = new PasswordUpdateController()
 
 const uploads = new Uploads('avatar', 'image')
 
@@ -36,8 +38,9 @@ userRoutes.patch(
   uploads.upload.single('file'),
   avatarUpdateController.handle,
 )
-userRoutes.patch('/username', usernameUpdateController.handle)
+userRoutes.patch('/', userUpdateController.handle)
 userRoutes.get('/', getInfosController.handle)
+userRoutes.patch('/password', passwordUpdateController.handle)
 
 userRoutes.use(verifyIsAdmin)
 userRoutes.delete('/:id', deleteUserController.handle)

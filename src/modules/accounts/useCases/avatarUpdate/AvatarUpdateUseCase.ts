@@ -78,6 +78,7 @@ export class AvatarUpdateUseCase {
         notifications: updatedUser.notifications,
         updateAt: updatedUser.updateAt,
         isInitialized: updatedUser.isInitialized,
+        name: updatedUser.name,
       }
 
       fs.rmSync(file.path)
