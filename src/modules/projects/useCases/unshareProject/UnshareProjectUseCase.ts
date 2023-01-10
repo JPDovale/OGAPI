@@ -1,86 +1,56 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
-
-interface IUserRequest {
-  email: string
-  permission: 'view' | 'edit' | 'comment'
-}
-
-interface IResponseError {
-  error: string
-  email: string
-}
 
 @injectable()
 export class UnshareProjectUseCase {
   constructor(
-    @inject('UsersRepository')
-    private readonly usersRepository: IUsersRepository,
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
   async execute(
-    users: IUserRequest[],
+    userEmail: string,
     projectId: string,
     userId: string,
-  ): Promise<IResponseError[]> {
-    const errors: IResponseError[] = []
-
+  ): Promise<IProjectMongo> {
     const project = await this.projectsRepository.findById(projectId)
 
     if (!project) {
-      throw new AppError('O projeto não existe', 404)
+      throw new AppError({
+        title: 'Projeto não encontrado.',
+        message: 'Parece que esse projeto não existe na nossa base de dados...',
+        statusCode: 404,
+      })
     }
 
     const thisProjectAreFromUser = project.createdPerUser === userId
 
     if (!thisProjectAreFromUser) {
-      throw new AppError(
-        'Você não tem permissão para editar o compartilhamento desse projeto, pois ele é de propriedade de outro usuário.',
-        401,
-      )
+      throw new AppError({
+        title: 'Acesso negado!',
+        message: 'Você não tem permissão para alterar o projeto.',
+        statusCode: 401,
+      })
     }
 
-    const usersWithAccess = users.filter((user) => {
-      const shared = project.users.find((u) => u.email === user.email)
-      if (shared) {
-        return true
-      } else {
-        errors.push({
-          email: user.email,
-          error: 'Esse usuário não tem acesso ao projeto',
-        })
-        return false
-      }
-    })
+    const isShared = project.users.find((u) => u.email === userEmail)
 
-    const usersAccessUpdate = project.users.filter((u) => {
-      const userToRemove = usersWithAccess.find(
-        (user) => user.email === u.email,
-      )
+    if (!isShared)
+      throw new AppError({
+        title: 'Esse usuário não tem acesso ao projeto...',
+        message:
+          'Você está tentando remover um usuário que não tem acesso ao projeto...',
+      })
 
-      if (u.id === userId) {
-        errors.push({
-          email: userToRemove.email,
-          error:
-            'Você não pode ser removido de um projeto que criou. Caso não queira mais ver esse projeto, tente apaga-lo',
-        })
-        return true
-      }
+    const usersAccessUpdate = project.users.filter((u) => u.email !== userEmail)
+    const response = await this.projectsRepository.addUsers(
+      usersAccessUpdate,
+      projectId,
+    )
 
-      if (userToRemove) {
-        return false
-      } else {
-        return true
-      }
-    })
-
-    await this.projectsRepository.addUsers(usersAccessUpdate, projectId)
-
-    return errors
+    return response
   }
 }
