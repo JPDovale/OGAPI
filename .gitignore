@@ -5,4 +5,7 @@ tmp/*
 src/config/*.ts
 
 
-./dist
+dist
+.vscode
+
+!temp/.gitkeep

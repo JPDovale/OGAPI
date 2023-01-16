@@ -1,7 +1,7 @@
-import session from 'config/session'
 import { NextFunction, Request, Response } from 'express'
 import { verify } from 'jsonwebtoken'
 
+import session from '@config/session'
 import { AppError } from '@shared/errors/AppError'
 
 interface IPayload {
