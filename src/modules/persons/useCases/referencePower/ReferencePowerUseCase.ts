@@ -26,7 +26,11 @@ export class ReferencePowerUseCase {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
-      throw new AppError('O personagem não existe', 404)
+      throw new AppError({
+        title: 'O personagem não existe',
+        message: 'Parece que esse personagem não existe na nossa base de dados',
+        statusCode: 404,
+      })
     }
 
     const permissionToEditProject = container.resolve(PermissionToEditProject)
@@ -38,27 +42,34 @@ export class ReferencePowerUseCase {
 
     let tags: ITag[]
     tags = project.tags.filter((tag) => tag.type !== 'persons/powers')
-    const tagPowers = project.tags.find(
-      (tag) => tag.type === 'persons/powers',
-    ) as ITag
+    const tagPowers = project.tags.find((tag) => tag.type === 'persons/powers')
 
     if (!tagPowers) {
-      throw new AppError(
-        'Você está tentando referenciar uma tag que não existe...',
-        401,
-      )
+      throw new AppError({
+        title: 'Tag inexistente',
+        message: 'Você está tentando referenciar uma tag que não existe...',
+        statusCode: 404,
+      })
     }
 
     const exiteRef = tagPowers.refs.find((ref) => ref.object.id === refId)
 
     if (!exiteRef) {
-      throw new AppError('Essa referencia não existe... Tente cria-lá', 401)
+      throw new AppError({
+        title: 'Referência inexistente',
+        message: 'Essa referencia não existe... Tente cria-lá',
+        statusCode: 404,
+      })
     }
 
     const personExisteInRef = exiteRef.references.find((id) => id === personId)
 
     if (personExisteInRef) {
-      throw new AppError('Esse personagem já foi adicionado a referencia', 401)
+      throw new AppError({
+        title: 'Referencia criada anteriormente.',
+        message: 'Esse personagem já foi adicionado a referencia',
+        statusCode: 409,
+      })
     }
 
     const addPersonToRef = {

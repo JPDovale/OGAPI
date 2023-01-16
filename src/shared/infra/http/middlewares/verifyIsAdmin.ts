@@ -16,7 +16,11 @@ export async function verifyIsAdmin(
   const authHeader = req.headers.authorization
 
   if (!authHeader) {
-    throw new AppError('Token missing!', 401)
+    throw new AppError({
+      title: 'Token missing!',
+      message: 'Token missing!',
+      statusCode: 401,
+    })
   }
 
   const [, token] = authHeader.split(' ')
@@ -25,11 +29,19 @@ export async function verifyIsAdmin(
     const { admin } = verify(token, session.secretRefreshToken) as IPayload
 
     if (!admin) {
-      throw new AppError('Acesses denied!', 401)
+      throw new AppError({
+        title: 'Acesso negado!',
+        message: 'Acesso negado!',
+        statusCode: 409,
+      })
     }
 
     next()
   } catch {
-    throw new AppError('Invalid token!', 401)
+    throw new AppError({
+      title: 'Acesso negado!',
+      message: 'Token invalido!',
+      statusCode: 409,
+    })
   }
 }

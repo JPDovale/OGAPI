@@ -36,7 +36,11 @@ export class CreateFearUseCase {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
-      throw new AppError('O personagem não existe', 404)
+      throw new AppError({
+        title: 'O personagem não existe',
+        message: 'Parece que esse personagem não existe na nossa base de dados',
+        statusCode: 404,
+      })
     }
 
     const permissionToEditProject = container.resolve(PermissionToEditProject)

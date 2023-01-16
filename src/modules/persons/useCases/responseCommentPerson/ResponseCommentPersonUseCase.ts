@@ -38,7 +38,6 @@ export class ResponseCommentPersonUseCase {
       content,
       userId,
       username: user.username,
-      userAvata: user.avatar,
     })
 
     const comment: IComment = person.comments.find(

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { CommentInPersonController } from '@modules/persons/useCases/commentInPerson/CommentInPersonController'
-import { CreateAppearancesController } from '@modules/persons/useCases/createAppearance/CreateDreamsController'
+import { CreateAppearancesController } from '@modules/persons/useCases/createAppearance/CreateAppearanceController'
 import { CreateCouplesController } from '@modules/persons/useCases/createCouples/CreateCouplesController'
 import { CreateDreamsController } from '@modules/persons/useCases/createDreams/CreateDreamsController'
 import { CreateFearsController } from '@modules/persons/useCases/createFears/CreateFearsController'

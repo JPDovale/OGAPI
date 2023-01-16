@@ -37,7 +37,6 @@ export class CommentInPersonUseCase {
       to,
       userId,
       username: user.username,
-      userAvata: user.avatar,
     })
 
     const comments: IComment[] = [{ ...newComment }, ...person.comments]
