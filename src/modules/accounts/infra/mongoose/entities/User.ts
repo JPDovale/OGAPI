@@ -1,11 +1,12 @@
 import mongoose from 'mongoose'
+import { container } from 'tsyringe'
 
 import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
 
 import { IAvatar } from './Avatar'
 import { INotification } from './Notification'
 
-const dateProvider = new DayJsDateProvider()
+const dateProvider = container.resolve(DayJsDateProvider)
 
 const UserSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -19,6 +20,7 @@ const UserSchema = new mongoose.Schema({
   admin: { type: Boolean, default: false, required: false },
   payed: { type: Boolean, default: false, required: false },
   isInitialized: { type: Boolean, default: false, required: false },
+  isSocialLogin: { type: Boolean, default: false },
   code: { type: String, required: false },
   createAt: {
     type: String,
@@ -45,6 +47,7 @@ export interface IUserMongo {
   admin?: boolean
   payed?: boolean
   isInitialized?: boolean
+  isSocialLogin?: boolean
   code?: string
   createAt?: string
   updateAt?: string

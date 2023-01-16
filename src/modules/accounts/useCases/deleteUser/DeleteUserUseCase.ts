@@ -38,7 +38,7 @@ export class DeleteUserUseCase {
       await this.personsRepository.deletePerUserId(id)
       await this.refreshTokenRepository.deletePerUserId(id)
 
-      if (user.avatar.fileName) {
+      if (user?.avatar?.fileName) {
         await this.storageProvider.delete(user.avatar.fileName, 'avatar')
       }
     } catch (err) {

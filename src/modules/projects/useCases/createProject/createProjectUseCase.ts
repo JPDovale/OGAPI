@@ -52,6 +52,7 @@ export class CreateProjectUseCase {
           {
             id,
             permission: 'edit',
+            email: infoUser.email,
           },
         ],
         plot: new PlotProject({}),

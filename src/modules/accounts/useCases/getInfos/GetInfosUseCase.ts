@@ -33,6 +33,7 @@ export class GetInfosUseCase {
       updateAt: user.updateAt,
       name: user.name,
       isInitialized: user.isInitialized,
+      isSocialLogin: user.isSocialLogin,
     }
 
     return response

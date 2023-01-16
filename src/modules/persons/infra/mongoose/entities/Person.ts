@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { container } from 'tsyringe'
 
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
@@ -15,7 +16,7 @@ import { ITrauma } from './Trauma'
 import { IValue } from './Value'
 import { IWishe } from './Wishe'
 
-const dateProvider = new DayJsDateProvider()
+const dateProvider = container.resolve(DayJsDateProvider)
 
 const PersonSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, replace: false },

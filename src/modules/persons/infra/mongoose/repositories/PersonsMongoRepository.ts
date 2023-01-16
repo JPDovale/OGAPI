@@ -74,7 +74,14 @@ export class PersonsMongoRepository implements IPersonsRepository {
   ): Promise<IPersonMongo> {
     await PersonMongo.findOneAndUpdate(
       { id },
-      { ...person, id, updateAt: this.dateProvider.getDate(new Date()) },
+      {
+        name: person.name,
+        lastName: person.lastName,
+        age: person.age,
+        history: person.history,
+        id,
+        updateAt: this.dateProvider.getDate(new Date()),
+      },
     )
 
     const updatedPerson = await PersonMongo.findOne({ id })

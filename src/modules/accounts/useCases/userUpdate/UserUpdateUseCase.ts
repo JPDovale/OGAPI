@@ -61,6 +61,7 @@ export class UserUpdateUseCase {
         updateAt: updatedUser.updateAt,
         isInitialized: user.isInitialized,
         name: updatedUser.name,
+        isSocialLogin: user.isSocialLogin,
       }
 
       return response

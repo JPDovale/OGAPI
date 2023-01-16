@@ -1,8 +1,9 @@
+import { container } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
 import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
 
-const dateProvider = new DayJsDateProvider()
+const dateProvider = container.resolve(DayJsDateProvider)
 
 export interface IComment {
   userId: string

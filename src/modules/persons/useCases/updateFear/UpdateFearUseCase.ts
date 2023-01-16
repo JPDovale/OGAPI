@@ -26,21 +26,26 @@ export class UpdateFearUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
     const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project, permission } = await permissionToEditProject.verify(
       userId,
       person.defaultProject,
       'edit',
     )
 
     if (!person) {
-      throw new AppError('O personagem não existe', 404)
+      throw new AppError({
+        title: 'O personagem não existe',
+        message: 'Você está tentando atualizar um personagem que não existe.',
+        statusCode: 404,
+      })
     }
 
-    if (person.fromUser !== userId) {
-      throw new AppError(
-        'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
-        404,
-      )
+    if (permission !== 'edit') {
+      throw new AppError({
+        title: 'Você não tem permissão para atualizar o personagem',
+        message: 'Você está tentando atualizar um personagem que não existe.',
+        statusCode: 401,
+      })
     }
 
     const filteredFears = person.fears.filter((fear) => fear.id !== fearId)

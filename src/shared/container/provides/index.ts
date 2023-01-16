@@ -15,6 +15,6 @@ container.registerSingleton<IStorageProvider>(
 )
 
 container.registerSingleton<INotifyUsersProvider>(
-  'NotifyUserProvider',
+  'NotifyUsersProvider',
   NotifyUsersProvider,
 )

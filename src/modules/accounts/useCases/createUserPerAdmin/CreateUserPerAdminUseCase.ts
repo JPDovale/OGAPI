@@ -46,7 +46,9 @@ export class CreateUserPerAdminUseCase {
         notifications: newUser.notifications,
         updateAt: newUser.updateAt,
         name: newUser.name,
+        code,
         isInitialized: newUser.isInitialized,
+        isSocialLogin: newUser.isSocialLogin,
       }
 
       return response

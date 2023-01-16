@@ -1,8 +1,9 @@
 import mongoose from 'mongoose'
+import { container } from 'tsyringe'
 
 import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
 
-const dateProvider = new DayJsDateProvider()
+const dateProvider = container.resolve(DayJsDateProvider)
 
 const RefreshToken = new mongoose.Schema({
   id: { type: String, required: true },

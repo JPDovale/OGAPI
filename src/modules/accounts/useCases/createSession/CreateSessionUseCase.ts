@@ -109,6 +109,7 @@ export class CreateSessionUseCase {
         notifications: userExiste.notifications,
         isInitialized: userExiste.isInitialized,
         name: userExiste.name,
+        isSocialLogin: userExiste.isSocialLogin,
       },
       refreshToken,
       token,

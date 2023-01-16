@@ -12,5 +12,7 @@ export interface IUserInfosResponse {
   updateAt: string
   notifications: INotification[]
   isInitialized: boolean
+  isSocialLogin: boolean
   name: string
+  code?: string
 }

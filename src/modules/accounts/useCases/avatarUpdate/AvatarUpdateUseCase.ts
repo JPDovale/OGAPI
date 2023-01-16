@@ -79,6 +79,7 @@ export class AvatarUpdateUseCase {
         updateAt: updatedUser.updateAt,
         isInitialized: updatedUser.isInitialized,
         name: updatedUser.name,
+        isSocialLogin: updatedUser.isSocialLogin,
       }
 
       fs.rmSync(file.path)

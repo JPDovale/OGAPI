@@ -44,4 +44,17 @@ export class RefreshTokenRepositoryInMemory implements IRefreshTokenRepository {
 
     this.userTokens = filteredTokens
   }
+
+  async deletePerUserId(userId: string): Promise<void> {
+    const filteredTokens = this.userTokens.filter(
+      (token) => token.userId !== userId,
+    )
+
+    this.userTokens = filteredTokens
+  }
+
+  async findByUserId(id: string): Promise<IRefreshTokenMongo[]> {
+    const refreshTokens = this.userTokens.filter((token) => token.userId === id)
+    return refreshTokens
+  }
 }

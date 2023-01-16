@@ -1,4 +1,3 @@
-import { storage } from 'config/storage'
 import {
   deleteObject,
   getDownloadURL,
@@ -6,6 +5,8 @@ import {
   uploadBytesResumable,
 } from 'firebase/storage'
 import fs from 'fs'
+
+import { storage } from '@config/storage'
 
 import { IStorageProvider } from '../IStorageProvider'
 

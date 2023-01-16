@@ -22,7 +22,7 @@ export class ImageUpdateUseCase {
     private readonly storageProvider: IStorageProvider,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-    @inject('NotifyUserProvider')
+    @inject('NotifyUsersProvider')
     private readonly notifyUsersProvider: INotifyUsersProvider,
   ) {}
 

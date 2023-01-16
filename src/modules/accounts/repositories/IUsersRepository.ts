@@ -9,7 +9,7 @@ export interface IUsersRepository {
   create: (dataUserObj: ICreateUserDTO) => Promise<IUserMongo>
   findById: (userId: string) => Promise<IUserMongo>
   delete: (id: string) => Promise<void>
-  updateAvatar: (userId: string, url: IAvatar) => Promise<IUserMongo>
+  updateAvatar: (userId: string, avatar: IAvatar) => Promise<IUserMongo>
   updateUser: (
     userId: string,
     username: string,

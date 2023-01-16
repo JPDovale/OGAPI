@@ -16,8 +16,18 @@ export class UsersMongoRepository implements IUsersRepository {
   ) {}
 
   async create(dataUserObj: ICreateUserDTO): Promise<IUserMongo> {
-    const { name, email, age, password, sex, username, isInitialized, code } =
-      dataUserObj
+    const {
+      name,
+      email,
+      age,
+      password,
+      sex,
+      username,
+      isInitialized,
+      isSocialLogin,
+      code,
+      avatar,
+    } = dataUserObj
 
     const mocUser = new UserMongo({
       id: uuidV4(),
@@ -28,7 +38,9 @@ export class UsersMongoRepository implements IUsersRepository {
       sex,
       username,
       isInitialized,
+      isSocialLogin,
       code,
+      avatar,
     })
 
     const user = await mocUser.save()

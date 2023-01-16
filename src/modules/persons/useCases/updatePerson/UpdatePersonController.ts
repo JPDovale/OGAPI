@@ -16,7 +16,7 @@ export class UpdatePersonController {
       age: person.age,
       history: person.history,
       lastName: person.lastName,
-      name: person.lastName,
+      name: person.name,
     })
 
     return res.status(200).json(personUpdated)

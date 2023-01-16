@@ -20,14 +20,20 @@ export class UpdatePersonUseCase {
     const personExite = await this.personsRepository.findById(personId)
 
     if (!personExite) {
-      throw new AppError('O personagem não exite', 404)
+      throw new AppError({
+        title: 'Personagem não encontrado.',
+        message:
+          'Parece que esse personagem não existe na nossa base de dados...',
+        statusCode: 404,
+      })
     }
 
     if (personExite.fromUser !== userId) {
-      throw new AppError(
-        'Você não tem permissão para alterar esse personagem',
-        404,
-      )
+      throw new AppError({
+        title: 'Acesso negado!',
+        message: 'Você não tem permissão para alterar o projeto.',
+        statusCode: 401,
+      })
     }
 
     const updatedPerson = await this.personsRepository.updatePerson(

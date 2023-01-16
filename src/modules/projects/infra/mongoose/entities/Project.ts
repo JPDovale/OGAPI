@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { container } from 'tsyringe'
 
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
@@ -6,7 +7,7 @@ import { DayJsDateProvider } from '@shared/container/provides/DateProvider/imple
 import { IPlotProject } from './Plot'
 import { ITag } from './Tag'
 
-const dateProvider = new DayJsDateProvider()
+const dateProvider = container.resolve(DayJsDateProvider)
 
 const ProjectSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },

@@ -38,6 +38,7 @@ describe('refresh token', () => {
     refreshTokenUseCase = new RefreshTokenUseCase(
       refreshTokenRepository,
       dateProvider,
+      usersRepository,
     )
   })
 
@@ -56,12 +57,9 @@ describe('refresh token', () => {
       password: 'password',
     })
 
-    const token = await refreshTokenUseCase.execute(refreshToken)
+    const { token } = await refreshTokenUseCase.execute(refreshToken)
 
-    const { sub: userId } = verify(
-      token,
-      session.secretRefreshToken,
-    ) as IPayload
+    const { sub: userId } = verify(token, session.secretToken) as IPayload
 
     expect(userId).toEqual(user.id)
   })

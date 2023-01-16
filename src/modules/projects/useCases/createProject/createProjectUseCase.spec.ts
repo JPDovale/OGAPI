@@ -36,10 +36,11 @@ describe('Create new project', () => {
       type: 'book',
       createdPerUser: user.id,
       users: [],
+      plot: {},
     }
 
     const newProject = await createProjectUseCase.execute({
-      project: { ...newProjectTest },
+      project: newProjectTest,
       user: {
         id: user.id,
       },

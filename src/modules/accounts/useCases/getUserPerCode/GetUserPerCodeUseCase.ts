@@ -29,7 +29,7 @@ export class GetUserPerCodeUseCase {
 
     if (userAlreadyExiste) {
       throw new AppError({
-        title: 'O email está sendo usado por outro usuário;',
+        title: 'O email está sendo usado por outro usuário.',
         message:
           'Parece que alguém já está usando esse email. Por favor tente outro.',
       })
@@ -45,6 +45,7 @@ export class GetUserPerCodeUseCase {
       username: username || name,
       name,
       code: ' ',
+      isInitialized: true,
     }
 
     try {
