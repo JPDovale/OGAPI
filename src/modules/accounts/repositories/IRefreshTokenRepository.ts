@@ -14,4 +14,8 @@ export interface IRefreshTokenRepository {
   ) => Promise<IRefreshTokenMongo>
 
   deleteById: (refreshTokenId: string) => Promise<void>
+
+  deletePerUserId: (userId: string) => Promise<void>
+
+  findByUserId: (userId: string) => Promise<IRefreshTokenMongo[]>
 }

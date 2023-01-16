@@ -1,3 +1,5 @@
+import { IAvatar } from '../infra/mongoose/entities/Avatar'
+
 export interface ICreateUserDTO {
   name: string
   email: string
@@ -5,4 +7,8 @@ export interface ICreateUserDTO {
   sex: string
   age: string
   username: string
+  isInitialized?: boolean
+  isSocialLogin?: boolean
+  code?: string
+  avatar?: IAvatar
 }

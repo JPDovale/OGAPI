@@ -11,6 +11,7 @@
       "@middlewares/*": ["middlewares/*"],
       "@modules/*": ["modules/*"],
       "@routes/*": ["routes/*"],
+      "@config/*": ["config/*"],
       "@shared/*": ["shared/*"]
     },                                     
     "resolveJsonModule": true,                       

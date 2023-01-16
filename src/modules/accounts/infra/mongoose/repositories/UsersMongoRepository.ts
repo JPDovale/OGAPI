@@ -1,39 +1,51 @@
+import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
-import { AppError } from '@shared/errors/AppError'
+import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 
+import { IAvatar } from '../entities/Avatar'
+import { INotification } from '../entities/Notification'
 import { IUserMongo, UserMongo } from '../entities/User'
-
+@injectable()
 export class UsersMongoRepository implements IUsersRepository {
+  constructor(
+    @inject('DateProvider')
+    private readonly dateProvider: IDateProvider,
+  ) {}
+
   async create(dataUserObj: ICreateUserDTO): Promise<IUserMongo> {
-    const { name, email, age, password, sex, username } = dataUserObj
+    const {
+      name,
+      email,
+      age,
+      password,
+      sex,
+      username,
+      isInitialized,
+      isSocialLogin,
+      code,
+      avatar,
+    } = dataUserObj
 
-    if (!name || !email || !password) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
+    const mocUser = new UserMongo({
+      id: uuidV4(),
+      name,
+      email,
+      age,
+      password,
+      sex,
+      username,
+      isInitialized,
+      isSocialLogin,
+      code,
+      avatar,
+    })
 
-    try {
-      const mocUser = new UserMongo({
-        id: uuidV4(),
-        name,
-        email,
-        age,
-        password,
-        sex,
-        username,
-      })
+    const user = await mocUser.save()
 
-      const user = await mocUser.save()
-
-      return user
-    } catch (err) {
-      throw new AppError('Internal error', 500)
-    }
+    return user
   }
 
   async list(): Promise<IUserMongo[]> {
@@ -43,50 +55,82 @@ export class UsersMongoRepository implements IUsersRepository {
   }
 
   async findByEmail(email: string): Promise<IUserMongo> {
-    if (!email) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
+    const user = await UserMongo.findOne({ email })
 
-    try {
-      const user = await UserMongo.findOne({ email })
-
-      return user
-    } catch (err) {
-      throw new AppError('Internal error', 500)
-    }
+    return user
   }
 
-  async findById(userId: string): Promise<IUserMongo> {
-    if (!userId) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
-
-    try {
-      const user = await UserMongo.findOne({ id: userId })
-      return user
-    } catch (err) {
-      throw new AppError('Internal error', 500)
-    }
+  async findById(id: string): Promise<IUserMongo> {
+    const user = await UserMongo.findOne({ id })
+    return user
   }
 
-  async delete(userId: string): Promise<void> {
-    if (!userId) {
-      throw new AppError(
-        'Algumas informações estão ausentes na requisição, porem são indispensáveis para o funcionamento.',
-        409,
-      )
-    }
+  async delete(id: string): Promise<void> {
+    await UserMongo.deleteOne({ id })
+  }
 
-    try {
-      await UserMongo.deleteOne({ id: userId })
-    } catch (err) {
-      throw new AppError('Internal error', 500)
-    }
+  async updateAvatar(id: string, avatar: IAvatar): Promise<IUserMongo> {
+    await UserMongo.findOneAndUpdate(
+      { id },
+      { avatar, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+
+    const updatedUser = await UserMongo.findOne({ id })
+    return updatedUser
+  }
+
+  async updateUser(
+    id: string,
+    username: string,
+    name: string,
+    email: string,
+    age: string,
+    sex: string,
+  ): Promise<IUserMongo> {
+    await UserMongo.findOneAndUpdate(
+      { id },
+      {
+        username,
+        name,
+        email,
+        age,
+        sex,
+        updateAt: this.dateProvider.getDate(new Date()),
+      },
+    )
+
+    const updatedUser = await UserMongo.findOne({ id })
+    return updatedUser
+  }
+
+  async findByUsername(username: string): Promise<IUserMongo> {
+    const userExiste = await UserMongo.findOne({ username })
+    return userExiste
+  }
+
+  async findByCode(code: string): Promise<IUserMongo> {
+    const userExiste = await UserMongo.findOne({ code })
+    return userExiste
+  }
+
+  async getUser(id: string, updatedInfos: ICreateUserDTO): Promise<IUserMongo> {
+    await UserMongo.findOneAndUpdate({ id }, { ...updatedInfos })
+
+    const getUser = await UserMongo.findOne({ id })
+    return getUser
+  }
+
+  async updateNotifications(
+    id: string,
+    notifications: INotification[],
+  ): Promise<void> {
+    await UserMongo.findOneAndUpdate({ id }, { notifications })
+  }
+
+  async updatePassword(id: string, password: string): Promise<void> {
+    await UserMongo.findOneAndUpdate(
+      { id },
+      { password, updateAt: this.dateProvider.getDate(new Date()) },
+    )
   }
 }

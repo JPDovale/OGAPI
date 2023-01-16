@@ -1,11 +1,21 @@
 import mongoose from 'mongoose'
+import { container } from 'tsyringe'
+
+import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+
+const dateProvider = container.resolve(DayJsDateProvider)
 
 const RefreshToken = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  refreshToken: { type: String, required: true, unique: true },
+  id: { type: String, required: true },
+  refreshToken: { type: String, required: true },
   userId: { type: String, required: true },
   expiresDate: { type: String, required: true },
-  createAt: { type: String, required: true, default: new Date() },
+  application: { type: String, required: true, default: 'OG-web' },
+  createAt: {
+    type: String,
+    required: true,
+    default: dateProvider.getDate(new Date()),
+  },
 })
 
 export interface IRefreshTokenMongo {
@@ -13,6 +23,7 @@ export interface IRefreshTokenMongo {
   refreshToken: string
   userId: string
   expiresDate: string
+  application?: 'OG-web' | 'OG-mobile' | string
   createAt?: string
 }
 

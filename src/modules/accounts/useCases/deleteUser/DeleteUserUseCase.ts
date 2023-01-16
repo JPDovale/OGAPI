@@ -1,6 +1,10 @@
 import { inject, injectable } from 'tsyringe'
 
+import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()
@@ -8,19 +12,43 @@ export class DeleteUserUseCase {
   constructor(
     @inject('UsersRepository')
     private readonly usersRepository: IUsersRepository,
+    @inject('StorageProvider')
+    private readonly storageProvider: IStorageProvider,
+    @inject('ProjectsRepository')
+    private readonly projectsRepository: IProjectsRepository,
+    @inject('PersonsRepository')
+    private readonly personsRepository: IPersonsRepository,
+    @inject('RefreshTokenRepository')
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
   ) {}
 
   async execute(id: string): Promise<void> {
     const user = await this.usersRepository.findById(id)
 
-    if (!user) {
-      throw new AppError('User not found', 404)
-    }
+    if (!user)
+      throw new AppError({
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
+      })
 
     try {
       await this.usersRepository.delete(id)
+      await this.projectsRepository.deletePerUserId(id)
+      await this.personsRepository.deletePerUserId(id)
+      await this.refreshTokenRepository.deletePerUserId(id)
+
+      if (user?.avatar?.fileName) {
+        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
+      }
     } catch (err) {
-      throw new AppError('Não foi possível deletar o usuário', 500)
+      console.log(err)
+
+      throw new AppError({
+        title: 'Internal error',
+        message: 'Try again later.',
+        statusCode: 500,
+      })
     }
   }
 }

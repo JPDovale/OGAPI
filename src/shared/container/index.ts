@@ -7,6 +7,8 @@ import { RefreshTokenRepository } from '@modules/accounts/infra/mongoose/reposit
 import { UsersMongoRepository } from '@modules/accounts/infra/mongoose/repositories/UsersMongoRepository'
 import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { PersonsMongoRepository } from '@modules/persons/infra/mongoose/repositories/PersonsMongoRepository'
+import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { ProjectsMongoRepository } from '@modules/projects/infra/mongoose/repositories/ProjectsMongoRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 
@@ -23,4 +25,9 @@ container.registerSingleton<IProjectsRepository>(
 container.registerSingleton<IRefreshTokenRepository>(
   'RefreshTokenRepository',
   RefreshTokenRepository,
+)
+
+container.registerSingleton<IPersonsRepository>(
+  'PersonsRepository',
+  PersonsMongoRepository,
 )
