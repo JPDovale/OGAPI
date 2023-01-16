@@ -16,7 +16,11 @@ export class Uploads {
         filename: (req, file, callback) => {
           crypto.randomBytes(16, (err, hash) => {
             if (err) {
-              return new AppError('Não foi possível realizar o upload', 500)
+              return new AppError({
+                title: 'Não foi possível realizar o upload',
+                message: 'Não foi possível realizar o upload',
+                statusCode: 500,
+              })
             }
 
             const fileName = `${hash.toString('hex')}-${req.user.id}`
@@ -38,7 +42,13 @@ export class Uploads {
         if (allow.includes(file.mimetype)) {
           callback(null, true)
         } else {
-          callback(new AppError('Tipo de arquivo invalido.', 500))
+          callback(
+            new AppError({
+              title: 'Tipo de arquivo invalido.',
+              message: 'Tipo de arquivo invalido.',
+              statusCode: 500,
+            }),
+          )
         }
       },
     })

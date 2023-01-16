@@ -30,14 +30,20 @@ export class DeleteFearUseCase {
     )
 
     if (!person) {
-      throw new AppError('O personagem não existe', 404)
+      throw new AppError({
+        title: 'O personagem não existe',
+        message: 'Parece que esse personagem não existe na nossa base de dados',
+        statusCode: 404,
+      })
     }
 
     if (person.fromUser !== userId) {
-      throw new AppError(
-        'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
-        404,
-      )
+      throw new AppError({
+        title: 'Permissão de alteração invalida.',
+        message:
+          'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
+        statusCode: 401,
+      })
     }
 
     const filteredFears = person.fears.filter((fear) => fear.id !== fearId)

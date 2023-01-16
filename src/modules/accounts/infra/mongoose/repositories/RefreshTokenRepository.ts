@@ -50,4 +50,9 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
   async deletePerUserId(userId: string): Promise<void> {
     await RefreshTokenMongo.deleteMany({ userId })
   }
+
+  async findByUserId(userId: string): Promise<IRefreshTokenMongo[]> {
+    const tokens = await RefreshTokenMongo.find({ userId })
+    return tokens
+  }
 }

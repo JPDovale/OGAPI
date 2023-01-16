@@ -14,10 +14,12 @@ export class RateLimiter {
         return req.ip
       },
       handler(_, res: Response): void {
-        throw new AppError(
-          'Você fez muitas alterações em um período muito curto de tempo. Aguarde e tente novamente mais tarde.',
-          429,
-        )
+        throw new AppError({
+          title: 'Limite de requisições ultrapassado',
+          message:
+            'Você fez muitas alterações em um período muito curto de tempo. Aguarde e tente novamente mais tarde.',
+          statusCode: 429,
+        })
       },
     })
   }

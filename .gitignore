@@ -5,3 +5,4 @@ tmp/*
 src/config/*.ts
 
 
+./dist

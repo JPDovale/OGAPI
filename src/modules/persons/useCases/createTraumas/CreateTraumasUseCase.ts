@@ -38,7 +38,12 @@ export class CreateTraumaUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) throw new AppError('O personagem não existe.', 404)
+    if (!person)
+      throw new AppError({
+        title: 'O personagem não existe',
+        message: 'Parece que esse personagem não existe na nossa base de dados',
+        statusCode: 404,
+      })
 
     const permissionToEditProject = container.resolve(PermissionToEditProject)
     const { project } = await permissionToEditProject.verify(

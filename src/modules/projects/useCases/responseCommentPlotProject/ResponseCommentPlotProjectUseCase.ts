@@ -5,6 +5,7 @@ import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepositor
 import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
 import {
   Comment,
+  IComment,
   Response,
 } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
@@ -39,17 +40,16 @@ export class ResponseCommentPlotProjectUseCase {
       content,
       userId,
       username: user.username,
-      userAvata: user.avatar,
     })
 
-    const comment: Comment = project.plot.comments.find(
+    const comment: IComment = project.plot.comments.find(
       (comment: Comment) => comment.id === commentId,
     )
     const filteredComments = project.plot.comments.filter(
       (comment: Comment) => comment.id !== commentId,
     ) as Comment[]
 
-    const updatedComment: Comment = {
+    const updatedComment: IComment = {
       ...comment,
       responses: [newResponse, ...comment.responses],
     }
@@ -60,6 +60,8 @@ export class ResponseCommentPlotProjectUseCase {
       const newNotification = new Notification({
         title: `${user.username} respondeu seu comentário`,
         content: `${user.username} respondeu seu comentário em |${comment.to}: ${newResponse.content}`,
+        projectId: project.id,
+        sendedPerUser: user.id,
       })
 
       const notificationsUpdated = [
@@ -86,6 +88,8 @@ export class ResponseCommentPlotProjectUseCase {
           const newNotification = new Notification({
             title: `${user.username} respondeu ao próprio comentário`,
             content: `${user.username} respondeu ao próprio comentário em |${comment.to}: ${newResponse.content}`,
+            projectId: project.id,
+            sendedPerUser: user.id,
           })
 
           const notificationsUpdated = [
