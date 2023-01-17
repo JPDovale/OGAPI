@@ -17,7 +17,12 @@ getConnectionMongoDb()
     throw err
   })
 
-app.use(cors())
+app.use(
+  cors({
+    allowedHeaders: ['Access-Control-Allow-Origin', 'Access-Control'],
+    origin: '*',
+  }),
+)
 app.use(express.json())
 
 app.use(router)
