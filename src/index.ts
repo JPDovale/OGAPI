@@ -3,12 +3,11 @@ import express, { NextFunction, Request, Response } from 'express'
 import 'express-async-errors'
 import 'reflect-metadata'
 
-import '../../container'
+import '@shared/container'
 
 import { AppError } from '@shared/errors/AppError'
+import { router } from '@shared/infra/http/routes'
 import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
-
-import { router } from './routes'
 
 const app = express()
 
@@ -30,7 +29,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     })
   }
 
-  throw err
   return res.status(500).json(err)
 })
 

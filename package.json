@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "application": "npm run build && node ./opt/render/project/src/shared/infra/http/index.js",
+    "publish": "npm i && npm run build",
+    "application": "node index.js",
     "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
     "dev": "ts-node-dev -r tsconfig-paths/register --poll --inspect --transpile-only --ignore-watch node_modules --respawn src/shared/infra/http/index.ts",
     "test": "jest",
