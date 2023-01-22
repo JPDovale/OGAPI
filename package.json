@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "publish": "npm i && npm run build",
-    "application": "node dist/shared/infra/http/index.js",
+    "application": "node shared/infra/http/index.js",
     "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
     "dev": "ts-node-dev -r tsconfig-paths/register --poll --inspect --transpile-only --ignore-watch node_modules --respawn src/shared/infra/http/index.ts",
     "test": "jest",

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import handlebars from 'handlebars'
-import fs from 'node:fs'
+import fs from 'fs'
 import nodemailer, { Transporter } from 'nodemailer'
 import { injectable } from 'tsyringe'
 

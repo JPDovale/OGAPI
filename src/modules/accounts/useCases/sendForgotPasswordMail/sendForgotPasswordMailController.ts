@@ -1,4 +1,4 @@
-import path from 'node:path'
+import path from 'path'
 import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
