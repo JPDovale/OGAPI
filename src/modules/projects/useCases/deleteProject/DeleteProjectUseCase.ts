@@ -1,6 +1,5 @@
 import { inject, injectable } from 'tsyringe'
 
-import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'

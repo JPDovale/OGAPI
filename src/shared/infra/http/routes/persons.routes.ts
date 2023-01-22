@@ -16,6 +16,7 @@ import { DeleteAppearanceController } from '@modules/persons/useCases/deleteAppe
 import { DeleteCoupleController } from '@modules/persons/useCases/deleteCouple/DeleteCoupleController'
 import { DeleteDreamController } from '@modules/persons/useCases/deleteDream/DeleteDreamController'
 import { DeleteFearController } from '@modules/persons/useCases/deleteFear/DeleteFearController'
+import { DeleteImagePersonController } from '@modules/persons/useCases/deleteImagePerson/DeleteImagePersonController'
 import { DeleteObjectiveController } from '@modules/persons/useCases/deleteObjective/DeleteObjectiveController'
 import { DeletePersonController } from '@modules/persons/useCases/deletePerson/DeletePersonController'
 import { DeletePersonalityController } from '@modules/persons/useCases/deletePersonality/DeletePersonalityController'
@@ -98,6 +99,7 @@ const updatePowersController = new UpdatePowerController()
 const createCouplesController = new CreateCouplesController()
 const updateCouplesController = new UpdateCoupleController()
 const deleteCoupleController = new DeleteCoupleController()
+const deleteImagePersonController = new DeleteImagePersonController()
 
 const uploads = new Uploads('persons', 'image')
 
@@ -112,6 +114,7 @@ personsRoutes.patch(
   uploads.upload.single('file'),
   updateImagePersonController.handle,
 )
+personsRoutes.delete('/image/:personId', deleteImagePersonController.handle)
 
 personsRoutes.post('/objectives', createObjectivesController.handle)
 personsRoutes.patch(

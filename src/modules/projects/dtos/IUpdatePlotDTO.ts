@@ -10,6 +10,7 @@ export interface IUpdatePlotDTO {
   details?: string
   summary?: string
   persons?: string[]
+  urlOfText?: string
   structure?: {
     act1?: string
     act2?: string

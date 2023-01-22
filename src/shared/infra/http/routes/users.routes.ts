@@ -3,12 +3,15 @@ import { Router } from 'express'
 import { AvatarUpdateController } from '@modules/accounts/useCases/avatarUpdate/AvatarUpdateController'
 import { CreateUserController } from '@modules/accounts/useCases/createUser/CreateUserController'
 import { CreateUserPerAdminController } from '@modules/accounts/useCases/createUserPerAdmin/CreateUserPerAdminController'
+import { DeleteAvatarController } from '@modules/accounts/useCases/deleteAvatar/DeleteAvatarController'
 import { DeleteUserController } from '@modules/accounts/useCases/deleteUser/DeleteUserController'
 import { GetInfosController } from '@modules/accounts/useCases/getInfos/GetInfosController'
 import { GetUserPerCodeController } from '@modules/accounts/useCases/getUserPerCode/GetUserPerCodeController'
 import { ListUsersController } from '@modules/accounts/useCases/listUsers/ListUsersController'
 import { LogoutController } from '@modules/accounts/useCases/logout/LogoutController'
 import { PasswordUpdateController } from '@modules/accounts/useCases/passwordUpdate/PasswordUpdateController'
+import { RecoveryPasswordController } from '@modules/accounts/useCases/recoveryPassword/RecoveryPasswordController'
+import { SendForgotPasswordMailController } from '@modules/accounts/useCases/sendForgotPasswordMail/sendForgotPasswordMailUseCase'
 import { UserUpdateController } from '@modules/accounts/useCases/userUpdate/UserUpdateController'
 
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated'
@@ -27,11 +30,16 @@ const getUserPerCodeController = new GetUserPerCodeController()
 const getInfosController = new GetInfosController()
 const passwordUpdateController = new PasswordUpdateController()
 const logoutController = new LogoutController()
+const deleteAvatarController = new DeleteAvatarController()
+const sendForgotPasswordMailController = new SendForgotPasswordMailController()
+const recoveryPasswordController = new RecoveryPasswordController()
 
 const uploads = new Uploads('avatar', 'image')
 
 userRoutes.post('/', createUserController.handle)
 userRoutes.post('/init', getUserPerCodeController.handle)
+userRoutes.post('/password/forgot', sendForgotPasswordMailController.handle)
+userRoutes.post('/password/recovery', recoveryPasswordController.handle)
 
 userRoutes.use(ensureAuthenticated)
 userRoutes.patch('/logout', logoutController.handle)
@@ -45,6 +53,7 @@ userRoutes.patch(
 userRoutes.patch('/', userUpdateController.handle)
 userRoutes.get('/', getInfosController.handle)
 userRoutes.patch('/password', passwordUpdateController.handle)
+userRoutes.delete('/avatar', deleteAvatarController.handle)
 
 userRoutes.use(verifyIsAdmin)
 userRoutes.delete('/:id', deleteUserController.handle)

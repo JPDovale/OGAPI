@@ -37,7 +37,7 @@ export class AvatarUpdateUseCase {
           statusCode: 404,
         })
 
-      if (user.avatar.fileName) {
+      if (user?.avatar?.fileName) {
         await this.storageProvider.delete(user.avatar.fileName, 'avatar')
       }
 

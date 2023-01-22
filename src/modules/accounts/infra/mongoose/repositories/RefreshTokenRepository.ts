@@ -1,7 +1,10 @@
 import { v4 as uuidV4 } from 'uuid'
 
 import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
-import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
+import {
+  IFindByRefreshToken,
+  IRefreshTokenRepository,
+} from '@modules/accounts/repositories/IRefreshTokenRepository'
 
 import { IRefreshTokenMongo, RefreshTokenMongo } from '../entities/RefreshToken'
 
@@ -54,5 +57,14 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
   async findByUserId(userId: string): Promise<IRefreshTokenMongo[]> {
     const tokens = await RefreshTokenMongo.find({ userId })
     return tokens
+  }
+
+  async findByRefreshToken({
+    refreshToken,
+  }: IFindByRefreshToken): Promise<IRefreshTokenMongo> {
+    const token = await RefreshTokenMongo.findOne({
+      refreshToken,
+    })
+    return token
   }
 }

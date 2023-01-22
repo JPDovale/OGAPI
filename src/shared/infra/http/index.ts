@@ -1,4 +1,5 @@
 import cors from 'cors'
+import dotenv from 'dotenv'
 import express, { NextFunction, Request, Response } from 'express'
 import 'express-async-errors'
 import 'reflect-metadata'
@@ -8,22 +9,23 @@ import '@shared/container'
 import { AppError } from '@shared/errors/AppError'
 import { router } from '@shared/infra/http/routes'
 import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
+dotenv.config()
 
 const app = express()
+
+app.use(
+  cors({
+    allowedHeaders: '*',
+    origin: '*',
+  }),
+)
+app.use(express.json())
 
 getConnectionMongoDb()
   .then(() => console.log('Database connected'))
   .catch((err) => {
     throw err
   })
-
-app.use(
-  cors({
-    allowedHeaders: ['Access-Control-Allow-Origin', 'Access-Control'],
-    origin: '*',
-  }),
-)
-app.use(express.json())
 
 app.use(router)
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

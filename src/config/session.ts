@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 export default {
   secretToken: '398d784bcfc5ada86652d5f127d1350d',
   expiresInToken: '10m',

@@ -46,7 +46,7 @@ export class Uploads {
             new AppError({
               title: 'Tipo de arquivo invalido.',
               message: 'Tipo de arquivo invalido.',
-              statusCode: 500,
+              statusCode: 415,
             }),
           )
         }
