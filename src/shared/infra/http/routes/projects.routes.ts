@@ -7,6 +7,7 @@ import { DeleteProjectController } from '@modules/projects/useCases/deleteProjec
 import { ImageUpdateController } from '@modules/projects/useCases/imageUpdate/ImageUpdateController'
 import { ListProjectsPerUserController } from '@modules/projects/useCases/listProjectsPerUser/ListProjectsPerUserController'
 import { PlotUpdateController } from '@modules/projects/useCases/plotUpdate/PlotUpdateController'
+import { QuitProjectController } from '@modules/projects/useCases/quitProject/QuitProjectController'
 import { ResponseCommentPlotProjectController } from '@modules/projects/useCases/responseCommentPlotProject/ResponseCommentPlotProjectController'
 import { ShareProjectController } from '@modules/projects/useCases/shareProject/ShareProjectController'
 import { UnshareProjectController } from '@modules/projects/useCases/unshareProject/UnshareProjectController'
@@ -26,6 +27,7 @@ const plotUpdateController = new PlotUpdateController()
 const commentInPlotProjectController = new CommentInPlotProjectController()
 const responseCommentPlotProject = new ResponseCommentPlotProjectController()
 const deleteImageController = new DeleteImageController()
+const quitProjectController = new QuitProjectController()
 
 const uploads = new Uploads('projects', 'image')
 
@@ -47,3 +49,4 @@ projectsRoutes.post(
   '/plot/comments/response',
   responseCommentPlotProject.handle,
 )
+projectsRoutes.put('/quit', quitProjectController.handle)

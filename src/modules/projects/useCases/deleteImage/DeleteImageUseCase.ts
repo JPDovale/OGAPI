@@ -29,44 +29,32 @@ export class DeleteImageUseCase {
       'edit',
     )
 
-    try {
-      if (!project?.image.fileName) {
-        throw new AppError({
-          title: 'Image não encontrada.',
-          message: 'Não existe uma imagem para esse projeto.',
-          statusCode: 404,
-        })
-      }
-
-      const updatedProject = await this.projectsRepository.updateImage(
-        {
-          fileName: '',
-          url: '',
-          createdAt: this.dateProvider.getDate(new Date()),
-        },
-        projectId,
-      )
-
-      await this.storageProvider.delete(
-        project.image.fileName,
-        'projects/images',
-      )
-
-      await this.notifyUsersProvider.notify(
-        user,
-        project,
-        `${user.username} deletou a imagem do projeto.`,
-        `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
-      )
-
-      return updatedProject
-    } catch (err) {
-      console.log(err)
+    if (!project?.image.fileName) {
       throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
+        title: 'Image não encontrada.',
+        message: 'Não existe uma imagem para esse projeto.',
+        statusCode: 404,
       })
     }
+
+    const updatedProject = await this.projectsRepository.updateImage(
+      {
+        fileName: '',
+        url: '',
+        createdAt: this.dateProvider.getDate(new Date()),
+      },
+      projectId,
+    )
+
+    await this.storageProvider.delete(project.image.fileName, 'projects/images')
+
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} deletou a imagem do projeto.`,
+      `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
+    )
+
+    return updatedProject
   }
 }

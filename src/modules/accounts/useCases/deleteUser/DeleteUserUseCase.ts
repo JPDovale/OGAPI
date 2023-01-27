@@ -32,23 +32,13 @@ export class DeleteUserUseCase {
         statusCode: 404,
       })
 
-    try {
-      await this.usersRepository.delete(id)
-      await this.projectsRepository.deletePerUserId(id)
-      await this.personsRepository.deletePerUserId(id)
-      await this.refreshTokenRepository.deletePerUserId(id)
+    await this.usersRepository.delete(id)
+    await this.projectsRepository.deletePerUserId(id)
+    await this.personsRepository.deletePerUserId(id)
+    await this.refreshTokenRepository.deletePerUserId(id)
 
-      if (user?.avatar?.fileName) {
-        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
-      }
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
+    if (user?.avatar?.fileName) {
+      await this.storageProvider.delete(user.avatar.fileName, 'avatar')
     }
   }
 }

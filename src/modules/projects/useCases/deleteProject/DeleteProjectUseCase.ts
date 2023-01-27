@@ -46,22 +46,13 @@ export class DeleteProjectUseCase {
       })
     }
 
-    try {
-      await this.projectsRepository.delete(projectId)
-      await this.personsRepository.deletePerProjectId(projectId)
-      await this.notifyUsersProvider.notify(
-        user,
-        project,
-        `${user.username} deletou o projeto.`,
-        `${user.username} acabou de deletar o projeto o qual havia sido compartilhado com você: ${project.name} `,
-      )
-    } catch (err) {
-      console.log(err)
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
-    }
+    await this.projectsRepository.delete(projectId)
+    await this.personsRepository.deletePerProjectId(projectId)
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} deletou o projeto.`,
+      `${user.username} acabou de deletar o projeto o qual havia sido compartilhado com você: ${project.name} `,
+    )
   }
 }

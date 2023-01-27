@@ -12,7 +12,7 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
   async create(
     dataUserTokenObj: ICreateUserTokenDTO,
   ): Promise<IRefreshTokenMongo> {
-    const { expiresDate, refreshToken, userId } = dataUserTokenObj
+    const { expiresDate, refreshToken, userId, accessCode } = dataUserTokenObj
 
     const tokenInAppAlreadyExists = await RefreshTokenMongo.findOne({
       userId,
@@ -28,6 +28,7 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
       userId,
       expiresDate,
       refreshToken,
+      accessCode,
     })
 
     await userToken.save()

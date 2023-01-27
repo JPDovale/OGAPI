@@ -1,28 +1,24 @@
-import {
-  // container,
-  inject,
-  injectable,
-} from 'tsyringe'
+import { container, inject, injectable } from 'tsyringe'
 
-import {
-  ICouple,
-  Couple,
-} from '@modules/persons/infra/mongoose/entities/Couple'
+import { ICreateCoupleDTO } from '@modules/persons/dtos/ICreateCoupleDTO'
+import { Couple } from '@modules/persons/infra/mongoose/entities/Couple'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-// import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  couple: ICreateCoupleDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  personOfCouple: IPersonMongo
+}
 
 @injectable()
 export class CreateCoupleUseCase {
@@ -33,15 +29,18 @@ export class CreateCoupleUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    projectId: string,
-    personId: string,
-    couples: ICouple[],
-  ): Promise<IPersonMongo> {
+  async execute({
+    userId,
+    couple,
+    personId,
+    projectId,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
+    const personOfCouple = await this.personsRepository.findById(
+      couple.personId,
+    )
 
-    if (!person) {
+    if (!person || !personOfCouple) {
       throw new AppError({
         title: 'O personagem não existe',
         message: 'Parece que esse personagem não existe na nossa base de dados',
@@ -49,48 +48,58 @@ export class CreateCoupleUseCase {
       })
     }
 
-    // const permissionToEditProject = container.resolve(PermissionToEditProject)
-    // const { project } = await permissionToEditProject.verify(
-    //   userId,
-    //   projectId || person.defaultProject,
-    //   'edit',
-    // )
+    const permissionToEditProject = container.resolve(PermissionToEditProject)
+    await permissionToEditProject.verify(
+      userId,
+      projectId || person.defaultProject,
+      'edit',
+    )
 
-    const errors: IError[] = []
+    const coupleExisteToThisPerson = person.couples.find(
+      (c) => c.personId === couple.personId,
+    )
+    const personOfCoupleExisteToThisPerson = personOfCouple?.couples.find(
+      (c) => c.personId === personId,
+    )
 
-    const unExitesCouplesToThisPerson = couples.filter((couple) => {
-      const existeCouple = person.couples.find(
-        (obj) => obj.title === couple.title,
-      )
-
-      if (existeCouple) {
-        errors.push({
-          at: couple.title,
-          errorMessage:
-            'já exite um "medo" com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
-
-    const newCouples = unExitesCouplesToThisPerson.map((couple) => {
-      const newCouple = new Couple({
-        description: couple.description,
-        title: couple.title,
-        final: couple.final,
-        personId: couple.personId,
+    if (coupleExisteToThisPerson || personOfCoupleExisteToThisPerson) {
+      throw new AppError({
+        title: 'Já existe uma casal relacionado a esse personagem.',
+        message:
+          'Já existe uma casal relacionado a esse personagem. Tente com outro personagem.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newCouple }
+    const newCouple = new Couple({
+      description: couple.description,
+      title: couple.title,
+      final: couple.final,
+      personId: couple.personId,
     })
 
-    const updatedCouples = [...newCouples, ...person.couples]
+    const newCoupleToPersonOfCouple = new Couple({
+      description: couple.description,
+      title: couple.title,
+      final: couple.final,
+      personId,
+    })
+
+    const updatedCouples = [newCouple, ...person.couples]
     const updatedPerson = await this.personsRepository.updateCouples(
       personId,
       updatedCouples,
     )
 
-    return updatedPerson
+    const updatedCoupleToPersonOfCouple = [
+      newCoupleToPersonOfCouple,
+      ...personOfCouple.couples,
+    ]
+    const updatedPersonOfCouple = await this.personsRepository.updateCouples(
+      couple.personId,
+      updatedCoupleToPersonOfCouple,
+    )
+
+    return { person: updatedPerson, personOfCouple: updatedPersonOfCouple }
   }
 }

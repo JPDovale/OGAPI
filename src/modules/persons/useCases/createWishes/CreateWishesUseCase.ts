@@ -1,22 +1,26 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IWishe, Wishe } from '@modules/persons/infra/mongoose/entities/Wishe'
+import { Wishe } from '@modules/persons/infra/mongoose/entities/Wishe'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  wishe: ICreateGenericObjectDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 
 @injectable()
 export class CreateWisheUseCase {
@@ -27,12 +31,12 @@ export class CreateWisheUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    projectId: string,
-    personId: string,
-    wishes: IWishe[],
-  ): Promise<IPersonMongo> {
+  async execute({
+    personId,
+    projectId,
+    userId,
+    wishe,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -50,52 +54,38 @@ export class CreateWisheUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
-
-    const unExitesWishesToThisPerson = wishes.filter((wishe) => {
-      const existeWishe = person.wishes.find((obj) => obj.title === wishe.title)
-
-      if (existeWishe) {
-        errors.push({
-          at: wishe.title,
-          errorMessage:
-            'já exite um "desejo" com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    const wisheExistesToThiPerson = person.wishes.find(
+      (w) => w.title === wishe.title,
+    )
+    if (wisheExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe um desejo com esse nome.',
+        message:
+          'Já existe um desejo com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagWishes = project.tags.find((tag) => tag.type === 'persons/wishes')
 
-    const unExitesWishes = tagWishes
-      ? unExitesWishesToThisPerson.filter((wishe) => {
-          const existeRef = tagWishes.refs.find(
-            (ref) => ref.object.title === wishe.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: wishe.title,
-              errorMessage:
-                'Você já criou um desejo com esse nome para outro personagem... Caso o desejo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o desejo.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesWishesToThisPerson
-
-    const newWishes = unExitesWishes.map((wishe) => {
-      const newWishe = new Wishe({
-        description: wishe.description,
-        title: wishe.title,
+    const wisheAlreadyExistsInTags = tagWishes?.refs.find(
+      (ref) => ref.object.title === wishe.title,
+    )
+    if (wisheAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Desejo já existe nas tags.',
+        message:
+          'Você já criou um desejo com esse nome para outro personagem... Caso o desejo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o desejo.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newWishe }
+    const newWishe = new Wishe({
+      description: wishe.description,
+      title: wishe.title,
     })
 
-    const updatedWishes = [...newWishes, ...person.wishes]
+    const updatedWishes = [newWishe, ...person.wishes]
     const updatedPerson = await this.personsRepository.updateWishes(
       personId,
       updatedWishes,
@@ -105,16 +95,16 @@ export class CreateWisheUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/wishes',
-      newWishes,
+      [newWishe],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

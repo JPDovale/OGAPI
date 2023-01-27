@@ -1,16 +1,25 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
+import { z } from 'zod'
 
 import { ReferenceAppearanceUseCase } from './ReferenceAppearanceUseCase'
 
 export class ReferenceAppearanceController {
   async handle(req: Request, res: Response): Promise<Response> {
+    const referenceAppearanceBodySchema = z.object({
+      personId: z.string().min(6).max(100),
+      projectId: z.string().min(6).max(100),
+      refId: z.string().min(6).max(100),
+    })
+
     const { id } = req.user
-    const { projectId, personId, refId } = req.body
+    const { projectId, personId, refId } = referenceAppearanceBodySchema.parse(
+      req.body,
+    )
+
     const referenceAppearanceUseCase = container.resolve(
       ReferenceAppearanceUseCase,
     )
-
     const personUpdated = await referenceAppearanceUseCase.execute(
       id,
       projectId,

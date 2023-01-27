@@ -26,73 +26,62 @@ export class AvatarUpdateUseCase {
     file: Express.Multer.File,
     userId: string,
   ): Promise<IUserInfosResponse> {
-    try {
-      const user = await this.usersRepository.findById(userId)
+    const user = await this.usersRepository.findById(userId)
 
-      if (!user)
-        throw new AppError({
-          title: 'Usuário não encontrado.',
-          message:
-            'Parece que esse usuário não existe na nossa base de dados...',
-          statusCode: 404,
-        })
-
-      if (user?.avatar?.fileName) {
-        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
-      }
-
-      const url = await this.storageProvider.upload(file, 'avatar')
-      let avatarToUpdate: IAvatar
-
-      if (user.avatar.fileName) {
-        const avatar: IAvatar = {
-          ...user.avatar,
-          fileName: file.filename,
-          url,
-          updatedAt: this.dateProvider.getDate(new Date()),
-        }
-
-        avatarToUpdate = avatar
-      } else {
-        const avatar = new Avatar({
-          fileName: file.filename,
-          url,
-        })
-
-        avatarToUpdate = avatar
-      }
-
-      const updatedUser = await this.usersRepository.updateAvatar(
-        userId,
-        avatarToUpdate,
-      )
-
-      const response: IUserInfosResponse = {
-        age: updatedUser.age,
-        email: updatedUser.email,
-        sex: updatedUser.sex,
-        username: updatedUser.username,
-        avatar: updatedUser.avatar,
-        createAt: updatedUser.createAt,
-        id: updatedUser.id,
-        notifications: updatedUser.notifications,
-        updateAt: updatedUser.updateAt,
-        isInitialized: updatedUser.isInitialized,
-        name: updatedUser.name,
-        isSocialLogin: updatedUser.isSocialLogin,
-      }
-
-      fs.rmSync(file.path)
-
-      return response
-    } catch (err) {
-      console.log(err)
-
+    if (!user)
       throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
       })
+
+    if (user?.avatar?.fileName) {
+      await this.storageProvider.delete(user.avatar.fileName, 'avatar')
     }
+
+    const url = await this.storageProvider.upload(file, 'avatar')
+    let avatarToUpdate: IAvatar
+
+    if (user.avatar.fileName) {
+      const avatar: IAvatar = {
+        ...user.avatar,
+        fileName: file.filename,
+        url,
+        updatedAt: this.dateProvider.getDate(new Date()),
+      }
+
+      avatarToUpdate = avatar
+    } else {
+      const avatar = new Avatar({
+        fileName: file.filename,
+        url,
+      })
+
+      avatarToUpdate = avatar
+    }
+
+    const updatedUser = await this.usersRepository.updateAvatar(
+      userId,
+      avatarToUpdate,
+    )
+
+    const response: IUserInfosResponse = {
+      age: updatedUser.age,
+      email: updatedUser.email,
+      sex: updatedUser.sex,
+      username: updatedUser.username,
+      avatar: updatedUser.avatar,
+      createAt: updatedUser.createAt,
+      id: updatedUser.id,
+      notifications: updatedUser.notifications,
+      updateAt: updatedUser.updateAt,
+      isInitialized: updatedUser.isInitialized,
+      name: updatedUser.name,
+      isSocialLogin: updatedUser.isSocialLogin,
+    }
+
+    fs.rmSync(file.path)
+
+    return response
   }
 }

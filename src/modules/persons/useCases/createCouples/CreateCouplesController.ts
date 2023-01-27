@@ -1,25 +1,47 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { ICouple } from '@modules/persons/infra/mongoose/entities/Couple'
+import { z } from 'zod'
 
 import { CreateCoupleUseCase } from './CreateCouplesUseCase'
 
 export class CreateCouplesController {
   async handle(req: Request, res: Response): Promise<Response> {
+    const createCoupleBodySchema = z.object({
+      projectId: z.string().min(6).max(100),
+      personId: z.string().min(6).max(100),
+      couple: z.object({
+        title: z.string().min(1).max(100),
+        description: z
+          .string()
+          .min(1)
+          .max(10000)
+          .regex(/^[^<>{}\\]+$/),
+        personId: z.string().min(6).max(100),
+        final: z.boolean(),
+      }),
+    })
+
     const { id } = req.user
-    const { projectId, personId } = req.body
-    const couples = req.body.couples as ICouple[]
+    const {
+      projectId,
+      personId,
+      couple: { title, description, final, personId: couplePersonId },
+    } = createCoupleBodySchema.parse(req.body)
 
     const createCouplesUseCase = container.resolve(CreateCoupleUseCase)
 
-    const updatedPerson = await createCouplesUseCase.execute(
-      id,
+    const updatedPersons = await createCouplesUseCase.execute({
+      userId: id,
       projectId,
       personId,
-      couples,
-    )
+      couple: {
+        title,
+        description,
+        final,
+        personId: couplePersonId,
+      },
+    })
 
-    return res.status(201).json(updatedPerson)
+    return res.status(201).json(updatedPersons)
   }
 }

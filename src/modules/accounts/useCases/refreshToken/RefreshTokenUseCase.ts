@@ -31,70 +31,65 @@ export class RefreshTokenUseCase {
   ) {}
 
   async execute(token: string): Promise<ITokenRefreshResponse> {
-    try {
-      const {
-        email,
-        sub: userId,
+    const {
+      email,
+      sub: userId,
+      admin,
+      name,
+    } = verify(token, session.secretRefreshToken) as IPayload
+
+    const userToken =
+      await this.refreshTokenRepository.findByUserIdAndRefreshToken(
+        userId,
+        token,
+      )
+
+    if (!userToken) {
+      throw new AppError({
+        title: 'RefreshToken inexistente',
+        message: 'Esse token não existe.',
+      })
+    }
+
+    const userExiste = await this.userRepository.findById(userId)
+    await this.refreshTokenRepository.deleteById(userToken.id)
+
+    const refreshToken = sign(
+      {
         admin,
         name,
-      } = verify(token, session.secretRefreshToken) as IPayload
+        email,
+      },
+      session.secretRefreshToken,
+      {
+        subject: userId,
+        expiresIn: session.expiresInRefreshToken,
+      },
+    )
 
-      const userToken =
-        await this.refreshTokenRepository.findByUserIdAndRefreshToken(
-          userId,
-          token,
-        )
+    const expiresDate = this.dateProvider
+      .addDays(session.expiresRefreshTokenDays)
+      .toString()
 
-      if (!userToken) {
-        throw new AppError({
-          title: 'RefreshToken inexistente',
-          message: 'Esse token não existe.',
-        })
-      }
+    await this.refreshTokenRepository.create({
+      expiresDate,
+      refreshToken,
+      userId,
+    })
 
-      const userExiste = await this.userRepository.findById(userId)
-      await this.refreshTokenRepository.deleteById(userToken.id)
+    const newToken = sign(
+      {
+        admin: userExiste.admin,
+        name: userExiste.username,
+        email: userExiste.email,
+      },
+      session.secretToken,
+      {
+        subject: userExiste.id,
+        expiresIn: session.expiresInToken,
+      },
+    )
 
-      const refreshToken = sign(
-        {
-          admin,
-          name,
-          email,
-        },
-        session.secretRefreshToken,
-        {
-          subject: userId,
-          expiresIn: session.expiresInRefreshToken,
-        },
-      )
-
-      const expiresDate = this.dateProvider
-        .addDays(session.expiresRefreshTokenDays)
-        .toString()
-
-      await this.refreshTokenRepository.create({
-        expiresDate,
-        refreshToken,
-        userId,
-      })
-
-      const newToken = sign(
-        {
-          admin: userExiste.admin,
-          name: userExiste.username,
-          email: userExiste.email,
-        },
-        session.secretToken,
-        {
-          subject: userExiste.id,
-          expiresIn: session.expiresInToken,
-        },
-      )
-
-      return { refreshToken, token: newToken }
-    } catch (err) {
-      console.log(err)
-      throw new AppError({ title: 'Invalid token', message: 'Invalid token' })
-    }
+    return { refreshToken, token: newToken }
   }
 }

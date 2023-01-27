@@ -12,6 +12,7 @@ import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
 
 @injectable()
 export class ResponseCommentPlotProjectUseCase {
@@ -20,6 +21,8 @@ export class ResponseCommentPlotProjectUseCase {
     private readonly projectsRepository: IProjectsRepository,
     @inject('UsersRepository')
     private readonly usersRepository: IUsersRepository,
+    @inject('NotifyUsersProvider')
+    private readonly notifyUsersProvider: INotifyUsersProvider,
   ) {}
 
   async execute(

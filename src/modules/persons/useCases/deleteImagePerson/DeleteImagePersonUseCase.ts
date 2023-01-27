@@ -36,34 +36,25 @@ export class DeleteImagePersonUseCase {
       })
     }
 
-    try {
-      if (!person?.image.fileName) {
-        throw new AppError({
-          title: 'Image não encontrada.',
-          message: 'Não existe uma imagem para esse personagem.',
-          statusCode: 404,
-        })
-      }
-
-      const updatedPerson = await this.personsRepository.updateImage(
-        {
-          fileName: '',
-          url: '',
-          createdAt: this.dateProvider.getDate(new Date()),
-        },
-        personId,
-      )
-
-      await this.storageProvider.delete(person.image.fileName, 'persons/images')
-
-      return updatedPerson
-    } catch (err) {
-      console.log(err)
+    if (!person?.image.fileName) {
       throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
+        title: 'Image não encontrada.',
+        message: 'Não existe uma imagem para esse personagem.',
+        statusCode: 404,
       })
     }
+
+    const updatedPerson = await this.personsRepository.updateImage(
+      {
+        fileName: '',
+        url: '',
+        createdAt: this.dateProvider.getDate(new Date()),
+      },
+      personId,
+    )
+
+    await this.storageProvider.delete(person.image.fileName, 'persons/images')
+
+    return updatedPerson
   }
 }

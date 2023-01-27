@@ -1,25 +1,21 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { AppError } from '@shared/errors/AppError'
+import { z } from 'zod'
 
 import { PasswordUpdateUseCase } from './PasswordUpdateUseCase'
 
 export class PasswordUpdateController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { id } = req.user
-    const { oldPassword, password } = req.body
+    const passwordUpdateBodySchema = z.object({
+      password: z.string().min(6).max(200),
+      oldPassword: z.string().min(6).max(200),
+    })
 
-    if (!oldPassword || !password)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message:
-          'Algumas informações necessárias para a criação do usuário estão faltando. Verifique as informações enviadas e tente novamente.',
-        statusCode: 409,
-      })
+    const { id } = req.user
+    const { oldPassword, password } = passwordUpdateBodySchema.parse(req.body)
 
     const updatePasswordUseCase = container.resolve(PasswordUpdateUseCase)
-    await updatePasswordUseCase.execute(id, oldPassword, password)
+    await updatePasswordUseCase.execute({ id, oldPassword, password })
 
     return res.status(200).json({ errorTitle: 'Senha alterada com sucesso' })
   }

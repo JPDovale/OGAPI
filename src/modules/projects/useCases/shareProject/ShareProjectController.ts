@@ -1,26 +1,27 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { AppError } from '@shared/errors/AppError'
+import { z } from 'zod'
 
 import { ShareProjectUseCase } from './ShareProjectUseCase'
 
 export class ShareProjectController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { user, projectId } = req.body
+    const shareProjectBodySchema = z.object({
+      user: z.object({
+        email: z.string().email().max(100),
+        permission: z.string().min(1).max(50),
+      }),
+      projectId: z.string().min(6).max(100),
+    })
 
-    if (!user || !projectId)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message:
-          'Algumas informações necessárias para a alteração do usuário estão faltando. Verifique as informações enviadas e tente novamente.',
-        statusCode: 409,
-      })
+    const {
+      user: { email, permission },
+      projectId,
+    } = shareProjectBodySchema.parse(req.body)
 
     const shareProjectUseCase = container.resolve(ShareProjectUseCase)
-
     const updatedProject = await shareProjectUseCase.execute(
-      user,
+      { email, permission },
       projectId,
       req.user.id,
     )

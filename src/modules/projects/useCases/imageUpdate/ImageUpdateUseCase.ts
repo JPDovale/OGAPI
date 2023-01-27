@@ -38,57 +38,47 @@ export class ImageUpdateUseCase {
       'edit',
     )
 
-    try {
-      if (project?.image?.fileName) {
-        await this.storageProvider.delete(
-          project.image.fileName,
-          'projects/images',
-        )
-      }
-
-      const url = await this.storageProvider.upload(file, 'projects/images')
-      let imageToUpdate: IAvatar
-
-      if (project.image.fileName) {
-        const image: IAvatar = {
-          ...project.image,
-          fileName: file.filename,
-          url,
-          updatedAt: this.dateProvider.getDate(new Date()),
-        }
-
-        imageToUpdate = image
-      } else {
-        const image = new Avatar({
-          fileName: file.filename,
-          url,
-        })
-
-        imageToUpdate = image
-      }
-
-      const updatedProject = await this.projectsRepository.updateImage(
-        imageToUpdate,
-        projectId,
+    if (project?.image?.fileName) {
+      await this.storageProvider.delete(
+        project.image.fileName,
+        'projects/images',
       )
-      fs.rmSync(file.path)
-
-      await this.notifyUsersProvider.notify(
-        user,
-        project,
-        `${user.username} alterou a imagem do projeto.`,
-        `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
-      )
-
-      return updatedProject
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
     }
+
+    const url = await this.storageProvider.upload(file, 'projects/images')
+    let imageToUpdate: IAvatar
+
+    if (project.image.fileName) {
+      const image: IAvatar = {
+        ...project.image,
+        fileName: file.filename,
+        url,
+        updatedAt: this.dateProvider.getDate(new Date()),
+      }
+
+      imageToUpdate = image
+    } else {
+      const image = new Avatar({
+        fileName: file.filename,
+        url,
+      })
+
+      imageToUpdate = image
+    }
+
+    const updatedProject = await this.projectsRepository.updateImage(
+      imageToUpdate,
+      projectId,
+    )
+    fs.rmSync(file.path)
+
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} alterou a imagem do projeto.`,
+      `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
+    )
+
+    return updatedProject
   }
 }

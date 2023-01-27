@@ -1,25 +1,26 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import {
-  IPersonality,
-  Personality,
-} from '@modules/persons/infra/mongoose/entities/Personality'
+import { Personality } from '@modules/persons/infra/mongoose/entities/Personality'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  personality: ICreateGenericObjectWithConsequencesDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 
 @injectable()
 export class CreatePersonalityUseCase {
@@ -30,12 +31,12 @@ export class CreatePersonalityUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    personality: IPersonality[],
-    userId: string,
-    projectId: string,
-    personId: string,
-  ): Promise<IPersonMongo> {
+  async execute({
+    personId,
+    personality,
+    projectId,
+    userId,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person)
@@ -52,57 +53,41 @@ export class CreatePersonalityUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
-
-    const unExitesPersonalityToThisPerson = personality.filter((p) => {
-      const existePersonality = person.personality.find(
-        (obj) => obj.title === p.title,
-      )
-
-      if (existePersonality) {
-        errors.push({
-          at: p.title,
-          errorMessage:
-            'já exite uma característica de personalidade com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    const personalityExistesToThiPerson = person.personality.find(
+      (p) => p.title === personality.title,
+    )
+    if (personalityExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe uma característica de personalidade com esse nome.',
+        message:
+          'Já existe uma característica de personalidade com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagPersonality = project.tags.find(
       (tag) => tag.type === 'persons/personality',
     )
 
-    const unExitesPersonality = tagPersonality
-      ? unExitesPersonalityToThisPerson.filter((p) => {
-          const existeRef = tagPersonality.refs.find(
-            (ref) => ref.object.title === p.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: p.title,
-              errorMessage:
-                'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesPersonalityToThisPerson
-
-    const newPersonality = unExitesPersonality.map((personality) => {
-      const newPersonality = new Personality({
-        title: personality.title,
-        consequences: personality.consequences,
-        description: personality.description,
+    const personalityAlreadyExistsInTags = tagPersonality?.refs.find(
+      (ref) => ref.object.title === personality.title,
+    )
+    if (personalityAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Característica de personalidade já existe nas tags.',
+        message:
+          'Você já criou uma característica de personalidade com esse nome para outro personagem... Caso o medo seja a mesma característica de personalidade, tente atribui-la ao personagem, ou então escolha outro nome para a característica de personalidade.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newPersonality }
+    const newPersonality = new Personality({
+      title: personality.title,
+      consequences: personality.consequences || [],
+      description: personality.description,
     })
 
-    const updatePersonality = [...newPersonality, ...person.personality]
+    const updatePersonality = [newPersonality, ...person.personality]
     const updatedPerson = await this.personsRepository.updatePersonality(
       personId,
       updatePersonality,
@@ -112,16 +97,16 @@ export class CreatePersonalityUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/personality',
-      newPersonality,
+      [newPersonality],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

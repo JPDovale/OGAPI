@@ -27,39 +27,29 @@ export class DeleteAvatarUseCase {
         statusCode: 404,
       })
 
-    try {
-      if (user?.avatar?.fileName) {
-        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
-      }
+    if (user?.avatar?.fileName) {
+      await this.storageProvider.delete(user.avatar.fileName, 'avatar')
+    }
 
-      const updatedUser = await this.usersRepository.updateAvatar(id, {
-        fileName: '',
-        url: '',
-        updatedAt: this.dateProvider.getDate(new Date()),
-      })
+    const updatedUser = await this.usersRepository.updateAvatar(id, {
+      fileName: '',
+      url: '',
+      updatedAt: this.dateProvider.getDate(new Date()),
+    })
 
-      return {
-        age: updatedUser.age,
-        avatar: updatedUser.avatar,
-        createAt: updatedUser.createAt,
-        email: updatedUser.email,
-        id: updatedUser.id,
-        isInitialized: updatedUser.isInitialized,
-        isSocialLogin: updatedUser.isSocialLogin,
-        name: updatedUser.name,
-        notifications: updatedUser.notifications,
-        sex: updatedUser.sex,
-        updateAt: updatedUser.updateAt,
-        username: updatedUser.username,
-      }
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
+    return {
+      age: updatedUser.age,
+      avatar: updatedUser.avatar,
+      createAt: updatedUser.createAt,
+      email: updatedUser.email,
+      id: updatedUser.id,
+      isInitialized: updatedUser.isInitialized,
+      isSocialLogin: updatedUser.isSocialLogin,
+      name: updatedUser.name,
+      notifications: updatedUser.notifications,
+      sex: updatedUser.sex,
+      updateAt: updatedUser.updateAt,
+      username: updatedUser.username,
     }
   }
 }

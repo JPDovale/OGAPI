@@ -9,6 +9,12 @@ import {
 } from '@modules/projects/infra/mongoose/entities/Comment'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 
+interface IRequest {
+  userId: string
+  personId: string
+  comment: ICommentPlotProjectDTO
+}
+
 @injectable()
 export class CommentInPersonUseCase {
   constructor(
@@ -16,11 +22,11 @@ export class CommentInPersonUseCase {
     private readonly personsRepository: IPersonsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    personId: string,
-    comment: ICommentPlotProjectDTO,
-  ): Promise<IPersonMongo> {
+  async execute({
+    userId,
+    personId,
+    comment,
+  }: IRequest): Promise<IPersonMongo> {
     const { content, to } = comment
 
     const person = await this.personsRepository.findById(personId)

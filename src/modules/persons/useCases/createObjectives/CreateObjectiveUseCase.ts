@@ -1,25 +1,27 @@
 import { container, inject, injectable } from 'tsyringe'
 
-import {
-  IObjective,
-  Objective,
-} from '@modules/persons/infra/mongoose/entities/Objective'
+import { ICreateObjectiveDTO } from '@modules/persons/dtos/ICreateObjectiveDTO'
+import { Objective } from '@modules/persons/infra/mongoose/entities/Objective'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  objective: ICreateObjectiveDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 
 @injectable()
 export class CreateObjectiveUseCase {
@@ -30,12 +32,12 @@ export class CreateObjectiveUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    projectId: string,
-    personId: string,
-    objectives: IObjective[],
-  ): Promise<IPersonMongo> {
+  async execute({
+    objective,
+    personId,
+    projectId,
+    userId,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -53,59 +55,42 @@ export class CreateObjectiveUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
-
-    const unExitesObjectivesToThisPerson = objectives.filter((objective) => {
-      const existeObjective = person.objectives.find(
-        (obj) => obj.title === objective.title,
-      )
-
-      if (existeObjective) {
-        errors.push({
-          at: objective.title,
-          errorMessage:
-            'já exite um objetivo com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    const objectiveExistesToThiPerson = person.objectives.find(
+      (o) => o.title === objective.title,
+    )
+    if (objectiveExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe um objetivo com esse nome.',
+        message:
+          'Já existe um objetivo com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagObjectives = project.tags.find(
       (tag) => tag.type === 'persons/objectives',
     )
-
-    const unExitesObjectives = tagObjectives
-      ? unExitesObjectivesToThisPerson.filter((objective) => {
-          const existeRef = tagObjectives.refs.find(
-            (ref) => ref.object.title === objective.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: objective.title,
-              errorMessage:
-                'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesObjectivesToThisPerson
-
-    const newObjectives = unExitesObjectives.map((objective) => {
-      const newObjective = new Objective({
-        avoiders: objective.avoiders,
-        description: objective.description,
-        objectified: objective.objectified,
-        supporting: objective.supporting,
-        title: objective.title,
+    const objectiveAlreadyExistsInTags = tagObjectives?.refs.find(
+      (ref) => ref.object.title === objective.title,
+    )
+    if (objectiveAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Objetivo já existe nas tags.',
+        message:
+          'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newObjective }
+    const newObjective = new Objective({
+      avoiders: objective.avoiders,
+      description: objective.description,
+      objectified: objective.objectified,
+      supporting: objective.supporting,
+      title: objective.title,
     })
 
-    const updatedObjetives = [...newObjectives, ...person.objectives]
+    const updatedObjetives = [newObjective, ...person.objectives]
     const updatedPerson = await this.personsRepository.updateObjectives(
       personId,
       updatedObjetives,
@@ -115,16 +100,16 @@ export class CreateObjectiveUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/objectives',
-      newObjectives,
+      [newObjective],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

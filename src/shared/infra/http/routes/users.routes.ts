@@ -11,8 +11,9 @@ import { ListUsersController } from '@modules/accounts/useCases/listUsers/ListUs
 import { LogoutController } from '@modules/accounts/useCases/logout/LogoutController'
 import { PasswordUpdateController } from '@modules/accounts/useCases/passwordUpdate/PasswordUpdateController'
 import { RecoveryPasswordController } from '@modules/accounts/useCases/recoveryPassword/RecoveryPasswordController'
-import { SendForgotPasswordMailController } from '@modules/accounts/useCases/sendForgotPasswordMail/sendForgotPasswordMailUseCase'
+import { SendForgotPasswordMailController } from '@modules/accounts/useCases/sendForgotPasswordMail/sendForgotPasswordMailController'
 import { UserUpdateController } from '@modules/accounts/useCases/userUpdate/UserUpdateController'
+import { VisualizeNotificationsController } from '@modules/accounts/useCases/visualizeNotifications/VisualizeNotificationsController'
 
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated'
 import { Uploads } from '../middlewares/upload'
@@ -33,6 +34,7 @@ const logoutController = new LogoutController()
 const deleteAvatarController = new DeleteAvatarController()
 const sendForgotPasswordMailController = new SendForgotPasswordMailController()
 const recoveryPasswordController = new RecoveryPasswordController()
+const visualizeNotificationsController = new VisualizeNotificationsController()
 
 const uploads = new Uploads('avatar', 'image')
 
@@ -54,6 +56,10 @@ userRoutes.patch('/', userUpdateController.handle)
 userRoutes.get('/', getInfosController.handle)
 userRoutes.patch('/password', passwordUpdateController.handle)
 userRoutes.delete('/avatar', deleteAvatarController.handle)
+userRoutes.patch(
+  '/notifications/visualize',
+  visualizeNotificationsController.handle,
+)
 
 userRoutes.use(verifyIsAdmin)
 userRoutes.delete('/:id', deleteUserController.handle)

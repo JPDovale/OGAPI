@@ -8,8 +8,10 @@ import { AppError } from '@shared/errors/AppError'
 
 interface IUserRequest {
   email: string
-  permission: 'view' | 'edit' | 'comment'
+  permission: string
 }
+
+type IPermission = 'view' | 'edit' | 'comment'
 
 @injectable()
 export class ShareProjectUseCase {
@@ -74,10 +76,24 @@ export class ShareProjectUseCase {
         statusCode: 404,
       })
 
+    const isValidPermission =
+      userToShare.permission === 'edit' ||
+      userToShare.permission === 'view' ||
+      userToShare.permission === 'comment'
+
+    if (!isValidPermission) {
+      throw new AppError({
+        title: 'Informações inválidas',
+        message:
+          'As informações fornecidas não são aceitas pela aplicação. Rastreamos o erro no seu dispositivo e resolveremos em breve',
+        statusCode: 401,
+      })
+    }
+
     const addUser = {
       email: userExist.email,
       id: userExist.id,
-      permission: userToShare.permission,
+      permission: userToShare.permission as IPermission,
     }
 
     const usersAdded = [...project.users, addUser]

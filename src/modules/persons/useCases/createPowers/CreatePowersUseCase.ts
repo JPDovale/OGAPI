@@ -1,22 +1,26 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPower, Power } from '@modules/persons/infra/mongoose/entities/Power'
+import { Power } from '@modules/persons/infra/mongoose/entities/Power'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  power: ICreateGenericObjectDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 
 @injectable()
 export class CreatePowerUseCase {
@@ -27,12 +31,12 @@ export class CreatePowerUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    projectId: string,
-    personId: string,
-    powers: IPower[],
-  ): Promise<IPersonMongo> {
+  async execute({
+    personId,
+    power,
+    projectId,
+    userId,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -50,52 +54,38 @@ export class CreatePowerUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
-
-    const unExitesPowersToThisPerson = powers.filter((power) => {
-      const existePower = person.powers.find((obj) => obj.title === power.title)
-
-      if (existePower) {
-        errors.push({
-          at: power.title,
-          errorMessage:
-            'já exite um "medo" com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    const powerExistesToThiPerson = person.powers.find(
+      (p) => p.title === power.title,
+    )
+    if (powerExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe um poder com esse nome.',
+        message:
+          'Já existe um poder com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagPowers = project.tags.find((tag) => tag.type === 'persons/powers')
 
-    const unExitesPowers = tagPowers
-      ? unExitesPowersToThisPerson.filter((power) => {
-          const existeRef = tagPowers.refs.find(
-            (ref) => ref.object.title === power.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: power.title,
-              errorMessage:
-                'Você já criou um medo com esse nome para outro personagem... Caso o medo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o medo.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesPowersToThisPerson
-
-    const newPowers = unExitesPowers.map((power) => {
-      const newPower = new Power({
-        description: power.description,
-        title: power.title,
+    const powerAlreadyExistsInTags = tagPowers?.refs.find(
+      (ref) => ref.object.title === power.title,
+    )
+    if (powerAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Poder já existe nas tags.',
+        message:
+          'Você já criou um poder com esse nome para outro personagem... Caso o poder seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o poder.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newPower }
+    const newPower = new Power({
+      description: power.description,
+      title: power.title,
     })
 
-    const updatedPowers = [...newPowers, ...person.powers]
+    const updatedPowers = [newPower, ...person.powers]
     const updatedPerson = await this.personsRepository.updatePowers(
       personId,
       updatedPowers,
@@ -105,16 +95,16 @@ export class CreatePowerUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/powers',
-      newPowers,
+      [newPower],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

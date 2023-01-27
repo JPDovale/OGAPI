@@ -2,11 +2,14 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import 'dayjs/locale/pt-br'
 
+import { injectable } from 'tsyringe'
+
 import { IDateProvider, IIsBefore } from '../IDateProvider'
 
 dayjs.extend(utc)
 dayjs.locale('pt-br')
 
+@injectable()
 export class DayJsDateProvider implements IDateProvider {
   constructor() {
     dayjs.extend(utc)

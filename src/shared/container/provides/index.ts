@@ -1,5 +1,7 @@
 import { container } from 'tsyringe'
 
+import { ICacheProvider } from './CacheProvider/ICacheProvider'
+import { RedisCacheProvider } from './CacheProvider/implementations/RedisCacheProvider'
 import { IDateProvider } from './DateProvider/IDateProvider'
 import { DayJsDateProvider } from './DateProvider/implementations/DayJsDateProvider'
 import { IMailProvider } from './MailProvider/IMailProvider'
@@ -31,3 +33,5 @@ container.registerInstance<IMailProvider>(
   'MailGunProvider',
   new MailGunProvider(),
 )
+
+container.registerSingleton<ICacheProvider>('CacheProvider', RedisCacheProvider)

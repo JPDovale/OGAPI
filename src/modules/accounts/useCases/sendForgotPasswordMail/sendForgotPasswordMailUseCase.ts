@@ -1,30 +1,65 @@
-import { Request, Response } from 'express'
-import { container } from 'tsyringe'
+import path from 'path'
+import { inject, injectable } from 'tsyringe'
+import { v4 as uuidV4 } from 'uuid'
 
+import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
+import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IMailProvider } from '@shared/container/provides/MailProvider/IMailProvider'
 import { AppError } from '@shared/errors/AppError'
 
-import { SendForgotPasswordMailUseCase } from './sendForgotPasswordMailController'
+@injectable()
+export class SendForgotPasswordMailUseCase {
+  constructor(
+    @inject('UsersRepository')
+    private readonly usersRepository: IUsersRepository,
+    @inject('RefreshTokenRepository')
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
+    @inject('DateProvider')
+    private readonly dateProvider: IDateProvider,
+    @inject('MailGunProvider')
+    private readonly mailProvider: IMailProvider,
+  ) {}
 
-export class SendForgotPasswordMailController {
-  async handle(req: Request, res: Response): Promise<Response> {
-    const email = req.body.email
+  async execute(email: string): Promise<void> {
+    const user = await this.usersRepository.findByEmail(email)
 
-    if (!email)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message:
-          'Algumas informações necessárias para a criação do usuário estão faltando. Verifique as informações enviadas e tente novamente.',
-        statusCode: 409,
-      })
-
-    const sendForgotPasswordMailUseCase = container.resolve(
-      SendForgotPasswordMailUseCase,
+    const templatePath = path.resolve(
+      __dirname,
+      '..',
+      '..',
+      'views',
+      'emails',
+      'forgotPassword.hbs',
     )
-    await sendForgotPasswordMailUseCase.execute(email)
 
-    return res.status(200).json({
-      successTitle: 'Email enviado.',
-      successMessage: 'Um email de recuperação de senha foi enviado para você.',
+    if (!user) {
+      throw new AppError({
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
+      })
+    }
+
+    const token = uuidV4()
+    const expiresDate = this.dateProvider.addHours(1).toString()
+
+    await this.refreshTokenRepository.create({
+      refreshToken: token,
+      userId: user.id,
+      expiresDate,
+    })
+
+    const variables = {
+      name: user.username,
+      link: `${process.env.FORGOT_MAIL_URL}${token}`,
+    }
+
+    await this.mailProvider.sendMail({
+      to: email,
+      subject: 'Recuperação de senha...',
+      path: templatePath,
+      variables,
     })
   }
 }

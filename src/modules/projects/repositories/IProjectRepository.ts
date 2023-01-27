@@ -22,6 +22,7 @@ export interface IProjectsRepository {
     projectId: string,
     plot: IUpdatePlotDTO,
   ) => Promise<IProjectMongo>
-  updateTag: (projectId: string, tags: ITag[]) => Promise<void>
+  updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
   deletePerUserId: (userId: string) => Promise<void>
+  listAll: () => Promise<IProjectMongo[]>
 }

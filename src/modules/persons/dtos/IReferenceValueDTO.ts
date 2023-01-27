@@ -1,6 +1,6 @@
 export interface IReferenceValueDTO {
   exceptions: Array<{
-    title: string
-    description: string
+    title?: string
+    description?: string
   }>
 }

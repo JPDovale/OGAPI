@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
-import handlebars from 'handlebars'
 import fs from 'fs'
+import handlebars from 'handlebars'
 import nodemailer, { Transporter } from 'nodemailer'
 import { injectable } from 'tsyringe'
 
@@ -30,22 +30,12 @@ export class MailGunProvider implements IMailProvider {
     const templateParse = handlebars.compile(templateFileContent)
     const templateHTML = templateParse(variables)
 
-    try {
-      await this.client.sendMail({
-        to: `${to}`,
-        from: 'Ognare | <noreply@ognare.com>',
-        subject,
-        html: templateHTML,
-        watchHtml: templateHTML,
-      })
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
-    }
+    await this.client.sendMail({
+      to: `${to}`,
+      from: 'Ognare | <noreply@ognare.com>',
+      subject,
+      html: templateHTML,
+      watchHtml: templateHTML,
+    })
   }
 }

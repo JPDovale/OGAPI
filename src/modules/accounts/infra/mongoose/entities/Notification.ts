@@ -10,6 +10,7 @@ export interface INotification {
   projectId: string
   sendedPerUser: string
   title: string
+  isVisualized?: boolean
   content: string
   createAt?: string
 }
@@ -19,6 +20,7 @@ export class Notification {
   projectId: string
   sendedPerUser: string
   title: string
+  isVisualized?: boolean
   content: string
   createAt: string
 
@@ -27,6 +29,7 @@ export class Notification {
     this.projectId = newNotification.projectId
     this.sendedPerUser = newNotification.sendedPerUser
     this.content = newNotification.content
+    this.isVisualized = newNotification.isVisualized || false
     this.title = newNotification.title
     this.createAt = dateProvider.getDate(new Date())
   }

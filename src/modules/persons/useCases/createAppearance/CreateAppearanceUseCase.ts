@@ -1,25 +1,26 @@
 import { container, inject, injectable } from 'tsyringe'
 
-import {
-  IAppearance,
-  Appearance,
-} from '@modules/persons/infra/mongoose/entities/Appearance'
+import { ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
+import { Appearance } from '@modules/persons/infra/mongoose/entities/Appearance'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  appearance: ICreateGenericObjectDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 
 @injectable()
 export class CreateAppearanceUseCase {
@@ -30,12 +31,12 @@ export class CreateAppearanceUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    projectId: string,
-    personId: string,
-    appearance: IAppearance[],
-  ): Promise<IPersonMongo> {
+  async execute({
+    appearance,
+    personId,
+    projectId,
+    userId,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -53,56 +54,41 @@ export class CreateAppearanceUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
+    const appearanceExistesToThiPerson = person.appearance.find(
+      (a) => a.title === appearance.title,
+    )
 
-    const unExitesAppearancesToThisPerson = appearance.filter((dream) => {
-      const existeAppearance = person.appearance.find(
-        (obj) => obj.title === dream.title,
-      )
-
-      if (existeAppearance) {
-        errors.push({
-          at: dream.title,
-          errorMessage:
-            'já exite uma"característica de aparência" com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    if (appearanceExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe uma aparência com esse nome.',
+        message:
+          'Já existe uma aparência com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagAppearances = project.tags.find(
       (tag) => tag.type === 'persons/appearance',
     )
 
-    const unExitesAppearances = tagAppearances
-      ? unExitesAppearancesToThisPerson.filter((dream) => {
-          const existeRef = tagAppearances.refs.find(
-            (ref) => ref.object.title === dream.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: dream.title,
-              errorMessage:
-                'Você já criou uma característica de aparência com esse nome para outro personagem... Caso a característica de aparência seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para a característica de aparência.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesAppearancesToThisPerson
-
-    const newAppearances = unExitesAppearances.map((dream) => {
-      const newAppearance = new Appearance({
-        description: dream.description,
-        title: dream.title,
+    const appearanceAlreadyExistsInTags = tagAppearances?.refs.find(
+      (ref) => ref.object.title === appearance.title,
+    )
+    if (appearanceAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Aparência já existe nas tags.',
+        message:
+          'Você já criou uma característica de aparência com esse nome para outro personagem... Caso a característica de aparência seja a mesma, tente atribui-la ao personagem, ou então escolha outro nome para a característica de aparência.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newAppearance }
+    const newAppearance = new Appearance({
+      title: appearance.title,
+      description: appearance.description,
     })
 
-    const updatedAppearances = [...newAppearances, ...person.appearance]
+    const updatedAppearances = [newAppearance, ...person.appearance]
     const updatedPerson = await this.personsRepository.updateAppearance(
       personId,
       updatedAppearances,
@@ -112,16 +98,16 @@ export class CreateAppearanceUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/appearance',
-      newAppearances,
+      [newAppearance],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

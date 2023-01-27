@@ -1,15 +1,31 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { IUpdateObjectiveDTO } from '@modules/persons/dtos/IUpdateObjectiveDTO'
+import { z } from 'zod'
 
 import { UpdateObjectiveUseCase } from './UpdateObjectiveUseCase'
 
 export class UpdateObjectiveController {
   async handle(req: Request, res: Response): Promise<Response> {
+    const updateObjectiveBodySchema = z.object({
+      objectiveId: z.string().min(6).max(100),
+      personId: z.string().min(6).max(100),
+      objective: z.object({
+        title: z.string().max(100).optional(),
+        description: z
+          .string()
+
+          .max(10000)
+          .regex(/^[^<>{}\\]+$/)
+          .optional(),
+        objectified: z.boolean().optional(),
+        supporting: z.array(z.string().min(6).max(100)).optional(),
+        avoiders: z.array(z.string().min(6).max(100)).optional(),
+      }),
+    })
+
     const { id } = req.user
-    const { personId, objectiveId } = req.body
-    const objective = req.body.objective as IUpdateObjectiveDTO
+    const { personId, objectiveId, objective } =
+      updateObjectiveBodySchema.parse(req.body)
 
     const updateObjectiveUseCase = container.resolve(UpdateObjectiveUseCase)
     const updatedPerson = await updateObjectiveUseCase.execute(

@@ -1,12 +1,17 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
+import { z } from 'zod'
 
 import { DeleteUserUseCase } from './DeleteUserUseCase'
 
 export class DeleteUserController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { id } = req.params
+    const deleteUserParamsSchema = z.object({
+      id: z.string().max(100).optional(),
+    })
+
     const { user } = req
+    const { id } = deleteUserParamsSchema.parse(req.params)
 
     const deleteUserUseCase = container.resolve(DeleteUserUseCase)
 

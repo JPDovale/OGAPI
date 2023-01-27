@@ -100,14 +100,23 @@ export class ProjectsMongoRepository implements IProjectsRepository {
     return updatedProject
   }
 
-  async updateTag(id: string, tags: ITag[]): Promise<void> {
+  async updateTag(id: string, tags: ITag[]): Promise<IProjectMongo> {
     await ProjectMongo.findOneAndUpdate(
       { id },
       { tags, updateAt: this.dateProvider.getDate(new Date()) },
     )
+
+    const updatedProject = await ProjectMongo.findOne({ id })
+
+    return updatedProject
   }
 
   async deletePerUserId(userId: string): Promise<void> {
     await ProjectMongo.deleteMany({ createdPerUser: userId })
+  }
+
+  async listAll(): Promise<IProjectMongo[]> {
+    const allProjects = await ProjectMongo.find()
+    return allProjects
   }
 }

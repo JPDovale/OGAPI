@@ -36,7 +36,7 @@ import { ReferenceValueController } from '@modules/persons/useCases/referenceVal
 import { ReferenceWisheController } from '@modules/persons/useCases/referenceWishe/ReferenceFearController'
 import { ResponseCommentPersonController } from '@modules/persons/useCases/responseCommentPerson/ResponseCommentPersonController'
 import { UpdateAppearanceController } from '@modules/persons/useCases/updateAppearance/UpdateAppearanceController'
-import { UpdateCoupleController } from '@modules/persons/useCases/updateCouple/UpdateFearController'
+import { UpdateCoupleController } from '@modules/persons/useCases/updateCouple/UpdateCoupleController'
 import { UpdateDreamController } from '@modules/persons/useCases/updateDream/UpdateDreamController'
 import { UpdateFearController } from '@modules/persons/useCases/updateFear/UpdateFearController'
 import { UpdateImagePersonController } from '@modules/persons/useCases/updateImagePerson/UpdateImagePersonController'

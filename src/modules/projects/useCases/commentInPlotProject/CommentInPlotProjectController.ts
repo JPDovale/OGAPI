@@ -1,24 +1,27 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
-import { AppError } from '@shared/errors/AppError'
+import { z } from 'zod'
 
 import { CommentInPlotProjectUseCase } from './CommentInPlotProjectUseCase'
 
 export class CommentInPlotProjectController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { id } = req.user
-    const { content, to } = req.body.comment as ICommentPlotProjectDTO
-    const projectId = req.body.projectId
+    const commentInPlotBodySchema = z.object({
+      projectId: z.string().min(6).max(100),
+      comment: z.object({
+        content: z
+          .string()
+          .max(2000)
+          .regex(/^[^<>{}\\]+$/),
+        to: z.string().min(6).max(100),
+      }),
+    })
 
-    if (!content || !to || !projectId)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message:
-          'Algumas informações necessárias para a alteração do usuário estão faltando. Verifique as informações enviadas e tente novamente.',
-        statusCode: 409,
-      })
+    const { id } = req.user
+    const {
+      projectId,
+      comment: { content, to },
+    } = commentInPlotBodySchema.parse(req.body)
 
     const commentInPlotProjectUseCase = container.resolve(
       CommentInPlotProjectUseCase,
