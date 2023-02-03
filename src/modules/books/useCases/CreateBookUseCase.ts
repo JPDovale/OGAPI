@@ -21,6 +21,8 @@ interface IRequest {
   literaryGenere: string
   generes: Array<{ name?: string }>
   isbn: string
+  words?: string
+  writtenWords?: string
 }
 
 interface IResponse {
@@ -46,6 +48,8 @@ export class CreateBookUseCase {
     literaryGenere,
     generes,
     isbn,
+    words,
+    writtenWords,
   }: IRequest): Promise<IResponse> {
     const permissionToEditProject = container.resolve(PermissionToEditProject)
     const { project } = await permissionToEditProject.verify(
@@ -63,6 +67,8 @@ export class CreateBookUseCase {
         title,
         isbn,
         subtitle,
+        words,
+        writtenWords,
       },
     })
 

@@ -9,4 +9,6 @@ export interface ICreateBookDTO {
   literaryGenere: string
   generes: Array<{ name?: string }>
   isbn?: string
+  words?: string
+  writtenWords?: string
 }

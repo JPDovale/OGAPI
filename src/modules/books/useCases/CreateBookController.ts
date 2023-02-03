@@ -17,12 +17,17 @@ export class CreateBookController {
         }),
       ),
       literaryGenere: z.string().min(1).max(200),
-      generes: z.array(
-        z.object({
-          name: z.string().min(1).max(150),
-        }),
-      ),
-      isbn: z.string().min(6).max(200).optional(),
+      words: z.string().min(1).max(20).regex(/^\d+$/).optional(),
+      writtenWords: z.string().min(1).max(20).regex(/^\d+$/).optional(),
+      generes: z
+        .array(
+          z.object({
+            name: z.string().min(1).max(150),
+          }),
+        )
+        .min(1)
+        .max(6),
+      isbn: z.string().max(200).optional(),
       projectId: z.string().min(6).max(100),
     })
 
@@ -35,6 +40,8 @@ export class CreateBookController {
       literaryGenere,
       generes,
       isbn,
+      words,
+      writtenWords,
     } = createBookBodySchema.parse(req.body)
 
     const createBookUseCase = container.resolve(CreateBookUseCase)
@@ -47,6 +54,8 @@ export class CreateBookController {
       literaryGenere,
       generes,
       isbn,
+      words,
+      writtenWords,
     })
 
     return res.status(200).json(newBook)

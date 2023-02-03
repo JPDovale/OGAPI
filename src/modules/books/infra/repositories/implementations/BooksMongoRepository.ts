@@ -19,7 +19,16 @@ export class BooksMongoRepository implements IBooksRepository {
 
   async create({
     projectId,
-    book: { authors, generes, literaryGenere, title, isbn, subtitle },
+    book: {
+      authors,
+      generes,
+      literaryGenere,
+      title,
+      isbn,
+      subtitle,
+      words,
+      writtenWords,
+    },
   }: ICreateBook): Promise<IBook> {
     const newBook = new BookMongo({
       id: uuidV4(),
@@ -30,6 +39,8 @@ export class BooksMongoRepository implements IBooksRepository {
       generes,
       literaryGenere,
       isbn,
+      words,
+      writtenWords,
       plot: new PlotBook({}),
       createAt: this.dateProvider.getDate(new Date()),
       updateAt: this.dateProvider.getDate(new Date()),

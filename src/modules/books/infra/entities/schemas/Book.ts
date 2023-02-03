@@ -11,7 +11,7 @@ const BookSchema = new mongoose.Schema({
   generes: { type: Array, required: true, default: [] },
   authors: { type: Array, required: true, default: [] },
   plot: { type: Object, required: true },
-  words: { type: String },
+  words: { type: String, default: '0' },
   writtenWords: { type: String, default: '0' },
   capitules: { type: Array },
   comments: { type: Array, default: [] },
