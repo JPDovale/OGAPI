@@ -1,6 +1,12 @@
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 
+import { IAuthorBook } from './IAuthorBook'
+import { ICapitule } from './ICapitule'
+import { IGenereBook } from './IGenereBook'
+import { IPlotBook } from './IPlotBook'
+import { IScene } from './IScene'
+
 export interface IBook {
   id: string
   title: string
@@ -9,11 +15,12 @@ export interface IBook {
   literaryGenere: string
   isbn?: string
   frontCover?: IAvatar
-  generes: any[]
-  authors: any[]
-  plot: any
+  generes: IGenereBook[]
+  authors: IAuthorBook[]
+  plot: IPlotBook
   words?: string
-  capitules: any[]
+  capitules: ICapitule[]
+  scenes: IScene[]
   comments: IComment[]
   createAt: string
   updateAt: string

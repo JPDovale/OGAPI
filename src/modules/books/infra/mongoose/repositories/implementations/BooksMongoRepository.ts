@@ -9,6 +9,8 @@ import { IBook } from '../../entities/types/IBook'
 import { IBooksRepository } from '../IBooksRepository'
 import { ICreateBook } from '../types/ICreateBook'
 import { IFindManyById } from '../types/IFindManyById'
+import { IUpdateCapitules } from '../types/IUpdateCapitules'
+import { IUpdateFrontCover } from '../types/IUpdateFrontCover'
 
 @injectable()
 export class BooksMongoRepository implements IBooksRepository {
@@ -61,5 +63,33 @@ export class BooksMongoRepository implements IBooksRepository {
     const books = await BookMongo.find({ $or: booksIds })
 
     return books
+  }
+
+  async findById(id: string): Promise<IBook> {
+    const book = await BookMongo.findOne({ id })
+    return book
+  }
+
+  async updateFrontCover({
+    id,
+    frontCover,
+  }: IUpdateFrontCover): Promise<IBook> {
+    await BookMongo.updateOne(
+      { id },
+      { frontCover, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+
+    const book = await BookMongo.findOne({ id })
+    return book
+  }
+
+  async updateCapitules({ id, capitules }: IUpdateCapitules): Promise<IBook> {
+    await BookMongo.updateOne(
+      { id },
+      { capitules, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+
+    const book = await BookMongo.findOne({ id })
+    return book
   }
 }

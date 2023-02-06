@@ -1,12 +1,11 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { ITag, Tag } from '@modules/projects/infra/mongoose/entities/Tag'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-
-import { IBook } from '../infra/entities/types/IBook'
-import { IBooksRepository } from '../infra/repositories/IBooksRepository'
 
 interface IRequest {
   userId: string
