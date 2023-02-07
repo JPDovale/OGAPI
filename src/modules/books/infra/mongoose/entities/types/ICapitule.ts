@@ -1,4 +1,5 @@
 import { IStructurePlotBook } from './IPlotBook'
+import { IScene } from './IScene'
 
 export interface ICapitule {
   id?: string
@@ -8,7 +9,7 @@ export interface ICapitule {
   complete: boolean
   words?: string
   structure?: IStructurePlotBook
-  scenes?: string[]
+  scenes?: IScene[]
   createdAt?: string
   updatedAt?: string
 }

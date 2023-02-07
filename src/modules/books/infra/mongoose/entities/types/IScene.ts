@@ -7,4 +7,5 @@ export interface IScene {
   complete: boolean
   writtenWords?: string
   structure: IStructurePlotBook
+  persons: string[]
 }

@@ -10,13 +10,15 @@ export class Scene {
   complete: boolean
   writtenWords?: string
   structure: IStructurePlotBook
+  persons: string[]
 
-  constructor(capitule: IScene) {
-    this.id = capitule.id || uuidV4()
-    this.sequence = capitule.sequence
-    this.objective = capitule.objective
-    this.complete = capitule.complete
-    this.writtenWords = capitule.writtenWords
-    this.structure = capitule.structure
+  constructor(scene: IScene) {
+    this.id = scene.id || uuidV4()
+    this.sequence = scene.sequence
+    this.objective = scene.objective
+    this.complete = scene.complete
+    this.writtenWords = scene.writtenWords
+    this.structure = scene.structure
+    this.persons = scene.persons
   }
 }
