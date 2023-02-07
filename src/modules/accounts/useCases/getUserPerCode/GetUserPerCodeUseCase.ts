@@ -6,6 +6,10 @@ import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { AppError } from '@shared/errors/AppError'
 
+interface IRequest {
+  code: string
+  infosUser: ICreateUserDTO
+}
 @injectable()
 export class GetUserPerCodeUseCase {
   constructor(
@@ -13,8 +17,8 @@ export class GetUserPerCodeUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute(code: string, dataObj: ICreateUserDTO): Promise<IUserMongo> {
-    const { email, password, name, username, age, sex } = dataObj
+  async execute({ code, infosUser }: IRequest): Promise<IUserMongo> {
+    const { email, password, name, username, age, sex } = infosUser
     const getUserPerCode = await this.usersRepository.findByCode(code)
 
     if (!getUserPerCode) {
@@ -48,21 +52,11 @@ export class GetUserPerCodeUseCase {
       isInitialized: true,
     }
 
-    try {
-      const user = await this.usersRepository.getUser(
-        getUserPerCode.id,
-        infosToSave,
-      )
+    const user = await this.usersRepository.getUser(
+      getUserPerCode.id,
+      infosToSave,
+    )
 
-      return user
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
-    }
+    return user
   }
 }

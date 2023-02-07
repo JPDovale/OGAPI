@@ -19,6 +19,7 @@ export interface IPlotProject {
   summary?: string
   persons?: string[]
   structure?: IStructure
+  urlOfText?: string
   comments?: IComment[]
 }
 
@@ -35,6 +36,7 @@ export class PlotProject {
   summary: string
   persons: string[]
   structure: IStructure
+  urlOfText?: string
   comments: IComment[]
 
   constructor(plot: IPlotProject) {
@@ -50,6 +52,7 @@ export class PlotProject {
     this.summary = plot.summary || ''
     this.persons = plot.persons || []
     this.structure = plot.structure || {}
+    this.urlOfText = plot.urlOfText || ''
     this.comments = plot.comments || []
   }
 }

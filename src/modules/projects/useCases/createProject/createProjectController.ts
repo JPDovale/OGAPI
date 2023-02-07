@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
+import { z } from 'zod'
 
 import { AppError } from '@shared/errors/AppError'
 
@@ -7,16 +8,20 @@ import { CreateProjectUseCase } from './CreateProjectUseCase'
 
 export class CreateProjectController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { name, private: priv, type, password } = req.body
-    const { id } = req.user
+    const createProjectBodySchema = z.object({
+      name: z.string().min(1).max(200),
+      private: z.boolean().optional(),
+      type: z.string().min(1).max(30),
+      password: z.string().max(100).optional(),
+    })
 
-    if (!name || !type)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message:
-          'Algumas informações necessárias para a alteração do usuário estão faltando. Verifique as informações enviadas e tente novamente.',
-        statusCode: 409,
-      })
+    const {
+      name,
+      private: priv,
+      type,
+      password,
+    } = createProjectBodySchema.parse(req.body)
+    const { id } = req.user
 
     if (
       type !== 'rpg' &&
@@ -28,12 +33,11 @@ export class CreateProjectController {
         title: 'Informações invalida',
         message:
           'Algumas informações estão fora do padrão esperado para a criação do projeto.',
-        statusCode: 409,
+        statusCode: 401,
       })
     }
 
     const createProjectUseCase = container.resolve(CreateProjectUseCase)
-
     const newProject = await createProjectUseCase.execute({
       user: { id },
       project: {

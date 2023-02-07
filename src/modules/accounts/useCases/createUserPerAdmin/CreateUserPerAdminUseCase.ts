@@ -23,43 +23,33 @@ export class CreateUserPerAdminUseCase {
 
     const code = Math.floor(Math.random() * 100000000).toString()
 
-    try {
-      const newUser = await this.usersRepository.create({
-        name,
-        email: ' ',
-        password: ' ',
-        age: age || 'uncharacterized',
-        sex: sex || 'uncharacterized',
-        username: username || name,
-        isInitialized: true,
-        code,
-      })
+    const newUser = await this.usersRepository.create({
+      name,
+      email: ' ',
+      password: ' ',
+      age: age || 'uncharacterized',
+      sex: sex || 'uncharacterized',
+      username: username || name,
+      isInitialized: true,
+      code,
+    })
 
-      const response: IUserInfosResponse = {
-        age: newUser.age,
-        email: newUser.email,
-        sex: newUser.sex,
-        username: newUser.username,
-        avatar: newUser.avatar,
-        createAt: newUser.createAt,
-        id: newUser.id,
-        notifications: newUser.notifications,
-        updateAt: newUser.updateAt,
-        name: newUser.name,
-        code,
-        isInitialized: newUser.isInitialized,
-        isSocialLogin: newUser.isSocialLogin,
-      }
-
-      return response
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
+    const response: IUserInfosResponse = {
+      age: newUser.age,
+      email: newUser.email,
+      sex: newUser.sex,
+      username: newUser.username,
+      avatar: newUser.avatar,
+      createAt: newUser.createAt,
+      id: newUser.id,
+      notifications: newUser.notifications,
+      updateAt: newUser.updateAt,
+      name: newUser.name,
+      code,
+      isInitialized: newUser.isInitialized,
+      isSocialLogin: newUser.isSocialLogin,
     }
+
+    return response
   }
 }

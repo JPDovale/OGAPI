@@ -21,7 +21,7 @@ export async function ensureAuthenticated(
     throw new AppError({
       title: 'Invalid token!',
       message: 'Invalid token',
-      statusCode: 401,
+      statusCode: 404,
     })
   }
 
@@ -45,7 +45,7 @@ export async function ensureAuthenticated(
     throw new AppError({
       title: 'Invalid token!',
       message: 'Invalid token',
-      statusCode: 401,
+      statusCode: 404,
     })
   }
 }

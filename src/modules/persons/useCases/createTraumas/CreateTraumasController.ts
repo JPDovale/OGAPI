@@ -1,24 +1,55 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { ITrauma } from '@modules/persons/infra/mongoose/entities/Trauma'
+import { z } from 'zod'
 
 import { CreateTraumaUseCase } from './CreateTraumasUseCase'
 
 export class CreateTraumaController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { id } = req.user
-    const { projectId, personId } = req.body
-    const traumas = req.body.traumas as ITrauma[]
+    const createTraumaBodySchema = z.object({
+      projectId: z.string().min(6).max(100),
+      personId: z.string().min(6).max(100),
+      trauma: z.object({
+        title: z.string().min(1).max(100),
+        description: z
+          .string()
+          .min(1)
+          .max(10000)
+          .regex(/^[^<>{}\\]+$/),
+        consequences: z
+          .array(
+            z.object({
+              title: z.string().min(1).max(100),
+              description: z
+                .string()
+                .min(1)
+                .max(10000)
+                .regex(/^[^<>{}\\]+$/),
+            }),
+          )
+          .optional(),
+      }),
+    })
 
-    const createTraumaUseCase = container.resolve(CreateTraumaUseCase)
-    const updatedPerson = await createTraumaUseCase.execute(
-      traumas,
-      id,
+    const { id } = req.user
+    const {
       projectId,
       personId,
-    )
+      trauma: { title, description, consequences },
+    } = createTraumaBodySchema.parse(req.body)
 
-    return res.status(201).json(updatedPerson)
+    const createTraumaUseCase = container.resolve(CreateTraumaUseCase)
+    const { person, project } = await createTraumaUseCase.execute({
+      userId: id,
+      projectId,
+      personId,
+      trauma: {
+        title,
+        description,
+        consequences,
+      },
+    })
+
+    return res.status(201).json({ person, project })
   }
 }

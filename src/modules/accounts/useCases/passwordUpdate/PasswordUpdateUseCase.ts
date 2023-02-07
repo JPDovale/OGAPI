@@ -4,6 +4,12 @@ import { inject, injectable } from 'tsyringe'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { AppError } from '@shared/errors/AppError'
 
+interface IRequest {
+  id: string
+  oldPassword: string
+  password: string
+}
+
 @injectable()
 export class PasswordUpdateUseCase {
   constructor(
@@ -11,11 +17,7 @@ export class PasswordUpdateUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute(
-    id: string,
-    oldPassword: string,
-    password: string,
-  ): Promise<void> {
+  async execute({ id, oldPassword, password }: IRequest): Promise<void> {
     const user = await this.usersRepository.findById(id)
     if (!user)
       throw new AppError({

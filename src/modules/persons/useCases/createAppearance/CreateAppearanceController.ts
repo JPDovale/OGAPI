@@ -1,25 +1,43 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { IAppearance } from '@modules/persons/infra/mongoose/entities/Appearance'
+import { z } from 'zod'
 
 import { CreateAppearanceUseCase } from './CreateAppearanceUseCase'
 
 export class CreateAppearancesController {
   async handle(req: Request, res: Response): Promise<Response> {
+    const createAppearanceBodySchema = z.object({
+      projectId: z.string().min(6).max(100),
+      personId: z.string().min(6).max(100),
+      appearance: z.object({
+        title: z.string().min(1).max(100),
+        description: z
+          .string()
+          .min(1)
+          .max(10000)
+          .regex(/^[^<>{}\\]+$/),
+      }),
+    })
+
     const { id } = req.user
-    const { projectId, personId } = req.body
-    const appearance = req.body.appearance as IAppearance[]
+    const {
+      projectId,
+      personId,
+      appearance: { description, title },
+    } = createAppearanceBodySchema.parse(req.body)
 
     const createAppearanceUseCase = container.resolve(CreateAppearanceUseCase)
 
-    const updatedPerson = await createAppearanceUseCase.execute(
-      id,
+    const { person, project } = await createAppearanceUseCase.execute({
+      userId: id,
       projectId,
       personId,
-      appearance,
-    )
+      appearance: {
+        title,
+        description,
+      },
+    })
 
-    return res.status(201).json(updatedPerson)
+    return res.status(201).json({ person, project })
   }
 }

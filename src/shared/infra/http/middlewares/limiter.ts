@@ -3,13 +3,17 @@ import { rateLimit, RateLimitRequestHandler } from 'express-rate-limit'
 
 import { AppError } from '@shared/errors/AppError'
 
+export interface IRateLimiter {
+  limit: number
+  per: 'minutes' | 'hours'
+}
 export class RateLimiter {
   rete: RateLimitRequestHandler
 
-  constructor(limiter: number, per: 'minutes' | 'hours') {
+  constructor({ limit, per }: IRateLimiter) {
     this.rete = rateLimit({
       windowMs: per === 'minutes' ? 1 * 60 * 1000 : 1 * 60 * 1000 * 60,
-      max: limiter,
+      max: limit,
       keyGenerator(req: Request): string {
         return req.ip
       },

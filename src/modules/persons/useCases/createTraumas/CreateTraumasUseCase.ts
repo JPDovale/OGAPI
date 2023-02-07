@@ -1,26 +1,26 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import {
-  ITrauma,
-  Trauma,
-} from '@modules/persons/infra/mongoose/entities/Trauma'
+import { Trauma } from '@modules/persons/infra/mongoose/entities/Trauma'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  trauma: ICreateGenericObjectWithConsequencesDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
-
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 @injectable()
 export class CreateTraumaUseCase {
   constructor(
@@ -30,12 +30,12 @@ export class CreateTraumaUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    trauma: ITrauma[],
-    userId: string,
-    projectId: string,
-    personId: string,
-  ): Promise<IPersonMongo> {
+  async execute({
+    personId,
+    projectId,
+    userId,
+    trauma,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person)
@@ -52,53 +52,39 @@ export class CreateTraumaUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
-
-    const unExitesTraumaToThisPerson = trauma.filter((p) => {
-      const existeTrauma = person.traumas.find((obj) => obj.title === p.title)
-
-      if (existeTrauma) {
-        errors.push({
-          at: p.title,
-          errorMessage:
-            'já exite um trauma com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    const traumaExistesToThiPerson = person.traumas.find(
+      (t) => t.title === trauma.title,
+    )
+    if (traumaExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe um trauma com esse nome.',
+        message:
+          'Já existe um trauma com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagTrauma = project.tags.find((tag) => tag.type === 'persons/traumas')
 
-    const unExitesTrauma = tagTrauma
-      ? unExitesTraumaToThisPerson.filter((p) => {
-          const existeRef = tagTrauma.refs.find(
-            (ref) => ref.object.title === p.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: p.title,
-              errorMessage:
-                'Você já criou um trauma com esse nome para outro personagem... Caso o trauma seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o trauma.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesTraumaToThisPerson
-
-    const newTrauma = unExitesTrauma.map((trauma) => {
-      const newTrauma = new Trauma({
-        title: trauma.title,
-        consequences: trauma.consequences,
-        description: trauma.description,
+    const traumaAlreadyExistsInTags = tagTrauma?.refs.find(
+      (ref) => ref.object.title === trauma.title,
+    )
+    if (traumaAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Trauma já existe nas tags.',
+        message:
+          'Você já criou um trauma com esse nome para outro personagem... Caso o trauma seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o trauma.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newTrauma }
+    const newTrauma = new Trauma({
+      title: trauma.title,
+      consequences: trauma.consequences || [],
+      description: trauma.description,
     })
 
-    const updateTraumas = [...newTrauma, ...person.traumas]
+    const updateTraumas = [newTrauma, ...person.traumas]
     const updatedPerson = await this.personsRepository.updateTraumas(
       personId,
       updateTraumas,
@@ -108,16 +94,16 @@ export class CreateTraumaUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/traumas',
-      newTrauma,
+      [newTrauma],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

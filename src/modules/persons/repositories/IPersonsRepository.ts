@@ -54,4 +54,5 @@ export interface IPersonsRepository {
   updateCouples: (personId: string, powers: ICouple[]) => Promise<IPersonMongo>
   deletePerUserId: (userId: string) => Promise<void>
   deletePerProjectId: (projectId: string) => Promise<void>
+  findManyById: (ids: string[]) => Promise<IPersonMongo[]>
 }

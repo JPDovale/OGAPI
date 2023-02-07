@@ -10,7 +10,6 @@ export class ListProjectsPerUserController {
     const listProjectsPerUserUseCase = container.resolve(
       ListProjectsPerUserUseCase,
     )
-
     const projectsThisUser = await listProjectsPerUserUseCase.execute(id)
 
     return res.status(200).json(projectsThisUser)

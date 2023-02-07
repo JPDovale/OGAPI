@@ -1,9 +1,13 @@
 import { hashSync } from 'bcryptjs'
+import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
 import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { ISharedWhitUsers } from '@modules/projects/infra/mongoose/entities/Project'
+import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
+dotenv.config()
 
 interface IRequest {
   name: string
@@ -19,6 +23,8 @@ export class CreateUserUseCase {
   constructor(
     @inject('UsersRepository')
     private readonly usersRepository: IUsersRepository,
+    @inject('ProjectsRepository')
+    private readonly projectsRepository: IProjectsRepository,
   ) {}
 
   async execute(request: IRequest): Promise<IUserMongo> {
@@ -36,25 +42,32 @@ export class CreateUserUseCase {
 
     const passwordHash = hashSync(password, 8)
 
-    try {
-      const newUser = await this.usersRepository.create({
-        name,
-        email,
-        password: passwordHash,
-        age: age || 'uncharacterized',
-        sex: sex || 'uncharacterized',
-        username: username || name,
-      })
+    const newUser = await this.usersRepository.create({
+      name,
+      email,
+      password: passwordHash,
+      age: age || 'uncharacterized',
+      sex: sex || 'uncharacterized',
+      username: username || name,
+    })
 
-      return newUser
-    } catch (err) {
-      console.log(err)
+    const projectWelcome = await this.projectsRepository.findById(
+      process.env.ID_PROJECT_WELCOME,
+    )
 
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
+    const addUser: ISharedWhitUsers = {
+      email: newUser.email,
+      id: newUser.id,
+      permission: 'view',
     }
+
+    const usersAdded = [...projectWelcome.users, addUser]
+
+    await this.projectsRepository.addUsers(
+      usersAdded,
+      process.env.ID_PROJECT_WELCOME,
+    )
+
+    return newUser
   }
 }

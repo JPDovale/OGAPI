@@ -41,32 +41,22 @@ export class CreateProjectUseCase {
         statusCode: 404,
       })
 
-    try {
-      const newProject = await this.projectsRepository.create({
-        name,
-        private: priv,
-        type,
-        password,
-        createdPerUser: id,
-        users: [
-          {
-            id,
-            permission: 'edit',
-            email: infoUser.email,
-          },
-        ],
-        plot: new PlotProject({}),
-      })
+    const newProject = await this.projectsRepository.create({
+      name,
+      private: priv,
+      type,
+      password,
+      createdPerUser: id,
+      users: [
+        {
+          id,
+          permission: 'edit',
+          email: infoUser.email,
+        },
+      ],
+      plot: new PlotProject({}),
+    })
 
-      return newProject
-    } catch (err) {
-      console.log(err)
-
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
-    }
+    return newProject
   }
 }

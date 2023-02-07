@@ -1,8 +1,8 @@
 import { v4 as uuidV4 } from 'uuid'
 
 interface IConsequence {
-  title: string
-  description: string
+  title?: string
+  description?: string
 }
 
 export interface ITrauma {

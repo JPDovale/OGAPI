@@ -1,6 +1,5 @@
 import { inject, injectable } from 'tsyringe'
 
-import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
@@ -47,22 +46,13 @@ export class DeleteProjectUseCase {
       })
     }
 
-    try {
-      await this.projectsRepository.delete(projectId)
-      await this.personsRepository.deletePerProjectId(projectId)
-      await this.notifyUsersProvider.notify(
-        user,
-        project,
-        `${user.username} deletou o projeto.`,
-        `${user.username} acabou de deletar o projeto o qual havia sido compartilhado com você: ${project.name} `,
-      )
-    } catch (err) {
-      console.log(err)
-      throw new AppError({
-        title: 'Internal error',
-        message: 'Try again later.',
-        statusCode: 500,
-      })
-    }
+    await this.projectsRepository.delete(projectId)
+    await this.personsRepository.deletePerProjectId(projectId)
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} deletou o projeto.`,
+      `${user.username} acabou de deletar o projeto o qual havia sido compartilhado com você: ${project.name} `,
+    )
   }
 }

@@ -1,4 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 export default {
-  databaseUrl:
-    'mongodb+srv://jpdv:vajopau123@test.yumldy9.mongodb.net/?retryWrites=true&w=majority',
+  databaseUrl: `${process.env.DATABASE_MONGO_URL}`,
 }

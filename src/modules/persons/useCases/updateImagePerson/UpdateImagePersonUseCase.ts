@@ -28,14 +28,14 @@ export class UpdateImagePersonUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
-    if (person.image.fileName) {
+    if (person?.image?.fileName) {
       await this.storageProvider.delete(person.image.fileName, 'persons/images')
     }
 
     const url = await this.storageProvider.upload(file, 'persons/images')
     let avatarToUpdate: IAvatar
 
-    if (person.image.fileName) {
+    if (person?.image?.fileName) {
       const avatar: IAvatar = {
         ...person.image,
         fileName: file.filename,

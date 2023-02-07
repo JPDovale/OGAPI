@@ -26,13 +26,13 @@ export async function verifyIsAdmin(
   const [, token] = authHeader.split(' ')
 
   try {
-    const { admin } = verify(token, session.secretRefreshToken) as IPayload
+    const { admin } = verify(token, session.secretToken) as IPayload
 
     if (!admin) {
       throw new AppError({
         title: 'Acesso negado!',
         message: 'Acesso negado!',
-        statusCode: 409,
+        statusCode: 401,
       })
     }
 
@@ -41,7 +41,7 @@ export async function verifyIsAdmin(
     throw new AppError({
       title: 'Acesso negado!',
       message: 'Token invalido!',
-      statusCode: 409,
+      statusCode: 401,
     })
   }
 }

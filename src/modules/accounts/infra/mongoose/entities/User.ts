@@ -36,6 +36,7 @@ const UserSchema = new mongoose.Schema({
 })
 
 export interface IUserMongo {
+  [x: string]: any
   id?: string
   name: string
   username: string

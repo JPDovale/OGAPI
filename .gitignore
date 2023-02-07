@@ -7,3 +7,5 @@ dist
 .vscode
 
 !temp/.gitkeep
+.env
+productionenv

@@ -214,4 +214,16 @@ export class PersonsMongoRepository implements IPersonsRepository {
   async deletePerProjectId(projectId: string): Promise<void> {
     await PersonMongo.deleteMany({ defaultProject: projectId })
   }
+
+  async findManyById(ids: string[]): Promise<IPersonMongo[]> {
+    const personsIds = ids.map((id) => {
+      return {
+        id,
+      }
+    })
+
+    const persons = await PersonMongo.find({ $or: personsIds })
+
+    return persons
+  }
 }

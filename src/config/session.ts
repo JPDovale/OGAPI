@@ -1,8 +1,11 @@
-export default {
-  secretToken: '398d784bcfc5ada86652d5f127d1350d',
-  expiresInToken: '10m',
+import dotenv from 'dotenv'
+dotenv.config()
 
-  secretRefreshToken: 'foadih3d97f-gqD371321234=123G-37fd23t3-0128',
-  expiresInRefreshToken: '30d',
-  expiresRefreshTokenDays: 30,
+export default {
+  secretToken: process.env.SECRET_TOKEN,
+  expiresInToken: process.env.EXPIRES_IN_TOKEN,
+
+  secretRefreshToken: process.env.SECRET_REFRESH_TOKEN,
+  expiresInRefreshToken: process.env.EXPIRES_IN_REFRESH_TOKEN,
+  expiresRefreshTokenDays: Number(process.env.EXPIRES_IN_REFRESH_TOKEN_DAYS),
 }

@@ -1,6 +1,10 @@
 import { ICreateUserTokenDTO } from '../dtos/ICreateUserTokenDTO'
 import { IRefreshTokenMongo } from '../infra/mongoose/entities/RefreshToken'
 
+export interface IFindByRefreshToken {
+  refreshToken: string
+}
+
 export interface IRefreshTokenRepository {
   create: ({
     expiresDate,
@@ -18,4 +22,8 @@ export interface IRefreshTokenRepository {
   deletePerUserId: (userId: string) => Promise<void>
 
   findByUserId: (userId: string) => Promise<IRefreshTokenMongo[]>
+
+  findByRefreshToken: ({
+    refreshToken,
+  }: IFindByRefreshToken) => Promise<IRefreshTokenMongo>
 }

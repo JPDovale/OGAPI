@@ -133,4 +133,28 @@ export class UsersMongoRepository implements IUsersRepository {
       { password, updateAt: this.dateProvider.getDate(new Date()) },
     )
   }
+
+  async findManyById(ids: string[]): Promise<IUserMongo[]> {
+    const usersIds = ids.map((id) => {
+      return {
+        id,
+      }
+    })
+
+    const users = await UserMongo.find({ $or: [...usersIds] })
+
+    return users
+  }
+
+  async updateNotificationManyById(
+    ids: string[],
+    notification: INotification,
+  ): Promise<void> {
+    await UserMongo.updateMany(
+      {
+        id: { $in: ids },
+      },
+      { $push: { notifications: { $each: [notification], $position: -1 } } },
+    )
+  }
 }

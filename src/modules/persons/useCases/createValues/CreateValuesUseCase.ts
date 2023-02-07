@@ -1,22 +1,26 @@
 import { container, inject, injectable } from 'tsyringe'
 
+import { ICreateGenericObjectWithExceptionsDTO } from '@modules/persons/dtos/ICreateGenericObjectWithExceptionsDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IValue, Value } from '@modules/persons/infra/mongoose/entities/Value'
+import { Value } from '@modules/persons/infra/mongoose/entities/Value'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { AppError } from '@shared/errors/AppError'
 
-interface IError {
-  at: string
-  errorMessage: string
+interface IRequest {
+  userId: string
+  projectId: string
+  personId: string
+  value: ICreateGenericObjectWithExceptionsDTO
 }
 
-// interface IResponse {
-//   updatedPerson: IPersonMongo
-//   errors?: IError[]
-// }
+interface IResponse {
+  person: IPersonMongo
+  project: IProjectMongo
+}
 
 @injectable()
 export class CreateValueUseCase {
@@ -27,12 +31,12 @@ export class CreateValueUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute(
-    userId: string,
-    projectId: string,
-    personId: string,
-    values: IValue[],
-  ): Promise<IPersonMongo> {
+  async execute({
+    personId,
+    projectId,
+    userId,
+    value,
+  }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -50,53 +54,39 @@ export class CreateValueUseCase {
       'edit',
     )
 
-    const errors: IError[] = []
-
-    const unExitesValuesToThisPerson = values.filter((value) => {
-      const existeValue = person.values.find((obj) => obj.title === value.title)
-
-      if (existeValue) {
-        errors.push({
-          at: value.title,
-          errorMessage:
-            'já exite um "valor" com o mesmo nome para esse personagem',
-        })
-
-        return false
-      } else return true
-    })
+    const valueExistesToThiPerson = person.values.find(
+      (t) => t.title === value.title,
+    )
+    if (valueExistesToThiPerson) {
+      throw new AppError({
+        title: 'Já existe um valor com esse nome.',
+        message:
+          'Já existe um valor com esse nome para esse personagem. Tente com outro nome.',
+        statusCode: 409,
+      })
+    }
 
     const tagValues = project.tags.find((tag) => tag.type === 'persons/values')
 
-    const unExitesValues = tagValues
-      ? unExitesValuesToThisPerson.filter((value) => {
-          const existeRef = tagValues.refs.find(
-            (ref) => ref.object.title === value.title,
-          )
-
-          if (existeRef) {
-            errors.push({
-              at: value.title,
-              errorMessage:
-                'Você já criou um objetivo com esse nome para outro personagem... Caso o objetivo seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o objetivo.',
-            })
-
-            return false
-          } else return true
-        })
-      : unExitesValuesToThisPerson
-
-    const newValues = unExitesValues.map((value) => {
-      const newValue = new Value({
-        description: value.description,
-        title: value.title,
-        exceptions: value.exceptions,
+    const valueAlreadyExistsInTags = tagValues?.refs.find(
+      (ref) => ref.object.title === value.title,
+    )
+    if (valueAlreadyExistsInTags) {
+      throw new AppError({
+        title: 'Valor já existe nas tags.',
+        message:
+          'Você já criou um valor com esse nome para outro personagem... Caso o valor seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o valor.',
+        statusCode: 409,
       })
+    }
 
-      return { ...newValue }
+    const newValue = new Value({
+      description: value.description,
+      title: value.title,
+      exceptions: value.exceptions || [],
     })
 
-    const updatedObjetives = [...newValues, ...person.values]
+    const updatedObjetives = [newValue, ...person.values]
     const updatedPerson = await this.personsRepository.updateValues(
       personId,
       updatedObjetives,
@@ -106,16 +96,16 @@ export class CreateValueUseCase {
     const tags = await tagsToProject.createOrUpdate(
       project.tags,
       'persons/values',
-      newValues,
+      [newValue],
       [personId],
       project.name,
     )
 
-    await this.projectsRepository.updateTag(
+    const updatedProject = await this.projectsRepository.updateTag(
       projectId || person.defaultProject,
       tags,
     )
 
-    return updatedPerson
+    return { person: updatedPerson, project: updatedProject }
   }
 }

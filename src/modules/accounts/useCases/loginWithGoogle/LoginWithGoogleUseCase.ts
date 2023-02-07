@@ -9,6 +9,11 @@ import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosRespon
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
+interface IRequest {
+  email: string
+  image: string
+  name: string
+}
 interface IResponse {
   user: IUserInfosResponse
   refreshToken: string
@@ -26,11 +31,7 @@ export class LoginWithGoogleUseCase {
     private readonly dateProvider: IDateProvider,
   ) {}
 
-  async execute(
-    email: string,
-    image: string,
-    name: string,
-  ): Promise<IResponse> {
+  async execute({ email, image, name }: IRequest): Promise<IResponse> {
     const {
       expiresInToken,
       secretToken,

@@ -43,21 +43,23 @@ export class CreateSessionUseCase {
 
     const userExiste = await this.userRepository.findByEmail(email)
 
-    if (!userExiste)
+    if (!userExiste) {
       throw new AppError({
         title: 'Email ou senha incorretos.',
         message:
           'O email ou a senha que você informou são inválidos. Verifique as informações e tente de novo.',
       })
+    }
 
     const passwordCorrect = compareSync(password, userExiste.password)
 
-    if (!passwordCorrect)
+    if (!passwordCorrect) {
       throw new AppError({
         title: 'Email ou senha incorretos.',
         message:
           'O email ou a senha que você informou são inválidos. Verifique as informações e tente de novo.',
       })
+    }
 
     const token = sign(
       {

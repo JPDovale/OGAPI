@@ -1,15 +1,28 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
+import { z } from 'zod'
 
 import { ResponseCommentPersonUseCase } from './ResponseCommentPersonUseCase'
 
 export class ResponseCommentPersonController {
   async handle(req: Request, res: Response): Promise<Response> {
+    const responseCommentPersonBodySchema = z.object({
+      personId: z.string().min(6).max(100),
+      commentId: z.string().min(6).max(100),
+      response: z.object({
+        content: z
+          .string()
+          .max(2000)
+          .regex(/^[^<>{}\\]+$/),
+      }),
+    })
+
     const { id } = req.user
-    const response = req.body.response as IResponseCommentPlotProjectDTO
-    const { personId, commentId } = req.body
+    const {
+      personId,
+      commentId,
+      response: { content },
+    } = responseCommentPersonBodySchema.parse(req.body)
 
     const responseCommentPersonUseCase = container.resolve(
       ResponseCommentPersonUseCase,
@@ -18,7 +31,7 @@ export class ResponseCommentPersonController {
       id,
       personId,
       commentId,
-      response,
+      { content },
     )
 
     return res.status(200).json(person)

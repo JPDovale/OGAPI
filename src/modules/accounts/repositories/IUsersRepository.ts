@@ -26,4 +26,9 @@ export interface IUsersRepository {
     notifications: INotification[],
   ) => Promise<void>
   updatePassword: (userId: string, password: string) => Promise<void>
+  findManyById: (ids: string[]) => Promise<IUserMongo[]>
+  updateNotificationManyById: (
+    ids: string[],
+    notification: INotification,
+  ) => Promise<void>
 }

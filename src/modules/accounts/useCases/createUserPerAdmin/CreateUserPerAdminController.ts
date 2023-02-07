@@ -1,21 +1,21 @@
 import { Request, Response } from 'express'
 import { container } from 'tsyringe'
-
-import { AppError } from '@shared/errors/AppError'
+import { z } from 'zod'
 
 import { CreateUserPerAdminUseCase } from './CreateUserPerAdminUseCase'
 
 export class CreateUserPerAdminController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { name, username, age, sex } = req.body
+    const createUserPerAdminBodySchema = z.object({
+      name: z.string().min(1).max(200),
+      age: z.string().max(4).optional(),
+      sex: z.string().max(30).optional(),
+      username: z.string().max(200).optional(),
+    })
 
-    if (!name)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message:
-          'Algumas informações necessárias para a criação do usuário estão faltando. Verifique as informações enviadas e tente novamente.',
-        statusCode: 409,
-      })
+    const { name, username, age, sex } = createUserPerAdminBodySchema.parse(
+      req.body,
+    )
 
     const createUserPerAdminUseCase = container.resolve(
       CreateUserPerAdminUseCase,
