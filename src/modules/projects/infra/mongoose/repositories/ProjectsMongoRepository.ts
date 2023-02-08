@@ -13,6 +13,7 @@ import {
   ProjectMongo,
 } from '../entities/Project'
 import { ITag } from '../entities/Tag'
+import { IUpdateName } from './types/IUpdateName'
 
 @injectable()
 export class ProjectsMongoRepository implements IProjectsRepository {
@@ -118,5 +119,15 @@ export class ProjectsMongoRepository implements IProjectsRepository {
   async listAll(): Promise<IProjectMongo[]> {
     const allProjects = await ProjectMongo.find()
     return allProjects
+  }
+
+  async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
+    await ProjectMongo.updateOne(
+      { id },
+      { name, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+
+    const project = await ProjectMongo.findOne({ id })
+    return project
   }
 }

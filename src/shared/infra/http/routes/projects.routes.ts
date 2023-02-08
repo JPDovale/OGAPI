@@ -11,6 +11,7 @@ import { QuitProjectController } from '@modules/projects/useCases/quitProject/Qu
 import { ResponseCommentPlotProjectController } from '@modules/projects/useCases/responseCommentPlotProject/ResponseCommentPlotProjectController'
 import { ShareProjectController } from '@modules/projects/useCases/shareProject/ShareProjectController'
 import { UnshareProjectController } from '@modules/projects/useCases/unshareProject/UnshareProjectController'
+import { UpdateNameController } from '@modules/projects/useCases/updateName/UpdateNameController'
 
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated'
 import { Uploads } from '../middlewares/upload'
@@ -28,6 +29,7 @@ const commentInPlotProjectController = new CommentInPlotProjectController()
 const responseCommentPlotProject = new ResponseCommentPlotProjectController()
 const deleteImageController = new DeleteImageController()
 const quitProjectController = new QuitProjectController()
+const updateNameController = new UpdateNameController()
 
 const uploads = new Uploads('projects', 'image')
 
@@ -50,3 +52,4 @@ projectsRoutes.post(
   responseCommentPlotProject.handle,
 )
 projectsRoutes.put('/quit', quitProjectController.handle)
+projectsRoutes.patch('/name', updateNameController.handle)
