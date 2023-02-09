@@ -9,5 +9,9 @@ export interface IBooksRepository {
   findManyById: ({ ids }: IFindManyById) => Promise<IBook[]>
   findById: (id: string) => Promise<IBook>
   updateFrontCover: ({ id, frontCover }: IUpdateFrontCover) => Promise<IBook>
-  updateCapitules: ({ id, capitules }: IUpdateCapitules) => Promise<IBook>
+  updateCapitules: ({
+    id,
+    capitules,
+    writtenWords,
+  }: IUpdateCapitules) => Promise<IBook>
 }

@@ -1,9 +1,8 @@
 import { inject, injectable } from 'tsyringe'
 
-import { Scene } from '@modules/books/infra/mongoose/entities/schemas/Scene'
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
-import { IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
+import { IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
@@ -13,13 +12,12 @@ interface IRequest {
   userId: string
   bookId: string
   capituleId: string
-  objective: string
-  structure: IStructurePlotBook
-  persons: string[]
+  sceneId: string
+  writtenWords: string
 }
 
 @injectable()
-export class CreateSceneUseCase {
+export class SetCompleteSceneUseCase {
   constructor(
     @inject('BooksRepository')
     private readonly booksRepository: IBooksRepository,
@@ -33,9 +31,8 @@ export class CreateSceneUseCase {
     userId,
     bookId,
     capituleId,
-    objective,
-    structure,
-    persons,
+    sceneId,
+    writtenWords,
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
@@ -68,27 +65,64 @@ export class CreateSceneUseCase {
       })
     }
 
-    const newScene = new Scene({
-      complete: false,
-      objective,
-      persons,
-      sequence: `${capituleToUpdate.scenes.length + 1}`,
-      structure,
-    })
+    const sceneToUpdate = capituleToUpdate.scenes.find(
+      (scene) => scene.id === sceneId,
+    )
+    const indexOfSceneToUpdate = capituleToUpdate.scenes.findIndex(
+      (scene) => scene.id === sceneId,
+    )
+
+    if (!sceneToUpdate || indexOfSceneToUpdate < 0) {
+      throw new AppError({
+        title: 'A cena não existe',
+        message: 'Parece que essa cena não existe na nossa base de dados',
+        statusCode: 404,
+      })
+    }
+
+    const scene: IScene = {
+      ...sceneToUpdate,
+      complete: true,
+      writtenWords,
+    }
+
+    const scenes = capituleToUpdate.scenes
+    scenes[indexOfSceneToUpdate] = scene
+
+    const numberWrittenWordsToAdd = Number(writtenWords)
+    const numberOfWordsInCapitule = Number(capituleToUpdate.words || '0')
+
+    const newNumberOfWordsInCapitule = `${
+      numberOfWordsInCapitule + numberWrittenWordsToAdd
+    }`
+
+    const sceneIncomplete = capituleToUpdate.scenes.find(
+      (scene) => !scene.complete,
+    )
 
     const capitule: ICapitule = {
       ...capituleToUpdate,
-      complete: false,
-      scenes: [...capituleToUpdate.scenes, newScene],
+      complete: !sceneIncomplete,
+      words: newNumberOfWordsInCapitule,
       updatedAt: this.dateProvider.getDate(new Date()),
     }
 
     const capitules = book.capitules
     capitules[indexOfCapituleToUpdate] = capitule
 
+    let wordsInBook = 0
+
+    capitules.map((capitule) => {
+      const wordsInNumber = Number(capitule.words)
+
+      wordsInBook = wordsInBook + wordsInNumber
+      return ''
+    })
+
     const updatedBook = await this.booksRepository.updateCapitules({
+      id: book.id,
       capitules,
-      id: bookId,
+      writtenWords: `${wordsInBook}`,
     })
 
     return updatedBook

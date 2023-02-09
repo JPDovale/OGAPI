@@ -83,11 +83,26 @@ export class BooksMongoRepository implements IBooksRepository {
     return book
   }
 
-  async updateCapitules({ id, capitules }: IUpdateCapitules): Promise<IBook> {
-    await BookMongo.updateOne(
-      { id },
-      { capitules, updateAt: this.dateProvider.getDate(new Date()) },
-    )
+  async updateCapitules({
+    id,
+    capitules,
+    writtenWords,
+  }: IUpdateCapitules): Promise<IBook> {
+    if (writtenWords) {
+      await BookMongo.updateOne(
+        { id },
+        {
+          capitules,
+          writtenWords,
+          updateAt: this.dateProvider.getDate(new Date()),
+        },
+      )
+    } else {
+      await BookMongo.updateOne(
+        { id },
+        { capitules, updateAt: this.dateProvider.getDate(new Date()) },
+      )
+    }
 
     const book = await BookMongo.findOne({ id })
     return book

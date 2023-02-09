@@ -19,8 +19,8 @@ export interface IBook {
   authors: IAuthorBook[]
   plot: IPlotBook
   words?: string
+  writtenWords?: string
   capitules: ICapitule[]
-  scenes: IScene[]
   comments: IComment[]
   createAt: string
   updateAt: string

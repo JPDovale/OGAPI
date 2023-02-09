@@ -22,7 +22,7 @@ export class Capitule {
     this.sequence = capitule.sequence
     this.objective = capitule.objective
     this.complete = capitule.complete
-    this.words = capitule.words
+    this.words = capitule.words || '0'
     this.structure = capitule.structure
     this.scenes = capitule.scenes || []
     this.createdAt = capitule.createdAt

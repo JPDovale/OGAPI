@@ -6,7 +6,7 @@ import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepositor
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 
 import { ICacheProvider } from '../../CacheProvider/ICacheProvider'
-import { INotifyUsersProvider } from '../INotifyUsersProvider'
+import { INotifyAll, INotifyUsersProvider } from '../INotifyUsersProvider'
 
 @injectable()
 export class NotifyUsersProvider implements INotifyUsersProvider {
@@ -68,5 +68,22 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
     //       }
     //     }),
     //   )
+  }
+
+  async notifyAll({ content, sendBy, title }: INotifyAll): Promise<void> {
+    const allUsers = await this.usersRepository.list()
+
+    const usersIds = allUsers.map((user) => user.id)
+    const newNotification = new Notification({
+      title,
+      content,
+      projectId: '',
+      sendedPerUser: sendBy.id,
+    })
+
+    await this.usersRepository.updateNotificationManyById(
+      usersIds,
+      newNotification,
+    )
   }
 }

@@ -2,7 +2,6 @@ import { inject, injectable } from 'tsyringe'
 
 import { Capitule } from '@modules/books/infra/mongoose/entities/schemas/Capitule'
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
 import { IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
@@ -63,7 +62,7 @@ export class CreateCapituleUseCase {
 
     const updatedCapitules = [...book.capitules, newCapitule]
     const updatedBook = await this.booksRepository.updateCapitules({
-      capitules: updatedCapitules as ICapitule[],
+      capitules: updatedCapitules,
       id: bookId,
     })
 
