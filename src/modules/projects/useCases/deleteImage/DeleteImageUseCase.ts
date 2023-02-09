@@ -41,7 +41,8 @@ export class DeleteImageUseCase {
       {
         fileName: '',
         url: '',
-        createdAt: this.dateProvider.getDate(new Date()),
+        updatedAt: this.dateProvider.getDate(new Date()),
+        createdAt: project.image.createdAt,
       },
       projectId,
     )

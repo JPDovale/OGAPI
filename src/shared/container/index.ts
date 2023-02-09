@@ -2,11 +2,14 @@ import 'reflect-metadata'
 import { container } from 'tsyringe'
 
 import '@shared/container/provides'
+import '@shared/container/services'
 
 import { RefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/RefreshTokenRepository'
 import { UsersMongoRepository } from '@modules/accounts/infra/mongoose/repositories/UsersMongoRepository'
 import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { BooksMongoRepository } from '@modules/books/infra/mongoose/repositories/implementations/BooksMongoRepository'
 import { PersonsMongoRepository } from '@modules/persons/infra/mongoose/repositories/PersonsMongoRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { ProjectsMongoRepository } from '@modules/projects/infra/mongoose/repositories/ProjectsMongoRepository'
@@ -30,4 +33,9 @@ container.registerSingleton<IRefreshTokenRepository>(
 container.registerSingleton<IPersonsRepository>(
   'PersonsRepository',
   PersonsMongoRepository,
+)
+
+container.registerSingleton<IBooksRepository>(
+  'BooksRepository',
+  BooksMongoRepository,
 )

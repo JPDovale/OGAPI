@@ -40,6 +40,8 @@ export class PersonsMongoRepository implements IPersonsRepository {
       history,
       defaultProject: projectId,
       fromUser: userId,
+      createAt: this.dateProvider.getDate(new Date()),
+      updateAt: this.dateProvider.getDate(new Date()),
     })
 
     await newPerson.save()
