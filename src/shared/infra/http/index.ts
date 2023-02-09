@@ -24,21 +24,24 @@ const appName = process.env.APP_NAME
 const appPort = process.env.APP_PORT
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
-app.use(rateLimit.rete)
+const isDev = JSON.parse(process.env.IS_DEV || 'false')
 
-Sentry.init({
-  dsn: process.env.DNS_SENTRY,
-  // environment: params.INSTANCE_NAME,
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    new Tracing.Integrations.Express({ app }),
-  ],
-  tracesSampleRate: 1.0,
-})
+if (!isDev) {
+  app.use(rateLimit.rete)
 
-app.use(Sentry.Handlers.requestHandler())
-app.use(Sentry.Handlers.tracingHandler())
+  Sentry.init({
+    dsn: process.env.DNS_SENTRY,
+    // environment: params.INSTANCE_NAME,
+    integrations: [
+      new Sentry.Integrations.Http({ tracing: true }),
+      new Tracing.Integrations.Express({ app }),
+    ],
+    tracesSampleRate: 1.0,
+  })
 
+  app.use(Sentry.Handlers.requestHandler())
+  app.use(Sentry.Handlers.tracingHandler())
+}
 app.use(
   cors({
     allowedHeaders: '*',
@@ -46,17 +49,24 @@ app.use(
   }),
 )
 app.use(express.json())
-app.use(morgan('combined'))
+
+if (!isDev) {
+  app.use(morgan('combined'))
+}
 
 getConnectionMongoDb()
-  .then(() => console.log('Database connected'))
+  .then(() => {
+    if (isDev) console.log('Database connected')
+  })
   .catch((err) => {
     throw err
   })
 
 app.use(router)
 
-app.use(Sentry.Handlers.errorHandler())
+if (!isDev) {
+  app.use(Sentry.Handlers.errorHandler())
+}
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof AppError) {
@@ -67,7 +77,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 
   if (err instanceof ZodError) {
-    console.log(err)
+    if (isDev) console.log(err)
 
     return res.status(401).json({
       errorTitle: 'Informações inválidas',
@@ -77,7 +87,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 
   if (err instanceof Error) {
-    console.log(err)
+    if (isDev) console.log(err)
 
     res.status(500).json({
       errorTitle: 'Internal error',
@@ -87,5 +97,5 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 app.listen(appPort, () => {
-  console.log(`${appName} running on port ${appPort}`)
+  if (isDev) console.log(`${appName} running on port ${appPort}`)
 })

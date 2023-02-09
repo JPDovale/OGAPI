@@ -5,6 +5,8 @@ tmp/*
 
 dist
 .vscode
+.env
+productionenv
 
 !temp/.gitkeep
 .env
