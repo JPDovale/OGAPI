@@ -9,6 +9,7 @@ import { GetInfosController } from '@modules/accounts/useCases/getInfos/GetInfos
 import { GetUserPerCodeController } from '@modules/accounts/useCases/getUserPerCode/GetUserPerCodeController'
 import { ListUsersController } from '@modules/accounts/useCases/listUsers/ListUsersController'
 import { LogoutController } from '@modules/accounts/useCases/logout/LogoutController'
+import { NotifyAllUsersController } from '@modules/accounts/useCases/notifyAllUsers/NotifyAllUsersController'
 import { PasswordUpdateController } from '@modules/accounts/useCases/passwordUpdate/PasswordUpdateController'
 import { RecoveryPasswordController } from '@modules/accounts/useCases/recoveryPassword/RecoveryPasswordController'
 import { SendForgotPasswordMailController } from '@modules/accounts/useCases/sendForgotPasswordMail/sendForgotPasswordMailController'
@@ -35,6 +36,7 @@ const deleteAvatarController = new DeleteAvatarController()
 const sendForgotPasswordMailController = new SendForgotPasswordMailController()
 const recoveryPasswordController = new RecoveryPasswordController()
 const visualizeNotificationsController = new VisualizeNotificationsController()
+const notifyAllUsersController = new NotifyAllUsersController()
 
 const uploads = new Uploads('avatar', 'image')
 
@@ -65,3 +67,7 @@ userRoutes.use(verifyIsAdmin)
 userRoutes.delete('/:id', deleteUserController.handle)
 userRoutes.get('/all', listUsersController.handle)
 userRoutes.post('/create', createUserPerAdminController.handle)
+userRoutes.post('/notify', notifyAllUsersController.handle)
+userRoutes.get('/verify', (req, res) => {
+  return res.status(200).json({ admin: true })
+})
