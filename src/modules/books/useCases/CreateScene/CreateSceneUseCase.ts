@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
-import { Capitule } from '@modules/books/infra/mongoose/entities/schemas/Capitule'
+import { Scene } from '@modules/books/infra/mongoose/entities/schemas/Scene'
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
 import { IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
@@ -10,15 +10,16 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {
-  bookId: string
   userId: string
-  name: string
+  bookId: string
+  capituleId: string
   objective: string
-  structure?: IStructurePlotBook
+  structure: IStructurePlotBook
+  persons: string[]
 }
 
 @injectable()
-export class CreateCapituleUseCase {
+export class CreateSceneUseCase {
   constructor(
     @inject('BooksRepository')
     private readonly booksRepository: IBooksRepository,
@@ -29,11 +30,12 @@ export class CreateCapituleUseCase {
   ) {}
 
   async execute({
+    userId,
     bookId,
-    name,
+    capituleId,
     objective,
     structure,
-    userId,
+    persons,
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
@@ -51,19 +53,40 @@ export class CreateCapituleUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    const newCapitule = new Capitule({
+    const capituleToUpdate = book.capitules.find(
+      (capitule) => capitule.id === capituleId,
+    )
+    const indexOfCapituleToUpdate = book.capitules.findIndex(
+      (capitule) => capitule.id === capituleId,
+    )
+
+    if (!capituleToUpdate || indexOfCapituleToUpdate < 0) {
+      throw new AppError({
+        title: 'O capítulo não existe',
+        message: 'Parece que esse capítulo não existe na nossa base de dados',
+        statusCode: 404,
+      })
+    }
+
+    const newScene = new Scene({
       complete: false,
-      name,
       objective,
+      persons,
+      sequence: `${capituleToUpdate.scenes.length + 1}`,
       structure,
-      sequence: `${book.capitules.length + 1}`,
-      createdAt: this.dateProvider.getDate(new Date()),
-      updatedAt: this.dateProvider.getDate(new Date()),
     })
 
-    const updatedCapitules = [...book.capitules, newCapitule]
+    const capitule: ICapitule = {
+      ...capituleToUpdate,
+      scenes: [...capituleToUpdate.scenes, newScene],
+      updatedAt: this.dateProvider.getDate(new Date()),
+    }
+
+    const capitules = book.capitules
+    capitules[indexOfCapituleToUpdate] = capitule
+
     const updatedBook = await this.booksRepository.updateCapitules({
-      capitules: updatedCapitules as ICapitule[],
+      capitules,
       id: bookId,
     })
 

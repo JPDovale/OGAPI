@@ -3,7 +3,6 @@ import mongoose from 'mongoose'
 import { IAuthorBook } from '../types/IAuthorBook'
 import { ICapitule } from '../types/ICapitule'
 import { IGenereBook } from '../types/IGenereBook'
-import { IScene } from '../types/IScene'
 
 const BookSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -19,7 +18,6 @@ const BookSchema = new mongoose.Schema({
   words: { type: String, default: '0' },
   writtenWords: { type: String, default: '0' },
   capitules: { type: Array<ICapitule> },
-  scenes: { type: Array<IScene> },
   comments: { type: Array, default: [] },
   createAt: { type: String, required: true },
   updateAt: { type: String, required: true },

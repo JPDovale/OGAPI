@@ -4,7 +4,7 @@ import { IStructurePlotBook } from '../types/IPlotBook'
 import { IScene } from '../types/IScene'
 
 export class Scene {
-  id: string
+  id?: string
   sequence: string
   objective: string
   complete: boolean

@@ -1,7 +1,7 @@
 import { IStructurePlotBook } from './IPlotBook'
 
 export interface IScene {
-  id: string
+  id?: string
   sequence: string
   objective: string
   complete: boolean
