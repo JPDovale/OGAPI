@@ -1,5 +1,5 @@
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { AppError } from '@shared/errors/AppError'
 
 import { GetInfosUseCase } from './GetInfosUseCase'

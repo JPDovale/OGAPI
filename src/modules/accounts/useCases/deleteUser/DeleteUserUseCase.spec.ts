@@ -1,6 +1,6 @@
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { PersonsRepositoryInMemory } from '@modules/persons/repositories/inMemory/PersonsRepositoryInMemory'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { FirebaseStorageProvider } from '@shared/container/provides/StorageProvider/implementations/FirebaseStorageProvider'
@@ -25,6 +25,7 @@ describe('Delete user test', () => {
     projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
     personsRepositoryInMemory = new PersonsRepositoryInMemory()
     refreshTokenRepositoryInMemory = new RefreshTokenRepositoryInMemory()
+    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
 
     deleteUserUseCase = new DeleteUserUseCase(
       userRepositoryInMemory,
@@ -33,7 +34,10 @@ describe('Delete user test', () => {
       personsRepositoryInMemory,
       refreshTokenRepositoryInMemory,
     )
-    createUserUseCase = new CreateUserUseCase(userRepositoryInMemory)
+    createUserUseCase = new CreateUserUseCase(
+      userRepositoryInMemory,
+      projectsRepositoryInMemory,
+    )
     listUsersUseCase = new ListUsersUseCase(userRepositoryInMemory)
   })
 

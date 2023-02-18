@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'

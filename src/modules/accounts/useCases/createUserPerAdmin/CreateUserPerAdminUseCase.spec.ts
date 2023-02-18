@@ -1,4 +1,4 @@
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 
 import { CreateUserPerAdminUseCase } from './CreateUserPerAdminUseCase'
 

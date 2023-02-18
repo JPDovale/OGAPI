@@ -7,6 +7,7 @@ import {
   ProjectMongo,
 } from '@modules/projects/infra/mongoose/entities/Project'
 import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
+import { IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
 
 import { IProjectsRepository } from '../IProjectRepository'
 
@@ -51,7 +52,6 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     plot: IUpdatePlotDTO,
   ) => Promise<IProjectMongo>
 
-  updateTag: (projectId: string, tags: ITag[]) => Promise<void>
   async deletePerUserId(userId: string): Promise<void> {
     const filteredProjects = this.projects.filter(
       (project) => project.createdPerUser !== userId,
@@ -59,4 +59,8 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
     this.projects = filteredProjects
   }
+
+  updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
+  listAll: () => Promise<IProjectMongo[]>
+  updateName: ({ id, name }: IUpdateName) => Promise<IProjectMongo>
 }

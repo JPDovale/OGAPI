@@ -1,15 +1,21 @@
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { AppError } from '@shared/errors/AppError'
 
 import { CreateUserUseCase } from './CreateUserUseCase'
 
 let createUserUseCase: CreateUserUseCase
 let userRepositoryInMemory: UserRepositoryInMemory
+let projectRepositoryInMemory: ProjectsRepositoryInMemory
 
 describe('Create user', () => {
   beforeEach(() => {
     userRepositoryInMemory = new UserRepositoryInMemory()
-    createUserUseCase = new CreateUserUseCase(userRepositoryInMemory)
+    projectRepositoryInMemory = new ProjectsRepositoryInMemory()
+    createUserUseCase = new CreateUserUseCase(
+      userRepositoryInMemory,
+      projectRepositoryInMemory,
+    )
   })
 
   it('Should be able to create a new user', async () => {
@@ -29,6 +35,7 @@ describe('Create user', () => {
     )
 
     expect(userCreated).toHaveProperty('id')
+    expect(userCreated.password).not.toEqual('test123')
   })
 
   it('Should not be able to create a new user with email exits', async () => {
@@ -43,7 +50,6 @@ describe('Create user', () => {
       }
 
       await createUserUseCase.execute(newUserTest)
-
       await createUserUseCase.execute(newUserTest)
     })
       .rejects.toBeInstanceOf(AppError)

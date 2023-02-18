@@ -161,4 +161,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const updatedUser: IUserMongo = { ...userToUpdate, password }
     this.users = [...filteredUsers, updatedUser]
   }
+
+  findManyById: (ids: string[]) => Promise<IUserMongo[]>
+
+  updateNotificationManyById: (
+    ids: string[],
+    notification: INotification,
+  ) => Promise<void>
 }

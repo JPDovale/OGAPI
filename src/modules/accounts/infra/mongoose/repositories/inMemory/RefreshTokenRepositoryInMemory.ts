@@ -1,12 +1,15 @@
 import { v4 as uuidV4 } from 'uuid'
 
 import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
+
 import {
   IRefreshTokenMongo,
   RefreshTokenMongo,
-} from '@modules/accounts/infra/mongoose/entities/RefreshToken'
-
-import { IRefreshTokenRepository } from '../IRefreshTokenRepository'
+} from '../../entities/RefreshToken'
+import {
+  IFindByRefreshToken,
+  IRefreshTokenRepository,
+} from '../IRefreshTokenRepository'
 
 export class RefreshTokenRepositoryInMemory implements IRefreshTokenRepository {
   userTokens: IRefreshTokenMongo[] = []
@@ -57,4 +60,8 @@ export class RefreshTokenRepositoryInMemory implements IRefreshTokenRepository {
     const refreshTokens = this.userTokens.filter((token) => token.userId === id)
     return refreshTokens
   }
+
+  findByRefreshToken: ({
+    refreshToken,
+  }: IFindByRefreshToken) => Promise<IRefreshTokenMongo>
 }

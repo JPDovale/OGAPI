@@ -70,4 +70,5 @@ export class PersonsRepositoryInMemory implements IPersonsRepository {
   }
 
   deletePerProjectId: (projectId: string) => Promise<void>
+  findManyById: (ids: string[]) => Promise<IPersonMongo[]>
 }
