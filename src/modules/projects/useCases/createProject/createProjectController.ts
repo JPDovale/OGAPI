@@ -2,9 +2,8 @@ import { Request, Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { CreateProjectUseCase } from '@modules/projects/useCases/createProject/createProjectUseCase'
 import { AppError } from '@shared/errors/AppError'
-
-import { CreateProjectUseCase } from './CreateProjectUseCase'
 
 export class CreateProjectController {
   async handle(req: Request, res: Response): Promise<Response> {
