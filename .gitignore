@@ -2,7 +2,7 @@ node_modules
 mocs
 tmp/*
 
-
+build
 dist
 .vscode
 .env
