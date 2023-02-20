@@ -97,14 +97,16 @@ export class BooksMongoRepository implements IBooksRepository {
           updateAt: this.dateProvider.getDate(new Date()),
         },
       )
+      const book = await BookMongo.findOne({ id })
+      return book
     } else {
       await BookMongo.updateOne(
         { id },
         { capitules, updateAt: this.dateProvider.getDate(new Date()) },
       )
-    }
 
-    const book = await BookMongo.findOne({ id })
-    return book
+      const book = await BookMongo.findOne({ id })
+      return book
+    }
   }
 }
