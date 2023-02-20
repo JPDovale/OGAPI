@@ -1,4 +1,6 @@
+import 'reflect-metadata'
 import { hashSync } from 'bcryptjs'
+import { describe, beforeEach, it, expect } from 'vitest'
 
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'

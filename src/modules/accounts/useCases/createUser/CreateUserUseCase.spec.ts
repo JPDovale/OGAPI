@@ -1,3 +1,6 @@
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { AppError } from '@shared/errors/AppError'

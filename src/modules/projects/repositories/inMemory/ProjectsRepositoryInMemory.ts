@@ -16,21 +16,25 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
   async create(dataProjectObj: ICreateProjectDTO): Promise<IProjectMongo> {
     const {
+      createdPerUser,
       name,
       private: priv,
       type,
       password,
-      createdPerUser,
+      users,
+      plot,
     } = dataProjectObj
 
     const newProject = new ProjectMongo()
 
     Object.assign(newProject, {
+      createdPerUser,
       name,
+      private: priv,
       type,
       password,
-      private: priv,
-      createdPerUser,
+      users,
+      plot,
     })
 
     this.projects.push(newProject)
@@ -38,15 +42,31 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     return newProject
   }
 
-  listPerUser: (userId: string) => Promise<IProjectMongo[]>
-  findById: (projectId: string) => Promise<IProjectMongo>
+  async listPerUser(userId: string): Promise<IProjectMongo[]> {
+    const projectsOfUser = this.projects.filter(
+      (project) => project.createdPerUser === userId,
+    )
+
+    return projectsOfUser
+  }
+
+  async findById(id: string): Promise<IProjectMongo> {
+    const project = this.projects.find((project) => project.id === id)
+
+    return project
+  }
+
   addUsers: (
     users: ISharedWhitUsers[],
     projectId: string,
   ) => Promise<IProjectMongo>
 
   updateImage: (image: IAvatar, projectId: string) => Promise<IProjectMongo>
-  delete: (projectId: string) => Promise<void>
+
+  async delete(projectId: string): Promise<void> {
+    this.projects = this.projects.filter((project) => project.id !== projectId)
+  }
+
   updatePlot: (
     projectId: string,
     plot: IUpdatePlotDTO,

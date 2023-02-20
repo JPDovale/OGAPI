@@ -1,3 +1,6 @@
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 
 import { CreateUserPerAdminUseCase } from './CreateUserPerAdminUseCase'
