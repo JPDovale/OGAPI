@@ -4,6 +4,7 @@ tmp/*
 
 build
 dist
+build
 .vscode
 .env
 productionenv

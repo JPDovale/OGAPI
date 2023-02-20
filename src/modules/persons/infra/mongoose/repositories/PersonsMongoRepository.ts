@@ -228,4 +228,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
 
     return persons
   }
+
+  async listPerUser(userId: string): Promise<IPersonMongo[]> {
+    const persons = await PersonMongo.find({ fromUser: userId })
+
+    return persons
+  }
 }

@@ -55,4 +55,5 @@ export interface IPersonsRepository {
   deletePerUserId: (userId: string) => Promise<void>
   deletePerProjectId: (projectId: string) => Promise<void>
   findManyById: (ids: string[]) => Promise<IPersonMongo[]>
+  listPerUser: (userId: string) => Promise<IPersonMongo[]>
 }

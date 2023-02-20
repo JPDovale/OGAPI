@@ -3,8 +3,8 @@ import { sign, verify } from 'jsonwebtoken'
 import { inject, injectable } from 'tsyringe'
 
 import session from '@config/session'
-import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
 

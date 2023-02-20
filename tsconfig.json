@@ -1,23 +1,40 @@
 {
   "compilerOptions": {
-    "target": "es2016",                                 
-    "experimentalDecorators": true,                  
-    "emitDecoratorMetadata": true,                   
-    "module": "commonjs",                               
-    "baseUrl": "./src",     
+    "target": "es2016",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "module": "commonjs",
+    "baseUrl": "./src",
     "paths": {
-      "@database/*": ["database/*"],
-      "@errors/*": ["errors/*"],
-      "@middlewares/*": ["middlewares/*"],
-      "@modules/*": ["modules/*"],
-      "@routes/*": ["routes/*"],
-      "@config/*": ["config/*"],
-      "@shared/*": ["shared/*"]
-    },                                     
-    "resolveJsonModule": true,                       
-    "outDir": "./dist",                                  
-    "esModuleInterop": true,                            
-    "forceConsistentCasingInFileNames": true,           
-    "skipLibCheck": true                                
+      "@database/*": [
+        "database/*"
+      ],
+      "@errors/*": [
+        "errors/*"
+      ],
+      "@middlewares/*": [
+        "middlewares/*"
+      ],
+      "@modules/*": [
+        "modules/*"
+      ],
+      "@routes/*": [
+        "routes/*"
+      ],
+      "@config/*": [
+        "config/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ]
+    },
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "types": [
+      "vitest/importMeta"
+    ]
   }
 }
