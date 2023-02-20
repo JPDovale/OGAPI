@@ -1,7 +1,7 @@
 import { compareSync, hashSync } from 'bcryptjs'
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {

@@ -1,6 +1,6 @@
 import { container, inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import { Comment } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
@@ -8,7 +8,6 @@ import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
-import { AppError } from '@shared/errors/AppError'
 
 @injectable()
 export class CommentInPlotProjectUseCase {

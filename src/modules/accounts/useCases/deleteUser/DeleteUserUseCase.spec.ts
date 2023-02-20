@@ -1,18 +1,20 @@
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { PersonsRepositoryInMemory } from '@modules/persons/repositories/inMemory/PersonsRepositoryInMemory'
+import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { FirebaseStorageProvider } from '@shared/container/provides/StorageProvider/implementations/FirebaseStorageProvider'
 
-import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
-import { ListUsersUseCase } from '../listUsers/ListUsersUseCase'
 import { DeleteUserUseCase } from './DeleteUserUseCase'
 
 let deleteUserUseCase: DeleteUserUseCase
-let createUserUseCase: CreateUserUseCase
+
 let userRepositoryInMemory: UserRepositoryInMemory
-let listUsersUseCase: ListUsersUseCase
 let storageProvider: FirebaseStorageProvider
 let projectsRepositoryInMemory: ProjectsRepositoryInMemory
 let personsRepositoryInMemory: PersonsRepositoryInMemory
@@ -25,6 +27,7 @@ describe('Delete user test', () => {
     projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
     personsRepositoryInMemory = new PersonsRepositoryInMemory()
     refreshTokenRepositoryInMemory = new RefreshTokenRepositoryInMemory()
+    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
 
     deleteUserUseCase = new DeleteUserUseCase(
       userRepositoryInMemory,
@@ -33,8 +36,6 @@ describe('Delete user test', () => {
       personsRepositoryInMemory,
       refreshTokenRepositoryInMemory,
     )
-    createUserUseCase = new CreateUserUseCase(userRepositoryInMemory)
-    listUsersUseCase = new ListUsersUseCase(userRepositoryInMemory)
   })
 
   it('Should be abele delete user', async () => {
@@ -56,13 +57,126 @@ describe('Delete user test', () => {
       username: 'Test to delete user',
     }
 
-    const user = await createUserUseCase.execute(newUserTest)
-    await createUserUseCase.execute(newUserTest2)
+    const user = await userRepositoryInMemory.create(newUserTest)
+    await userRepositoryInMemory.create(newUserTest2)
 
     await deleteUserUseCase.execute(user.id)
 
-    const allUsers = await listUsersUseCase.execute()
+    const allUsers = await userRepositoryInMemory.list()
 
     expect(allUsers.length).toEqual(1)
   })
+
+  it('Should be possible automatically delete projects of user when user deleted', async () => {
+    const newUserTest: ICreateUserDTO = {
+      name: 'Unitary test to delete user',
+      email: 'test@test.com',
+      age: '18',
+      password: 'test123',
+      sex: 'test',
+      username: 'Test to delete user',
+    }
+
+    const newUserTest2: ICreateUserDTO = {
+      name: 'Unitary test to delete user',
+      email: 'test2@test2.com',
+      age: '18',
+      password: 'test123',
+      sex: 'test',
+      username: 'Test to delete user',
+    }
+
+    const user = await userRepositoryInMemory.create(newUserTest)
+    await userRepositoryInMemory.create(newUserTest2)
+
+    const projectToUserTest: ICreateProjectDTO = {
+      createdPerUser: user.id,
+      name: 'Project test',
+      plot: {},
+      private: false,
+      type: 'book',
+      users: [
+        {
+          email: user.email,
+          id: user.id,
+          permission: 'edit',
+        },
+      ],
+    }
+
+    await projectsRepositoryInMemory.create(projectToUserTest)
+    await deleteUserUseCase.execute(user.id)
+
+    const allUsers = await userRepositoryInMemory.list()
+    const projectsOfUser = await projectsRepositoryInMemory.listPerUser(user.id)
+
+    expect(allUsers.length).toEqual(1)
+    expect(projectsOfUser.length).toEqual(0)
+  })
+
+  it('Should be possible automatically delete persons of user when user deleted', async () => {
+    const newUserTest: ICreateUserDTO = {
+      name: 'Unitary test to delete user',
+      email: 'test@test.com',
+      age: '18',
+      password: 'test123',
+      sex: 'test',
+      username: 'Test to delete user',
+    }
+
+    const newUserTest2: ICreateUserDTO = {
+      name: 'Unitary test to delete user',
+      email: 'test2@test2.com',
+      age: '18',
+      password: 'test123',
+      sex: 'test',
+      username: 'Test to delete user',
+    }
+
+    const user = await userRepositoryInMemory.create(newUserTest)
+    await userRepositoryInMemory.create(newUserTest2)
+
+    const projectToUserTest: ICreateProjectDTO = {
+      createdPerUser: user.id,
+      name: 'Project test',
+      plot: {},
+      private: false,
+      type: 'book',
+      users: [
+        {
+          email: user.email,
+          id: user.id,
+          permission: 'edit',
+        },
+      ],
+    }
+
+    const project = await projectsRepositoryInMemory.create(projectToUserTest)
+
+    const personToUserTest: ICreatePersonDTO = {
+      name: 'jonas',
+      age: '18',
+      history: 'Teste',
+      lastName: 'repolho',
+    }
+
+    await personsRepositoryInMemory.create(
+      user.id,
+      project.id,
+      personToUserTest,
+    )
+    await deleteUserUseCase.execute(user.id)
+
+    const allUsers = await userRepositoryInMemory.list()
+    const projectsOfUser = await projectsRepositoryInMemory.listPerUser(user.id)
+    const personsOfUser = await personsRepositoryInMemory.listPerUser(user.id)
+
+    expect(allUsers.length).toEqual(1)
+    expect(projectsOfUser.length).toEqual(0)
+    expect(personsOfUser.length).toEqual(0)
+  })
+
+  it.todo(
+    'Should be possible automatically delete projects of user when user deleted',
+  )
 })

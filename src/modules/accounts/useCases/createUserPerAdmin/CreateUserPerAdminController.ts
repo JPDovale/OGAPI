@@ -20,7 +20,6 @@ export class CreateUserPerAdminController {
     const createUserPerAdminUseCase = container.resolve(
       CreateUserPerAdminUseCase,
     )
-
     const newUser = await createUserPerAdminUseCase.execute({
       name,
       username,

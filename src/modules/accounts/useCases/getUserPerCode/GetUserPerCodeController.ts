@@ -38,7 +38,6 @@ export class GetUserPerCodeController {
         username,
       },
     })
-
     const newSession = await createSessionUseCase.execute({
       email: user.email,
       password,
