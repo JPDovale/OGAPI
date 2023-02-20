@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { CommentInPlotProjectController } from '@modules/projects/useCases/commentInPlotProject/CommentInPlotProjectController'
-import { CreateProjectController } from '@modules/projects/useCases/createProject/CreateProjectController'
+import { CreateProjectController } from '@modules/projects/useCases/createProject/createProjectController'
 import { DeleteImageController } from '@modules/projects/useCases/deleteImage/DeleteImageController'
 import { DeleteProjectController } from '@modules/projects/useCases/deleteProject/DeleteProjectController'
 import { ImageUpdateController } from '@modules/projects/useCases/imageUpdate/ImageUpdateController'
