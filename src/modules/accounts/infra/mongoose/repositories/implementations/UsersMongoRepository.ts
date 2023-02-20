@@ -2,12 +2,13 @@ import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 
-import { IAvatar } from '../entities/Avatar'
-import { INotification } from '../entities/Notification'
-import { IUserMongo, UserMongo } from '../entities/User'
+import { IAvatar } from '../../entities/Avatar'
+import { INotification } from '../../entities/Notification'
+import { IUserMongo, UserMongo } from '../../entities/User'
+import { IUsersRepository } from '../IUsersRepository'
+
 @injectable()
 export class UsersMongoRepository implements IUsersRepository {
   constructor(

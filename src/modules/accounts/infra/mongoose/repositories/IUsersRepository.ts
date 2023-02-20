@@ -1,7 +1,8 @@
-import { ICreateUserDTO } from '../dtos/ICreateUserDTO'
-import { IAvatar } from '../infra/mongoose/entities/Avatar'
-import { INotification } from '../infra/mongoose/entities/Notification'
-import { IUserMongo } from '../infra/mongoose/entities/User'
+import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+
+import { IAvatar } from '../entities/Avatar'
+import { INotification } from '../entities/Notification'
+import { IUserMongo } from '../entities/User'
 
 export interface IUsersRepository {
   findByEmail: (email: string) => Promise<IUserMongo>

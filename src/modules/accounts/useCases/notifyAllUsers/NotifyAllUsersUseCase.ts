@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ICacheProvider } from '@shared/container/provides/CacheProvider/ICacheProvider'
 import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
 import { AppError } from '@shared/errors/AppError'

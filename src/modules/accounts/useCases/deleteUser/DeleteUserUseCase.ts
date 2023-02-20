@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'

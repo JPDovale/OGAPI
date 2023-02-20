@@ -1,17 +1,19 @@
+import 'reflect-metadata'
+import { hashSync } from 'bcryptjs'
+import { describe, beforeEach, it, expect } from 'vitest'
+
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
-import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
 import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
-import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
 import { CreateSessionUseCase } from './CreateSessionUseCase'
 
 let createSessionUseCase: CreateSessionUseCase
 let userRepositoryInMemory: UserRepositoryInMemory
-let createUserUseCase: CreateUserUseCase
 let refreshTokenRepository: IRefreshTokenRepository
 let dateProvider: IDateProvider
 
@@ -20,34 +22,35 @@ describe('Create session for user', () => {
     userRepositoryInMemory = new UserRepositoryInMemory()
     refreshTokenRepository = new RefreshTokenRepositoryInMemory()
     dateProvider = new DayJsDateProvider()
+
     createSessionUseCase = new CreateSessionUseCase(
       userRepositoryInMemory,
       refreshTokenRepository,
       dateProvider,
     )
-    createUserUseCase = new CreateUserUseCase(userRepositoryInMemory)
   })
 
   it('Should be able to create session an user', async () => {
     const newUserTest: ICreateUserDTO = {
-      name: 'Unitary test to create user',
+      name: 'Unitary test to create session',
       email: 'test@test.com',
       age: '18',
-      password: 'test123',
+      password: hashSync('test123', 8),
       sex: 'test',
-      username: 'Test to create user',
+      username: 'Test to create session',
     }
 
-    await createUserUseCase.execute(newUserTest)
+    await userRepositoryInMemory.create(newUserTest)
 
     const session = await createSessionUseCase.execute({
-      email: newUserTest.email,
-      password: newUserTest.password,
+      email: 'test@test.com',
+      password: 'test123',
     })
 
     expect(session).toHaveProperty('refreshToken')
     expect(session).toHaveProperty('token')
     expect(session).toHaveProperty('user')
+    expect(session.user).not.toHaveProperty('admin')
   })
 
   it('Should not be able to create session an none existent user', () => {
@@ -74,7 +77,7 @@ describe('Create session for user', () => {
         username: 'Test to create user',
       }
 
-      await createUserUseCase.execute(newUserTest)
+      await userRepositoryInMemory.create(newUserTest)
 
       await createSessionUseCase.execute({
         email: newUserTest.email,
@@ -98,7 +101,7 @@ describe('Create session for user', () => {
         username: 'Test to create user',
       }
 
-      const userCreated = await createUserUseCase.execute(newUserTest)
+      const userCreated = await userRepositoryInMemory.create(newUserTest)
 
       await createSessionUseCase.execute({
         email: newUserTest.email,
