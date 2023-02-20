@@ -1,10 +1,10 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
 import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 
 interface IRequest {
   user: {

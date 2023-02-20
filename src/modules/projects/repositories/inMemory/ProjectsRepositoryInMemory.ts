@@ -7,6 +7,7 @@ import {
   ProjectMongo,
 } from '@modules/projects/infra/mongoose/entities/Project'
 import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
+import { IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
 
 import { IProjectsRepository } from '../IProjectRepository'
 
@@ -15,21 +16,25 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
   async create(dataProjectObj: ICreateProjectDTO): Promise<IProjectMongo> {
     const {
+      createdPerUser,
       name,
       private: priv,
       type,
       password,
-      createdPerUser,
+      users,
+      plot,
     } = dataProjectObj
 
     const newProject = new ProjectMongo()
 
     Object.assign(newProject, {
+      createdPerUser,
       name,
+      private: priv,
       type,
       password,
-      private: priv,
-      createdPerUser,
+      users,
+      plot,
     })
 
     this.projects.push(newProject)
@@ -37,21 +42,36 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     return newProject
   }
 
-  listPerUser: (userId: string) => Promise<IProjectMongo[]>
-  findById: (projectId: string) => Promise<IProjectMongo>
+  async listPerUser(userId: string): Promise<IProjectMongo[]> {
+    const projectsOfUser = this.projects.filter(
+      (project) => project.createdPerUser === userId,
+    )
+
+    return projectsOfUser
+  }
+
+  async findById(id: string): Promise<IProjectMongo> {
+    const project = this.projects.find((project) => project.id === id)
+
+    return project
+  }
+
   addUsers: (
     users: ISharedWhitUsers[],
     projectId: string,
   ) => Promise<IProjectMongo>
 
   updateImage: (image: IAvatar, projectId: string) => Promise<IProjectMongo>
-  delete: (projectId: string) => Promise<void>
+
+  async delete(projectId: string): Promise<void> {
+    this.projects = this.projects.filter((project) => project.id !== projectId)
+  }
+
   updatePlot: (
     projectId: string,
     plot: IUpdatePlotDTO,
   ) => Promise<IProjectMongo>
 
-  updateTag: (projectId: string, tags: ITag[]) => Promise<void>
   async deletePerUserId(userId: string): Promise<void> {
     const filteredProjects = this.projects.filter(
       (project) => project.createdPerUser !== userId,
@@ -59,4 +79,8 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
     this.projects = filteredProjects
   }
+
+  updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
+  listAll: () => Promise<IProjectMongo[]>
+  updateName: ({ id, name }: IUpdateName) => Promise<IProjectMongo>
 }

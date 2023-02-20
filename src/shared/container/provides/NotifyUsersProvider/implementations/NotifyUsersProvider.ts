@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 
 import { ICacheProvider } from '../../CacheProvider/ICacheProvider'

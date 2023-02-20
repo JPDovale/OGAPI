@@ -1,4 +1,7 @@
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { AppError } from '@shared/errors/AppError'
 
 import { GetUserPerCodeUseCase } from './GetUserPerCodeUseCase'
@@ -35,10 +38,10 @@ describe('Get user per code to is initialized', () => {
       isInitialized: true,
     }
 
-    const user = await getUserPerCodeUseCase.execute(
-      newUserTest.code,
-      newUserTestFromCodeGet,
-    )
+    const user = await getUserPerCodeUseCase.execute({
+      code: newUserTest.code,
+      infosUser: newUserTestFromCodeGet,
+    })
 
     expect(user.code).toEqual(' ')
     expect(user.isInitialized).toEqual(true)
@@ -56,7 +59,10 @@ describe('Get user per code to is initialized', () => {
         isInitialized: true,
       }
 
-      await getUserPerCodeUseCase.execute('213123123', newUserTestFromCodeGet)
+      await getUserPerCodeUseCase.execute({
+        code: '213123123',
+        infosUser: newUserTestFromCodeGet,
+      })
     })
       .rejects.toBeInstanceOf(AppError)
       .catch((err) => {
@@ -99,7 +105,10 @@ describe('Get user per code to is initialized', () => {
         isInitialized: true,
       }
 
-      await getUserPerCodeUseCase.execute('1212', newUserTestFromCodeGet)
+      await getUserPerCodeUseCase.execute({
+        code: '1212',
+        infosUser: newUserTestFromCodeGet,
+      })
     })
       .rejects.toBeInstanceOf(AppError)
       .catch((err) => {

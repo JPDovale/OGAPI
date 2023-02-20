@@ -1,10 +1,12 @@
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-
-import { CreateProjectUseCase } from './CreateProjectUseCase'
+import { CreateProjectUseCase } from '@modules/projects/useCases/createProject/createProjectUseCase'
 
 let projectsRepository: IProjectsRepository
 let createProjectUseCase: CreateProjectUseCase

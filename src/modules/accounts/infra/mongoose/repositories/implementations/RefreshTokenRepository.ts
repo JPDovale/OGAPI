@@ -1,12 +1,15 @@
 import { v4 as uuidV4 } from 'uuid'
 
 import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
+
+import {
+  IRefreshTokenMongo,
+  RefreshTokenMongo,
+} from '../../entities/RefreshToken'
 import {
   IFindByRefreshToken,
   IRefreshTokenRepository,
-} from '@modules/accounts/repositories/IRefreshTokenRepository'
-
-import { IRefreshTokenMongo, RefreshTokenMongo } from '../entities/RefreshToken'
+} from '../IRefreshTokenRepository'
 
 export class RefreshTokenRepository implements IRefreshTokenRepository {
   async create(

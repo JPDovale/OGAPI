@@ -1,7 +1,7 @@
 import { container, inject, injectable } from 'tsyringe'
 
 import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
 import {
   Comment,
