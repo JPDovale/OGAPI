@@ -1,6 +1,7 @@
 export interface ICreateBookDTO {
   title: string
   subtitle?: string
+  createdPerUser: string
   authors: Array<{
     username?: string
     email?: string

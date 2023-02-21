@@ -1,3 +1,5 @@
+import { v4 as uuidV4 } from 'uuid'
+
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
@@ -25,9 +27,8 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
       plot,
     } = dataProjectObj
 
-    const newProject = new ProjectMongo()
-
-    Object.assign(newProject, {
+    const newProject = new ProjectMongo({
+      id: uuidV4(),
       createdPerUser,
       name,
       private: priv,
@@ -56,10 +57,20 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     return project
   }
 
-  addUsers: (
+  async addUsers(
     users: ISharedWhitUsers[],
     projectId: string,
-  ) => Promise<IProjectMongo>
+  ): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === projectId,
+    )
+    this.projects[indexOfProjectToUpdate].users = users
+
+    const projectUpdated = this.projects.find(
+      (project) => project.id === projectId,
+    )
+    return projectUpdated
+  }
 
   updateImage: (image: IAvatar, projectId: string) => Promise<IProjectMongo>
 
@@ -67,10 +78,20 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     this.projects = this.projects.filter((project) => project.id !== projectId)
   }
 
-  updatePlot: (
+  async updatePlot(
     projectId: string,
     plot: IUpdatePlotDTO,
-  ) => Promise<IProjectMongo>
+  ): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === projectId,
+    )
+    this.projects[indexOfProjectToUpdate].plot = plot
+
+    const projectUpdated = this.projects.find(
+      (project) => project.id === projectId,
+    )
+    return projectUpdated
+  }
 
   async deletePerUserId(userId: string): Promise<void> {
     const filteredProjects = this.projects.filter(
@@ -82,5 +103,14 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
   updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
   listAll: () => Promise<IProjectMongo[]>
-  updateName: ({ id, name }: IUpdateName) => Promise<IProjectMongo>
+
+  async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === id,
+    )
+
+    this.projects[indexOfProjectToUpdate].name = name
+
+    return this.projects[indexOfProjectToUpdate]
+  }
 }

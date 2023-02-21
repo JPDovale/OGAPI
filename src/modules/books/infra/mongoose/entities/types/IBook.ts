@@ -5,12 +5,12 @@ import { IAuthorBook } from './IAuthorBook'
 import { ICapitule } from './ICapitule'
 import { IGenereBook } from './IGenereBook'
 import { IPlotBook } from './IPlotBook'
-import { IScene } from './IScene'
 
 export interface IBook {
   id: string
   title: string
   subtitle?: string
+  createdPerUser: string
   defaultProject: string
   literaryGenere: string
   isbn?: string

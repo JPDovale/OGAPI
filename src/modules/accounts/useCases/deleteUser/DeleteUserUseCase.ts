@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
@@ -20,6 +21,8 @@ export class DeleteUserUseCase {
     private readonly personsRepository: IPersonsRepository,
     @inject('RefreshTokenRepository')
     private readonly refreshTokenRepository: IRefreshTokenRepository,
+    @inject('BooksRepository')
+    private readonly booksRepository: IBooksRepository,
   ) {}
 
   async execute(id: string): Promise<void> {
@@ -36,6 +39,7 @@ export class DeleteUserUseCase {
     await this.projectsRepository.deletePerUserId(id)
     await this.personsRepository.deletePerUserId(id)
     await this.refreshTokenRepository.deletePerUserId(id)
+    await this.booksRepository.deletePerUserId(id)
 
     if (user?.avatar?.fileName) {
       await this.storageProvider.delete(user.avatar.fileName, 'avatar')

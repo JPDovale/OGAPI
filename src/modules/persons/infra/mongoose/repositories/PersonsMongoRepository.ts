@@ -234,4 +234,16 @@ export class PersonsMongoRepository implements IPersonsRepository {
 
     return persons
   }
+
+  async findByProjectIds(projectIds: string[]): Promise<IPersonMongo[]> {
+    const projectsIds = projectIds.map((id) => {
+      return {
+        defaultProject: id,
+      }
+    })
+
+    const persons = await PersonMongo.find({ $or: projectsIds })
+
+    return persons
+  }
 }

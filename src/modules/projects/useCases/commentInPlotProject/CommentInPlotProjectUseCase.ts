@@ -1,23 +1,22 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import { Comment } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 @injectable()
 export class CommentInPlotProjectUseCase {
   constructor(
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
-    @inject('UsersRepository')
-    private readonly usersRepository: IUsersRepository,
     @inject('NotifyUsersProvider')
     private readonly notifyUsersProvider: INotifyUsersProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -27,12 +26,11 @@ export class CommentInPlotProjectUseCase {
   ): Promise<IProjectMongo> {
     const { content, to } = comment
 
-    const permissionToComment = container.resolve(PermissionToEditProject)
-    const { project, user } = await permissionToComment.verify(
+    const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'comment',
-    )
+      verifyPermissionTo: 'comment',
+    })
 
     const newComment = new Comment({
       content,
@@ -43,7 +41,7 @@ export class CommentInPlotProjectUseCase {
 
     const plotUpdated: IPlotProject = {
       ...project.plot,
-      comments: [newComment, ...project.plot.comments],
+      comments: [{ ...newComment }, ...project.plot.comments],
     }
 
     const updatedProject = await this.projectsRepository.updatePlot(

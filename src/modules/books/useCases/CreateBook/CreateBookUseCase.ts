@@ -60,6 +60,7 @@ export class CreateBookUseCase {
     const newBook = await this.booksRepository.create({
       projectId,
       book: {
+        createdPerUser: userId,
         authors,
         generes,
         literaryGenere,

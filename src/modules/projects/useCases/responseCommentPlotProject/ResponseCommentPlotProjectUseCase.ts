@@ -1,7 +1,5 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
 import {
   Comment,
@@ -11,18 +9,18 @@ import {
 import { IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 @injectable()
 export class ResponseCommentPlotProjectUseCase {
   constructor(
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
-    @inject('UsersRepository')
-    private readonly usersRepository: IUsersRepository,
     @inject('NotifyUsersProvider')
     private readonly notifyUsersProvider: INotifyUsersProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -32,12 +30,12 @@ export class ResponseCommentPlotProjectUseCase {
     response: IResponseCommentPlotProjectDTO,
   ): Promise<IProjectMongo> {
     const { content } = response
-    const permissionToComment = container.resolve(PermissionToEditProject)
-    const { project, user } = await permissionToComment.verify(
+
+    const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'comment',
-    )
+      verifyPermissionTo: 'comment',
+    })
 
     const newResponse = new Response({
       content,
@@ -57,57 +55,6 @@ export class ResponseCommentPlotProjectUseCase {
       responses: [newResponse, ...comment.responses],
     }
 
-    if (newResponse.userId !== comment.userId) {
-      const userToNotify = await this.usersRepository.findById(comment.userId)
-
-      const newNotification = new Notification({
-        title: `${user.username} respondeu seu comentário`,
-        content: `${user.username} respondeu seu comentário em |${comment.to}: ${newResponse.content}`,
-        projectId: project.id,
-        sendedPerUser: user.id,
-      })
-
-      const notificationsUpdated = [
-        newNotification,
-        ...userToNotify.notifications,
-      ]
-
-      await this.usersRepository.updateNotifications(
-        userToNotify.id,
-        notificationsUpdated,
-      )
-    } else {
-      const responses = updatedComment.responses.filter(
-        (response) => response.userId !== comment.userId,
-      )
-      const usersToNotify = responses.filter(
-        (response, i, self) => i === self.indexOf(response),
-      )
-
-      await Promise.all(
-        usersToNotify.map(async (u) => {
-          const userToNotify = await this.usersRepository.findById(u.userId)
-
-          const newNotification = new Notification({
-            title: `${user.username} respondeu ao próprio comentário`,
-            content: `${user.username} respondeu ao próprio comentário em |${comment.to}: ${newResponse.content}`,
-            projectId: project.id,
-            sendedPerUser: user.id,
-          })
-
-          const notificationsUpdated = [
-            newNotification,
-            ...userToNotify.notifications,
-          ]
-
-          await this.usersRepository.updateNotifications(
-            userToNotify.id,
-            notificationsUpdated,
-          )
-        }),
-      )
-    }
-
     const updatedPlot: IPlotProject = {
       ...project.plot,
       comments: [updatedComment, ...filteredComments],
@@ -117,6 +64,71 @@ export class ResponseCommentPlotProjectUseCase {
       projectId,
       updatedPlot,
     )
+
+    if (newResponse.userId !== comment.userId) {
+      await this.notifyUsersProvider.notify(
+        user,
+        project,
+        `${user.username} respondeu o comentário em ${comment.to}`,
+        `${user.username} acabou de responder o comentário "${comment.content}" em ${comment.to}: ${newResponse.content}`,
+      )
+
+      // const userToNotify = await this.usersRepository.findById(comment.userId)
+
+      // const newNotification = new Notification({
+      //   title: `${user.username} respondeu seu comentário`,
+      //   content: `${user.username} respondeu seu comentário em |${comment.to}: ${newResponse.content}`,
+      //   projectId: project.id,
+      //   sendedPerUser: user.id,
+      // })
+
+      // const notificationsUpdated = [
+      //   newNotification,
+      //   ...userToNotify.notifications,
+      // ]
+
+      // await this.usersRepository.updateNotifications(
+      //   userToNotify.id,
+      //   notificationsUpdated,
+      // )
+    } else {
+      await this.notifyUsersProvider.notify(
+        user,
+        project,
+        `${user.username} respondeu o próprio comentário em ${comment.to}`,
+        `${user.username} acabou de responder o próprio comentário "${comment.content}" em ${comment.to}: ${newResponse.content}`,
+      )
+      // const responses = updatedComment.responses.filter(
+      //   (response) => response.userId !== comment.userId,
+      // )
+      // const usersToNotify = responses.filter(
+      //   (response, i, self) => i === self.indexOf(response),
+      // )
+
+      // await Promise.all(
+      //   usersToNotify.map(async (u) => {
+      //     const userToNotify = await this.usersRepository.findById(u.userId)
+
+      //     const newNotification = new Notification({
+      //       title: `${user.username} respondeu ao próprio comentário`,
+      //       content: `${user.username} respondeu ao próprio comentário em |${comment.to}: ${newResponse.content}`,
+      //       projectId: project.id,
+      //       sendedPerUser: user.id,
+      //     })
+
+      //     const notificationsUpdated = [
+      //       newNotification,
+      //       ...userToNotify.notifications,
+      //     ]
+
+      //     await this.usersRepository.updateNotifications(
+      //       userToNotify.id,
+      //       notificationsUpdated,
+      //     )
+      //   }),
+      // )
+    }
+
     return updatedProject
   }
 }

@@ -6,6 +6,7 @@ import { DayJsDateProvider } from '@shared/container/provides/DateProvider/imple
 const dateProvider = container.resolve(DayJsDateProvider)
 
 export interface IComment {
+  id?: string
   userId: string
   username: string
   to: string
@@ -16,6 +17,7 @@ export interface IComment {
 }
 
 export interface IResponse {
+  id?: string
   userId: string
   username: string
   content: string

@@ -24,6 +24,7 @@ export class BooksMongoRepository implements IBooksRepository {
     book: {
       authors,
       generes,
+      createdPerUser,
       literaryGenere,
       title,
       isbn,
@@ -36,6 +37,7 @@ export class BooksMongoRepository implements IBooksRepository {
       id: uuidV4(),
       title,
       subtitle,
+      createdPerUser,
       authors,
       defaultProject: projectId,
       generes,
@@ -106,5 +108,31 @@ export class BooksMongoRepository implements IBooksRepository {
 
     const book = await BookMongo.findOne({ id })
     return book
+  }
+
+  async deletePerUserId(id: string): Promise<void> {
+    await BookMongo.deleteMany({ createdPerUser: id })
+  }
+
+  async listPerUser(userId: string): Promise<IBook[]> {
+    const books = await BookMongo.find({ createdPerUser: userId })
+
+    return books
+  }
+
+  async deletePerProjectId(projectId: string): Promise<void> {
+    await BookMongo.deleteMany({ defaultProject: projectId })
+  }
+
+  async findByProjectIds(projectIds: string[]): Promise<IBook[]> {
+    const projectsIds = projectIds.map((id) => {
+      return {
+        defaultProject: id,
+      }
+    })
+
+    const books = await BookMongo.find({ $or: projectsIds })
+
+    return books
   }
 }
