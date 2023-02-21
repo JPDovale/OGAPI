@@ -5,6 +5,7 @@ import {
   uploadBytesResumable,
 } from 'firebase/storage'
 import fs from 'node:fs'
+import path from 'node:path'
 
 import { storage } from '@config/storage'
 
@@ -18,7 +19,21 @@ export class FirebaseStorageProvider implements IStorageProvider {
       contentType: file.mimetype,
     }
 
-    const image = fs.readFileSync(file.path)
+    const folder = toFolder.split('/')[0]
+    const filePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      '..',
+      '..',
+      'tmp',
+      folder,
+      file.filename,
+    )
+
+    const image = fs.readFileSync(filePath)
 
     const uploadTask = await uploadBytesResumable(storageRef, image, metadata)
 

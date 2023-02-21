@@ -8,17 +8,16 @@ export class Uploads {
   upload: multer.Multer
 
   constructor(path: string, type: 'image') {
-    const filePath = `./temp/${path}`
-    // Path.join(
-    //   __dirname,
-    //   '..',
-    //   '..',
-    //   '..',
-    //   '..',
-    //   '..',
-    //   'tmp',
-    //   path,
-    // )
+    const filePath = Path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      '..',
+      'tmp',
+      path,
+    )
 
     this.upload = multer({
       dest: `${filePath}`,
