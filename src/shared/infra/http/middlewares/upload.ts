@@ -1,5 +1,6 @@
-import crypto from 'crypto'
 import multer from 'multer'
+import crypto from 'node:crypto'
+import Path from 'node:path'
 
 import { AppError } from '@shared/errors/AppError'
 
@@ -7,12 +8,15 @@ export class Uploads {
   upload: multer.Multer
 
   constructor(path: string, type: 'image') {
+    const filePath = Path.join(__dirname, '..', '..', '..', '..', 'tmp', path)
+
     this.upload = multer({
-      dest: `./tmp/${path}`,
+      dest: `${filePath}`,
       storage: multer.diskStorage({
         destination: (req, file, callback) => {
-          callback(null, `./tmp/${path}`)
+          callback(null, `${filePath}`)
         },
+
         filename: (req, file, callback) => {
           crypto.randomBytes(16, (err, hash) => {
             if (err) {

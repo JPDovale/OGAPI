@@ -4,7 +4,7 @@ import {
   ref,
   uploadBytesResumable,
 } from 'firebase/storage'
-import fs from 'fs'
+import fs from 'node:fs'
 
 import { storage } from '@config/storage'
 
