@@ -20,10 +20,8 @@ export class FirebaseStorageProvider implements IStorageProvider {
     }
 
     const folder = toFolder.split('/')[0]
-    const filePath = path.join(
+    const filePath = path.resolve(
       __dirname,
-      '..',
-      '..',
       '..',
       '..',
       '..',
