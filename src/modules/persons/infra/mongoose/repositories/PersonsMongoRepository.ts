@@ -5,7 +5,7 @@ import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
 import { IAppearance } from '../entities/Appearance'
 import { ICouple } from '../entities/Couple'
@@ -231,6 +231,18 @@ export class PersonsMongoRepository implements IPersonsRepository {
 
   async listPerUser(userId: string): Promise<IPersonMongo[]> {
     const persons = await PersonMongo.find({ fromUser: userId })
+
+    return persons
+  }
+
+  async findByProjectIds(projectIds: string[]): Promise<IPersonMongo[]> {
+    const projectsIds = projectIds.map((id) => {
+      return {
+        defaultProject: id,
+      }
+    })
+
+    const persons = await PersonMongo.find({ $or: projectsIds })
 
     return persons
   }

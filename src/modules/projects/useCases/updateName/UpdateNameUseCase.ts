@@ -1,9 +1,9 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 interface IRequest {
   userId: string
@@ -18,15 +18,16 @@ export class UpdateNameUseCase {
     private readonly projectsRepository: IProjectsRepository,
     @inject('NotifyUsersProvider')
     private readonly notifyUsersProvider: INotifyUsersProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute({ projectId, name, userId }: IRequest): Promise<IProjectMongo> {
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { user, project } = await permissionToEditProject.verify(
+    const { user, project } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'edit',
-    )
+      verifyPermissionTo: 'edit',
+    })
 
     const updatedProject = await this.projectsRepository.updateName({
       name,

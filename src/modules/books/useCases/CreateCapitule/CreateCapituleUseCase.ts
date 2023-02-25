@@ -4,7 +4,8 @@ import { Capitule } from '@modules/books/infra/mongoose/entities/schemas/Capitul
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
@@ -25,6 +26,8 @@ export class CreateCapituleUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
+    @inject('NotifyUsersProvider')
+    private readonly notifyUsersProvider: INotifyUsersProvider,
   ) {}
 
   async execute({
@@ -44,7 +47,7 @@ export class CreateCapituleUseCase {
       })
     }
 
-    await this.verifyPermissions.verify({
+    const { project, user } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
       userId,
       verifyPermissionTo: 'edit',
@@ -65,6 +68,19 @@ export class CreateCapituleUseCase {
       capitules: updatedCapitules,
       id: bookId,
     })
+
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} criou um novo capitulo: ${newCapitule.name}`,
+      `${user.username} acabou de criar um novo capitulo no livro ${
+        book.title
+      }${book.subtitle ? ` ${book.subtitle}` : ''} chamado ${
+        newCapitule.name
+      } dentro do projeto: ${project.name}. Acesse a aba 'Livros -> ${
+        book.title
+      } -> capítulos' para ver mais informações.`,
+    )
 
     return updatedBook
   }

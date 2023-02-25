@@ -1,6 +1,6 @@
 import { container } from 'tsyringe'
 
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 const dateProvider = container.resolve(DayJsDateProvider)
 
