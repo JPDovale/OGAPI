@@ -8,9 +8,9 @@ import {
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
-import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()

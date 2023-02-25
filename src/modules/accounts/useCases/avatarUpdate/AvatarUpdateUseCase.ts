@@ -7,8 +7,8 @@ import {
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()
@@ -36,7 +36,11 @@ export class AvatarUpdateUseCase {
       })
 
     if (user?.avatar?.fileName) {
-      await this.storageProvider.delete(user.avatar.fileName, 'avatar')
+      try {
+        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
+      } catch (err) {
+        console.log(err)
+      }
     }
 
     const url = await this.storageProvider.upload(file, 'avatar')

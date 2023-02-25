@@ -9,7 +9,6 @@
   "scripts": {
     "publish": "npm i && npm run build",
     "application": "node shared/infra/http/index.js",
-    "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
     "build:tsup": "tsup",
     "dev": "ts-node-dev -r tsconfig-paths/register --poll --inspect --transpile-only --ignore-watch node_modules --respawn src/shared/infra/http/index.ts",
     "dev:compile": "node build/shared/infra/http/index.js",

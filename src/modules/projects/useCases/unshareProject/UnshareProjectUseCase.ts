@@ -1,5 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
+import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
@@ -7,6 +9,8 @@ import { AppError } from '@shared/errors/AppError'
 @injectable()
 export class UnshareProjectUseCase {
   constructor(
+    @inject('UsersRepository')
+    private readonly usersRepository: IUsersRepository,
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
   ) {}
@@ -17,6 +21,7 @@ export class UnshareProjectUseCase {
     userId: string,
   ): Promise<IProjectMongo> {
     const project = await this.projectsRepository.findById(projectId)
+    const user = await this.usersRepository.findById(userId)
 
     if (!project) {
       throw new AppError({
@@ -49,6 +54,25 @@ export class UnshareProjectUseCase {
     const response = await this.projectsRepository.addUsers(
       usersAccessUpdate,
       projectId,
+    )
+
+    const userExist = await this.usersRepository.findByEmail(userEmail)
+
+    const newNotification = new Notification({
+      title: `Você foi removido do projeto ${project.name}`,
+      content: `${user.name} acabou de remover você do projeto "${project.name}".`,
+      projectId,
+      sendedPerUser: userId,
+    })
+
+    const notificationsUpdated = [
+      { ...newNotification },
+      ...userExist.notifications,
+    ]
+
+    await this.usersRepository.updateNotifications(
+      userExist.id,
+      notificationsUpdated,
     )
 
     return response
