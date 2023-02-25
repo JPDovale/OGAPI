@@ -21,12 +21,17 @@ export class DayJsDateProvider implements IDateProvider {
   }
 
   getDate(date: Date): string {
-    const formattedDate = dayjs(date).format('DD/MM/YYYY [às] HH:mm')
+    const dateOfPtBr = this.removeHours(3, date)
+    const formattedDate = dayjs(dateOfPtBr).format('DD/MM/YYYY [às] HH:mm')
     return formattedDate
   }
 
   addHours(hours: number): Date {
     return dayjs().add(hours, 'hour').toDate()
+  }
+
+  removeHours(hours: number, date: Date): Date {
+    return dayjs(date).subtract(hours, 'hour').toDate()
   }
 
   isBefore({ startDate, endDate }: IIsBefore): boolean {
