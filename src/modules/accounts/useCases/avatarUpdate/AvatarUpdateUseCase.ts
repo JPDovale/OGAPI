@@ -36,7 +36,11 @@ export class AvatarUpdateUseCase {
       })
 
     if (user?.avatar?.fileName) {
-      await this.storageProvider.delete(user.avatar.fileName, 'avatar')
+      try {
+        await this.storageProvider.delete(user.avatar.fileName, 'avatar')
+      } catch (err) {
+        console.log(err)
+      }
     }
 
     const url = await this.storageProvider.upload(file, 'avatar')
