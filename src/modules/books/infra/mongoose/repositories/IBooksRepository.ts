@@ -14,4 +14,8 @@ export interface IBooksRepository {
     capitules,
     writtenWords,
   }: IUpdateCapitules) => Promise<IBook>
+  deletePerUserId: (id: string) => Promise<void>
+  listPerUser: (userId: string) => Promise<IBook[]>
+  deletePerProjectId: (projectId: string) => Promise<void>
+  findByProjectIds: (projectIds: string[]) => Promise<IBook[]>
 }

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { container } from 'tsyringe'
 
-import '@shared/container/provides'
+import '@shared/container/providers'
 import '@shared/container/services'
 
 import { RefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/implementations/RefreshTokenRepository'

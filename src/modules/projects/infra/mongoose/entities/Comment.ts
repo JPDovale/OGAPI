@@ -1,11 +1,12 @@
 import { container } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 const dateProvider = container.resolve(DayJsDateProvider)
 
 export interface IComment {
+  id?: string
   userId: string
   username: string
   to: string
@@ -16,6 +17,7 @@ export interface IComment {
 }
 
 export interface IResponse {
+  id?: string
   userId: string
   username: string
   content: string

@@ -7,8 +7,8 @@ import {
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 
 @injectable()
 export class UpdateImagePersonUseCase {

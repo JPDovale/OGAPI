@@ -3,8 +3,8 @@ import { container, inject, injectable } from 'tsyringe'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()

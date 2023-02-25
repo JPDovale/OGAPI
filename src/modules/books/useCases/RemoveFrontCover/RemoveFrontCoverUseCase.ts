@@ -2,9 +2,9 @@ import { inject, injectable } from 'tsyringe'
 
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
-import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 

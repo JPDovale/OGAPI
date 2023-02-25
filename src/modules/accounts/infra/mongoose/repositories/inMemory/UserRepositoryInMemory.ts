@@ -153,7 +153,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
 
-    const updatedUser: IUserMongo = { ...userToUpdate, notifications }
+    const updatedUser: IUserMongo = { ...userToUpdate._doc, notifications }
     this.users = [...filteredUsers, updatedUser]
   }
 
@@ -166,7 +166,15 @@ export class UserRepositoryInMemory implements IUsersRepository {
     this.users = [...filteredUsers, updatedUser]
   }
 
-  findManyById: (ids: string[]) => Promise<IUserMongo[]>
+  async findManyById(ids: string[]): Promise<IUserMongo[]> {
+    const users = this.users.filter((user) => {
+      const userIn = ids.find((id) => user.id === id)
+
+      return !!userIn
+    })
+
+    return users
+  }
 
   async updateNotificationManyById(
     ids: string[],
