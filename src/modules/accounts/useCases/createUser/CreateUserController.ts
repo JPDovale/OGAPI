@@ -30,7 +30,6 @@ export class CreateUserController {
       sex,
       username,
     })
-
     const newSession = await createSessionUseCase.execute({
       email: newUser.email,
       password,

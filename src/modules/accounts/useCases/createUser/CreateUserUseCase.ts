@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
 import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ISharedWhitUsers } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
@@ -55,18 +55,20 @@ export class CreateUserUseCase {
       process.env.ID_PROJECT_WELCOME,
     )
 
-    const addUser: ISharedWhitUsers = {
-      email: newUser.email,
-      id: newUser.id,
-      permission: 'view',
+    if (projectWelcome) {
+      const addUser: ISharedWhitUsers = {
+        email: newUser.email,
+        id: newUser.id,
+        permission: 'view',
+      }
+
+      const usersAdded = [...projectWelcome.users, addUser]
+
+      await this.projectsRepository.addUsers(
+        usersAdded,
+        process.env.ID_PROJECT_WELCOME,
+      )
     }
-
-    const usersAdded = [...projectWelcome.users, addUser]
-
-    await this.projectsRepository.addUsers(
-      usersAdded,
-      process.env.ID_PROJECT_WELCOME,
-    )
 
     return newUser
   }

@@ -1,3 +1,5 @@
+import { v4 as uuidV4 } from 'uuid'
+
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
@@ -7,6 +9,7 @@ import {
   ProjectMongo,
 } from '@modules/projects/infra/mongoose/entities/Project'
 import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
+import { IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
 
 import { IProjectsRepository } from '../IProjectRepository'
 
@@ -15,21 +18,24 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
   async create(dataProjectObj: ICreateProjectDTO): Promise<IProjectMongo> {
     const {
+      createdPerUser,
       name,
       private: priv,
       type,
       password,
-      createdPerUser,
+      users,
+      plot,
     } = dataProjectObj
 
-    const newProject = new ProjectMongo()
-
-    Object.assign(newProject, {
+    const newProject = new ProjectMongo({
+      id: uuidV4(),
+      createdPerUser,
       name,
+      private: priv,
       type,
       password,
-      private: priv,
-      createdPerUser,
+      users,
+      plot,
     })
 
     this.projects.push(newProject)
@@ -37,26 +43,82 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     return newProject
   }
 
-  listPerUser: (userId: string) => Promise<IProjectMongo[]>
-  findById: (projectId: string) => Promise<IProjectMongo>
-  addUsers: (
+  async listPerUser(userId: string): Promise<IProjectMongo[]> {
+    const projectsOfUser = this.projects.filter(
+      (project) => project.createdPerUser === userId,
+    )
+
+    return projectsOfUser
+  }
+
+  async findById(id: string): Promise<IProjectMongo> {
+    const project = this.projects.find((project) => project.id === id)
+
+    return project
+  }
+
+  async addUsers(
     users: ISharedWhitUsers[],
     projectId: string,
-  ) => Promise<IProjectMongo>
+  ): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === projectId,
+    )
+    this.projects[indexOfProjectToUpdate].users = users
+
+    const projectUpdated = this.projects.find(
+      (project) => project.id === projectId,
+    )
+    return projectUpdated
+  }
 
   updateImage: (image: IAvatar, projectId: string) => Promise<IProjectMongo>
-  delete: (projectId: string) => Promise<void>
-  updatePlot: (
+
+  async delete(projectId: string): Promise<void> {
+    this.projects = this.projects.filter((project) => project.id !== projectId)
+  }
+
+  async updatePlot(
     projectId: string,
     plot: IUpdatePlotDTO,
-  ) => Promise<IProjectMongo>
+  ): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === projectId,
+    )
+    this.projects[indexOfProjectToUpdate].plot = plot
 
-  updateTag: (projectId: string, tags: ITag[]) => Promise<void>
+    const projectUpdated = this.projects.find(
+      (project) => project.id === projectId,
+    )
+    return projectUpdated
+  }
+
   async deletePerUserId(userId: string): Promise<void> {
     const filteredProjects = this.projects.filter(
       (project) => project.createdPerUser !== userId,
     )
 
     this.projects = filteredProjects
+  }
+
+  async updateTag(projectId: string, tags: ITag[]): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === projectId,
+    )
+    this.projects[indexOfProjectToUpdate].tags = tags
+
+    return this.projects[indexOfProjectToUpdate]
+  }
+
+  listAll: () => Promise<IProjectMongo[]>
+
+  async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === id,
+    )
+
+    this.projects[indexOfProjectToUpdate].name = name
+
+    return this.projects[indexOfProjectToUpdate]
   }
 }

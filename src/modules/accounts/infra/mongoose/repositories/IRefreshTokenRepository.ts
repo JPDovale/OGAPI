@@ -1,5 +1,6 @@
-import { ICreateUserTokenDTO } from '../dtos/ICreateUserTokenDTO'
-import { IRefreshTokenMongo } from '../infra/mongoose/entities/RefreshToken'
+import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
+
+import { IRefreshTokenMongo } from '../entities/RefreshToken'
 
 export interface IFindByRefreshToken {
   refreshToken: string

@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
@@ -29,13 +29,13 @@ export class ShareProjectUseCase {
   ): Promise<IProjectMongo> {
     const project = await this.projectsRepository.findById(projectId)
 
-    if (!project)
+    if (!project) {
       throw new AppError({
         title: 'Projeto não encontrado.',
         message: 'Parece que esse projeto não existe na nossa base de dados...',
         statusCode: 404,
       })
-
+    }
     const thisProjectAreFromUser = project.createdPerUser === userId
 
     if (!thisProjectAreFromUser) {
@@ -60,21 +60,22 @@ export class ShareProjectUseCase {
 
     const isShared = project.users.find((u) => u.email === userToShare.email)
 
-    if (isShared)
+    if (isShared) {
       throw new AppError({
         title: 'Esse usuário já tem acesso ao projeto...',
         message:
           'Você está tentando adicionar um usuário que já tem acesso ao projeto... Caso queira alterar a permissão, vá até as configurações do projeto.',
       })
-
+    }
     const userExist = await this.usersRepository.findByEmail(userToShare.email)
 
-    if (!userExist)
+    if (!userExist) {
       throw new AppError({
         title: 'Usuário não encontrado.',
         message: 'Parece que esse usuário não existe na nossa base de dados...',
         statusCode: 404,
       })
+    }
 
     const isValidPermission =
       userToShare.permission === 'edit' ||
@@ -110,7 +111,10 @@ export class ShareProjectUseCase {
       sendedPerUser: userId,
     })
 
-    const notificationsUpdated = [newNotification, ...userExist.notifications]
+    const notificationsUpdated = [
+      { ...newNotification },
+      ...userExist.notifications,
+    ]
 
     await this.usersRepository.updateNotifications(
       userExist.id,

@@ -1,6 +1,10 @@
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 import { CreateSessionUseCase } from '../createSession/CreateSessionUseCase'
 import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
@@ -8,6 +12,7 @@ import { LogoutUseCase } from './LogoutUseCase'
 
 let refreshTokenRepositoryInMemory: RefreshTokenRepositoryInMemory
 let userRepositoryInMemory: UserRepositoryInMemory
+let projectsRepositoryInMemory: ProjectsRepositoryInMemory
 
 let dateProvider: DayJsDateProvider
 
@@ -19,16 +24,23 @@ describe('Logout', () => {
   beforeEach(() => {
     refreshTokenRepositoryInMemory = new RefreshTokenRepositoryInMemory()
     userRepositoryInMemory = new UserRepositoryInMemory()
+    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
 
     dateProvider = new DayJsDateProvider()
 
-    createUserUseCase = new CreateUserUseCase(userRepositoryInMemory)
+    createUserUseCase = new CreateUserUseCase(
+      userRepositoryInMemory,
+      projectsRepositoryInMemory,
+    )
     createSessionUseCase = new CreateSessionUseCase(
       userRepositoryInMemory,
       refreshTokenRepositoryInMemory,
       dateProvider,
     )
-    logoutUseCase = new LogoutUseCase(refreshTokenRepositoryInMemory)
+    logoutUseCase = new LogoutUseCase(
+      refreshTokenRepositoryInMemory,
+      userRepositoryInMemory,
+    )
   })
 
   it('Should be able logout', async () => {

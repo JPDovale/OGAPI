@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "publish": "npm i && npm run build",
     "application": "node shared/infra/http/index.js",
-    "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
+    "build:tsup": "tsup",
     "dev": "ts-node-dev -r tsconfig-paths/register --poll --inspect --transpile-only --ignore-watch node_modules --respawn src/shared/infra/http/index.ts",
-    "test": "jest",
+    "dev:compile": "node build/shared/infra/http/index.js",
+    "test:ui": "vitest --ui",
+    "test": "vitest",
     "typeorm": "ts-node-dev -r tsconfig-paths/register ./node_modules/typeorm/cli -d src/shared/infra/typeorm/dataSource.ts",
     "createM": "ts-node-dev ./node_modules/typeorm/cli",
     "lint": "eslint ."
@@ -36,8 +41,10 @@
     "@types/morgan": "^1.9.4",
     "@types/multer": "^1.4.7",
     "@types/nodemailer": "^6.4.7",
+    "@types/supertest": "^2.0.12",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@vitest/ui": "^0.28.5",
     "babel-plugin-module-resolver": "^5.0.0",
     "babel-plugin-resolver": "^1.1.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.2",
@@ -52,10 +59,13 @@
     "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.2.2",
     "prettier": "^2.7.1",
+    "supertest": "^6.3.3",
     "ts-jest": "^29.0.3",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.1.0",
-    "typescript": "^4.8.4"
+    "tsup": "^6.6.3",
+    "typescript": "^4.8.4",
+    "rollup-plugin-multi-entry": "^2.1.0"
   },
   "dependencies": {
     "@sentry/node": "^7.31.1",
@@ -84,6 +94,8 @@
     "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.7.0",
     "uuid": "^9.0.0",
+    "vite": "^4.1.2",
+    "vitest": "^0.28.5",
     "zod": "^3.20.2"
   }
 }

@@ -3,7 +3,10 @@ import { v4 as uuidV4 } from 'uuid'
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { INotification } from '@modules/accounts/infra/mongoose/entities/Notification'
-import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
+import {
+  IUserMongo,
+  UserMongo,
+} from '@modules/accounts/infra/mongoose/entities/User'
 
 import { IUsersRepository } from '../IUsersRepository'
 
@@ -22,9 +25,9 @@ export class UserRepositoryInMemory implements IUsersRepository {
   }
 
   async findById(userId: string): Promise<IUserMongo> {
-    const allUser = this.users.find((user) => user.id === userId)
+    const user = this.users.find((user) => user.id === userId)
 
-    return allUser
+    return user
   }
 
   async create(dataUserObj: ICreateUserDTO): Promise<IUserMongo> {
@@ -41,7 +44,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
       isSocialLogin,
     } = dataUserObj
 
-    const newUser = {
+    const newUser = new UserMongo({
       id: uuidV4(),
       name,
       email,
@@ -53,7 +56,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
       code,
       isInitialized,
       isSocialLogin,
-    }
+    })
 
     this.users.push(newUser)
     return newUser
@@ -150,7 +153,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
 
-    const updatedUser: IUserMongo = { ...userToUpdate, notifications }
+    const updatedUser: IUserMongo = { ...userToUpdate._doc, notifications }
     this.users = [...filteredUsers, updatedUser]
   }
 
@@ -158,7 +161,40 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
 
-    const updatedUser: IUserMongo = { ...userToUpdate, password }
+    const updatedUser: IUserMongo = { ...userToUpdate._doc, password }
+
     this.users = [...filteredUsers, updatedUser]
+  }
+
+  async findManyById(ids: string[]): Promise<IUserMongo[]> {
+    const users = this.users.filter((user) => {
+      const userIn = ids.find((id) => user.id === id)
+
+      return !!userIn
+    })
+
+    return users
+  }
+
+  async updateNotificationManyById(
+    ids: string[],
+    notification: INotification,
+  ): Promise<void> {
+    const updatedUsers = this.users.map((user) => {
+      const userIn = ids.find((id) => user.id === id)
+
+      if (userIn) {
+        const updatedUser: IUserMongo = {
+          ...user._doc,
+          notifications: [{ ...notification }, ...user.notifications],
+        }
+
+        return updatedUser
+      }
+
+      return user
+    })
+
+    this.users = updatedUsers
   }
 }

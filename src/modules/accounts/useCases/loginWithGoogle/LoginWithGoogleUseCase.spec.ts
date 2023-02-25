@@ -1,6 +1,10 @@
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import 'reflect-metadata'
+
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
 import { LoginWithGoogleUseCase } from './LoginWithGoogleUseCase'
@@ -27,11 +31,11 @@ describe('Login with Google', () => {
   })
 
   it('Should be able to login in application using Google', async () => {
-    const newSession = await loginWithGoogleUseCase.execute(
-      'teste@teste',
-      undefined,
-      'test',
-    )
+    const newSession = await loginWithGoogleUseCase.execute({
+      email: 'teste@teste',
+      image: undefined,
+      name: 'test',
+    })
 
     expect(newSession).toHaveProperty('user')
     expect(newSession).toHaveProperty('token')
@@ -51,7 +55,11 @@ describe('Login with Google', () => {
         isSocialLogin: false,
       })
 
-      await loginWithGoogleUseCase.execute('test@teste', undefined, 'test')
+      await loginWithGoogleUseCase.execute({
+        email: 'test@teste',
+        image: undefined,
+        name: 'test',
+      })
     })
       .rejects.toBeInstanceOf(AppError)
       .catch((err) => {

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import { container } from 'tsyringe'
 
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 import { IAvatar } from './Avatar'
 import { INotification } from './Notification'

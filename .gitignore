@@ -1,13 +1,12 @@
 node_modules
 mocs
-tmp/*
-
 
 dist
+build
 .vscode
 .env
 productionenv
 
-!temp/.gitkeep
+!tmp/**/.gitkeep
 .env
 productionenv

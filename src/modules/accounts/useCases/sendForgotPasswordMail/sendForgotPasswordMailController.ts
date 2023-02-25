@@ -2,8 +2,6 @@ import { Request, Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
-import { AppError } from '@shared/errors/AppError'
-
 import { SendForgotPasswordMailUseCase } from './sendForgotPasswordMailUseCase'
 
 export class SendForgotPasswordMailController {

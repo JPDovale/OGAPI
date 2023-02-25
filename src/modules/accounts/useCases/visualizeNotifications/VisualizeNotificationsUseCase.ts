@@ -1,8 +1,9 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
-import { ICacheProvider } from '@shared/container/provides/CacheProvider/ICacheProvider'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { AppError } from '@shared/errors/AppError'
 
 @injectable()
 export class VisualizeNotificationsUseCase {
@@ -15,6 +16,14 @@ export class VisualizeNotificationsUseCase {
 
   async execute(userId: string): Promise<IUserInfosResponse> {
     const user = await this.usersRepository.findById(userId)
+
+    if (!user) {
+      throw new AppError({
+        title: 'Usuário não encontrado.',
+        message: 'Parece que esse usuário não existe na nossa base de dados...',
+        statusCode: 404,
+      })
+    }
 
     const notificationsUpdated = user.notifications.map((notification) => {
       return {

@@ -4,10 +4,10 @@ import { sign } from 'jsonwebtoken'
 import { inject, injectable } from 'tsyringe'
 
 import session from '@config/session'
-import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {

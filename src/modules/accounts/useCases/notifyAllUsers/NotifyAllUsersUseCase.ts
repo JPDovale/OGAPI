@@ -1,9 +1,9 @@
 import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
-import { ICacheProvider } from '@shared/container/provides/CacheProvider/ICacheProvider'
-import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { AppError } from '@shared/errors/AppError'
 dotenv.config()
 

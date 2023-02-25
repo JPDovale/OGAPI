@@ -1,9 +1,9 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
-import { ICacheProvider } from '@shared/container/provides/CacheProvider/ICacheProvider'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()

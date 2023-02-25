@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
@@ -8,7 +8,6 @@ import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { ICacheProvider } from '@shared/container/provides/CacheProvider/ICacheProvider'
 
 interface IResponse {
   projects: IProjectMongo[]
@@ -27,8 +26,6 @@ export class ListProjectsPerUserUseCase {
     private readonly personRepository: IPersonsRepository,
     @inject('BooksRepository')
     private readonly booksRepository: IBooksRepository,
-    @inject('CacheProvider')
-    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute(userId: string): Promise<IResponse> {
@@ -41,23 +38,16 @@ export class ListProjectsPerUserUseCase {
     let booksInfos: IBook[] = []
 
     if (projectsThisUser[0]) {
+      const projectsIds: string[] = []
       const userIds = []
-      const personsIds = []
-      const booksIds = []
 
       projectsThisUser.forEach((project) => {
+        projectsIds.push(project.id)
+
         project.users.map((user) => {
           if (user.id === userId) return ''
           return userIds.push(user.id)
         })
-
-        project.tags
-          .find((tag) => tag.type === 'persons')
-          ?.refs[0].references.map((ref) => personsIds.push(ref))
-
-        project.tags
-          .find((tag) => tag.type === 'books')
-          ?.refs[0].references.map((ref) => booksIds.push(ref))
       })
 
       const rest = new Set(userIds)
@@ -85,13 +75,8 @@ export class ListProjectsPerUserUseCase {
         return usersInfos.push(infoUser)
       })
 
-      const persons = personsIds[0]
-        ? await this.personRepository.findManyById(personsIds)
-        : []
-
-      const books = booksIds[0]
-        ? await this.booksRepository.findManyById({ ids: booksIds })
-        : []
+      const persons = await this.personRepository.findByProjectIds(projectsIds)
+      const books = await this.booksRepository.findByProjectIds(projectsIds)
 
       personsInfos = persons
       booksInfos = books

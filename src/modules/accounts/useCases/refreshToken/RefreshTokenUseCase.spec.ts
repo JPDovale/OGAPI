@@ -1,13 +1,16 @@
 /* eslint-disable import/no-unresolved */
+import 'reflect-metadata'
 import { verify } from 'jsonwebtoken'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import session from '@config/session'
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
-import { IRefreshTokenRepository } from '@modules/accounts/repositories/IRefreshTokenRepository'
-import { IUsersRepository } from '@modules/accounts/repositories/IUsersRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
+import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 import { CreateSessionUseCase } from '../createSession/CreateSessionUseCase'
 import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
@@ -15,6 +18,7 @@ import { RefreshTokenUseCase } from './RefreshTokenUseCase'
 
 let refreshTokenUseCase: RefreshTokenUseCase
 let refreshTokenRepository: IRefreshTokenRepository
+let projectsRepositoryInMemory: ProjectsRepositoryInMemory
 let dateProvider: IDateProvider
 let usersRepository: IUsersRepository
 let createSessionUseCase: CreateSessionUseCase
@@ -29,7 +33,11 @@ describe('refresh token', () => {
     dateProvider = new DayJsDateProvider()
     refreshTokenRepository = new RefreshTokenRepositoryInMemory()
     usersRepository = new UserRepositoryInMemory()
-    createUserUseCase = new CreateUserUseCase(usersRepository)
+    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
+    createUserUseCase = new CreateUserUseCase(
+      usersRepository,
+      projectsRepositoryInMemory,
+    )
     createSessionUseCase = new CreateSessionUseCase(
       usersRepository,
       refreshTokenRepository,

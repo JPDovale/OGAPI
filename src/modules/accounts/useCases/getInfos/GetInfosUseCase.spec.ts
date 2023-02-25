@@ -1,16 +1,27 @@
+import 'reflect-metadata'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { UserRepositoryInMemory } from '@modules/accounts/repositories/inMemory/UserRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { RedisCacheProvider } from '@shared/container/providers/CacheProvider/implementations/RedisCacheProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
 import { GetInfosUseCase } from './GetInfosUseCase'
 
 let userRepositoryInMemory: UserRepositoryInMemory
 let getInfosUseCase: GetInfosUseCase
+let dateProvider: IDateProvider
+let cacheProvider: ICacheProvider
 
 describe('Get user infos', () => {
   beforeEach(() => {
     userRepositoryInMemory = new UserRepositoryInMemory()
-    getInfosUseCase = new GetInfosUseCase(userRepositoryInMemory)
+    dateProvider = new DayJsDateProvider()
+    cacheProvider = new RedisCacheProvider(dateProvider)
+    getInfosUseCase = new GetInfosUseCase(userRepositoryInMemory, cacheProvider)
   })
 
   it('Should be able to get infos from one user', async () => {
