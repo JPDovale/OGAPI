@@ -4,7 +4,7 @@ import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
 import { IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
@@ -33,7 +33,7 @@ export class UpdateSceneUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-  ) {}
+  ) { }
 
   async execute({
     bookId,
@@ -112,9 +112,8 @@ export class UpdateSceneUseCase {
       Number(writtenWords) - Number(sceneToUpdate.writtenWords)
     const numberOfWordsInCapitule = Number(capituleToUpdate.words || '0')
 
-    const newNumberOfWordsInCapitule = `${
-      numberOfWordsInCapitule + numberWrittenWordsToAdd
-    }`
+    const newNumberOfWordsInCapitule = `${numberOfWordsInCapitule + numberWrittenWordsToAdd
+      }`
 
     const sceneIncomplete = scenes.find((scene) => !scene.complete)
 
