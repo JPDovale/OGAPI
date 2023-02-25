@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
+import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
+import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
@@ -17,23 +19,25 @@ import { VerifyPermissions } from '@shared/container/services/verifyPermissions/
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
-import { PlotUpdateUseCase } from './PlotUpdateUseCase'
+import { CreateCapituleUseCase } from './CreateCapituleUseCase'
 
-let projectsRepositoryInMemory: IProjectsRepository
 let usersRepositoryInMemory: IUsersRepository
+let booksRepositoryInMemory: IBooksRepository
+let projectsRepositoryInMemory: IProjectsRepository
 
 let dateProvider: IDateProvider
-let notifyUsersProvider: INotifyUsersProvider
 let cacheProvider: ICacheProvider
+let notifyUsersProvider: INotifyUsersProvider
 
 let verifyPermissionsService: IVerifyPermissionsService
 
-let plotUpdateUseCase: PlotUpdateUseCase
+let createCapituleUseCase: CreateCapituleUseCase
 
-describe('Update Plot on project', () => {
+describe('Create book', () => {
   beforeEach(() => {
-    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
     usersRepositoryInMemory = new UserRepositoryInMemory()
+    booksRepositoryInMemory = new BooksRepositoryInMemory()
+    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
 
     dateProvider = new DayJsDateProvider()
     cacheProvider = new RedisCacheProvider(dateProvider)
@@ -47,14 +51,15 @@ describe('Update Plot on project', () => {
       usersRepositoryInMemory,
     )
 
-    plotUpdateUseCase = new PlotUpdateUseCase(
-      projectsRepositoryInMemory,
-      notifyUsersProvider,
+    createCapituleUseCase = new CreateCapituleUseCase(
+      booksRepositoryInMemory,
       verifyPermissionsService,
+      dateProvider,
+      notifyUsersProvider,
     )
   })
 
-  it('should be able to update plot of project', async () => {
+  it('Should be able to create capitule in book', async () => {
     const user = await usersRepositoryInMemory.create({
       age: '2312',
       email: 'test@test.com',
@@ -64,7 +69,7 @@ describe('Update Plot on project', () => {
       username: 'test',
     })
 
-    const newProjectTest = await projectsRepositoryInMemory.create({
+    const newProjectTest: ICreateProjectDTO = {
       name: 'test',
       private: false,
       type: 'book',
@@ -76,22 +81,39 @@ describe('Update Plot on project', () => {
           permission: 'edit',
         },
       ],
-      plot: { ...new PlotProject({}) },
+      plot: {},
+    }
+
+    await projectsRepositoryInMemory.create(newProjectTest)
+    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+    const newBook = await booksRepositoryInMemory.create({
+      projectId: newProject.id,
+      book: {
+        authors: [{ email: user.email, id: user.id, username: user.username }],
+        createdPerUser: user.id,
+        generes: [{ name: 'test' }],
+        literaryGenere: 'test',
+        title: 'teste',
+        isbn: 'undefined',
+      },
     })
 
-    await plotUpdateUseCase.execute(
-      { onePhrase: 'Teste' },
-      user.id,
-      newProjectTest.id,
-    )
-    const updatedProject = await projectsRepositoryInMemory.findById(
-      newProjectTest.id,
+    await createCapituleUseCase.execute({
+      bookId: newBook.id,
+      name: 'teste supremo',
+      objective: 'testar',
+      userId: user.id,
+    })
+
+    const bookWithCapituleCreated = await booksRepositoryInMemory.findById(
+      newBook.id,
     )
 
-    expect(updatedProject.plot.onePhrase).toEqual('Teste')
+    expect(bookWithCapituleCreated.capitules.length).toEqual(1)
   })
 
-  it('should be able notify users on project about change', async () => {
+  it('Should be able to notify users on project about new capitule in book', async () => {
     const user = await usersRepositoryInMemory.create({
       age: '2312',
       email: 'test@test.com',
@@ -101,16 +123,16 @@ describe('Update Plot on project', () => {
       username: 'test',
     })
 
-    const user2 = await usersRepositoryInMemory.create({
+    const userToNotify = await usersRepositoryInMemory.create({
       age: '2312',
-      email: 'testUser2@test.com',
+      email: 'userToNotify@test.com',
       name: 'test',
       password: 'test',
       sex: 'male',
       username: 'test',
     })
 
-    const newProjectTest = await projectsRepositoryInMemory.create({
+    const newProjectTest: ICreateProjectDTO = {
       name: 'test',
       private: false,
       type: 'book',
@@ -122,26 +144,41 @@ describe('Update Plot on project', () => {
           permission: 'edit',
         },
         {
-          email: user2.email,
-          id: user2.id,
+          email: userToNotify.email,
+          id: userToNotify.id,
           permission: 'edit',
         },
       ],
-      plot: { ...new PlotProject({}) },
+      plot: {},
+    }
+    await projectsRepositoryInMemory.create(newProjectTest)
+    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+    const newBook = await booksRepositoryInMemory.create({
+      projectId: newProject.id,
+      book: {
+        authors: [{ email: user.email, id: user.id, username: user.username }],
+        createdPerUser: user.id,
+        generes: [{ name: 'test' }],
+        literaryGenere: 'test',
+        title: 'teste',
+        isbn: 'undefined',
+      },
     })
 
-    await plotUpdateUseCase.execute(
-      { onePhrase: 'Teste' },
-      user.id,
-      newProjectTest.id,
-    )
+    await createCapituleUseCase.execute({
+      bookId: newBook.id,
+      name: 'teste supremo',
+      objective: 'testar',
+      userId: user.id,
+    })
 
-    const userNotified = await usersRepositoryInMemory.findById(user2.id)
+    const userNotified = await usersRepositoryInMemory.findById(userToNotify.id)
 
     expect(userNotified.notifications.length).toEqual(1)
   })
 
-  it("not should be able update plot if user doesn't permission", async () => {
+  it("not should be able to create capitule in book if user doesn't not permission", async () => {
     expect(async () => {
       const user = await usersRepositoryInMemory.create({
         age: '2312',
@@ -154,14 +191,14 @@ describe('Update Plot on project', () => {
 
       const user2 = await usersRepositoryInMemory.create({
         age: '2312',
-        email: 'testUser2@test.com',
+        email: 'user2@test.com',
         name: 'test',
         password: 'test',
         sex: 'male',
         username: 'test',
       })
 
-      const newProjectTest = await projectsRepositoryInMemory.create({
+      const newProjectTest: ICreateProjectDTO = {
         name: 'test',
         private: false,
         type: 'book',
@@ -178,14 +215,32 @@ describe('Update Plot on project', () => {
             permission: 'view',
           },
         ],
-        plot: { ...new PlotProject({}) },
+        plot: {},
+      }
+
+      await projectsRepositoryInMemory.create(newProjectTest)
+      const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+      const newBook = await booksRepositoryInMemory.create({
+        projectId: newProject.id,
+        book: {
+          authors: [
+            { email: user.email, id: user.id, username: user.username },
+          ],
+          createdPerUser: user.id,
+          generes: [{ name: 'test' }],
+          literaryGenere: 'test',
+          title: 'teste',
+          isbn: 'undefined',
+        },
       })
 
-      await plotUpdateUseCase.execute(
-        { onePhrase: 'Teste' },
-        user2.id,
-        newProjectTest.id,
-      )
+      await createCapituleUseCase.execute({
+        bookId: newBook.id,
+        name: 'teste supremo',
+        objective: 'testar',
+        userId: user2.id,
+      })
     })
       .rejects.toBeInstanceOf(AppError)
       .catch((err) => {

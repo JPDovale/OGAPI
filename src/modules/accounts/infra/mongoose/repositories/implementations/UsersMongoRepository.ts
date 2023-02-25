@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
 import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
 import { IAvatar } from '../../entities/Avatar'
 import { INotification } from '../../entities/Notification'

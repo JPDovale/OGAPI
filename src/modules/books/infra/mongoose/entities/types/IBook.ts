@@ -7,6 +7,7 @@ import { IGenereBook } from './IGenereBook'
 import { IPlotBook } from './IPlotBook'
 
 export interface IBook {
+  [x: string]: any
   id: string
   title: string
   subtitle?: string

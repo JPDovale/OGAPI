@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {

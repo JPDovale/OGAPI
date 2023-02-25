@@ -9,7 +9,7 @@ import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { PersonsRepositoryInMemory } from '@modules/persons/repositories/inMemory/PersonsRepositoryInMemory'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { FirebaseStorageProvider } from '@shared/container/provides/StorageProvider/implementations/FirebaseStorageProvider'
+import { FirebaseStorageProvider } from '@shared/container/providers/StorageProvider/implementations/FirebaseStorageProvider'
 
 import { DeleteUserUseCase } from './DeleteUserUseCase'
 

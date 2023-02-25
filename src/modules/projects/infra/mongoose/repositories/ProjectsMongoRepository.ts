@@ -5,7 +5,7 @@ import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
 import {
   IProjectMongo,

@@ -1,11 +1,12 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { ITag, Tag } from '@modules/projects/infra/mongoose/entities/Tag'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 interface IRequest {
   userId: string
@@ -36,6 +37,10 @@ export class CreateBookUseCase {
     private readonly booksRepository: IBooksRepository,
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
+    @inject('NotifyUsersProvider')
+    private readonly notifyUsersProvider: INotifyUsersProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute({
@@ -50,12 +55,11 @@ export class CreateBookUseCase {
     words,
     writtenWords,
   }: IRequest): Promise<IResponse> {
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'edit',
-    )
+      verifyPermissionTo: 'edit',
+    })
 
     const newBook = await this.booksRepository.create({
       projectId,
@@ -106,6 +110,17 @@ export class CreateBookUseCase {
     const updatedProject = await this.projectsRepository.updateTag(
       projectId,
       tags,
+    )
+
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} criou o livro: ${newBook.title}`,
+      `${user.username} acabou de criar o livro ${newBook.title}${
+        newBook.subtitle ? ` ${newBook.subtitle}` : ''
+      } no projeto: ${
+        project.name
+      }. Acesse a aba 'Livros' para ver mais informações.`,
     )
 
     return { book: newBook, project: updatedProject }

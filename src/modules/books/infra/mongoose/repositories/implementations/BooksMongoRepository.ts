@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
 import { BookMongo } from '../../entities/schemas/Book'
 import { PlotBook } from '../../entities/schemas/PlotBook'

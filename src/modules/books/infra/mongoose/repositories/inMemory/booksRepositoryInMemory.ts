@@ -75,7 +75,7 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     const bookToUpdate = this.books[indexOfBookToUpdate]
 
     this.books[indexOfBookToUpdate] = {
-      ...bookToUpdate,
+      ...bookToUpdate._doc,
       capitules,
       writtenWords,
     }

@@ -101,7 +101,15 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     this.projects = filteredProjects
   }
 
-  updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
+  async updateTag(projectId: string, tags: ITag[]): Promise<IProjectMongo> {
+    const indexOfProjectToUpdate = this.projects.findIndex(
+      (project) => project.id === projectId,
+    )
+    this.projects[indexOfProjectToUpdate].tags = tags
+
+    return this.projects[indexOfProjectToUpdate]
+  }
+
   listAll: () => Promise<IProjectMongo[]>
 
   async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
