@@ -76,13 +76,11 @@ export class BooksRepositoryInMemory implements IBooksRepository {
 
     this.books[indexOfBookToUpdate] = {
       ...bookToUpdate._doc,
-      capitules,
+      capitules: [...capitules],
       writtenWords,
     }
 
-    const bookUpdated = this.books.find((book) => book.id === id)
-
-    return bookUpdated
+    return this.books[indexOfBookToUpdate]
   }
 
   async deletePerUserId(id: string): Promise<void> {
