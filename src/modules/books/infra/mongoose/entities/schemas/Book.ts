@@ -8,6 +8,7 @@ const BookSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   title: { type: String, required: true },
   subtitle: { type: String },
+  createdPerUser: { type: String, required: true },
   defaultProject: { type: String, required: true },
   literaryGenere: { type: String, required: true },
   isbn: { type: String },

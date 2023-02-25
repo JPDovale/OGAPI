@@ -109,4 +109,14 @@ export class PersonsRepositoryInMemory implements IPersonsRepository {
 
     return personOfUser
   }
+
+  async findByProjectIds(projectIds: string[]): Promise<IPersonMongo[]> {
+    const persons = this.persons.filter((person) => {
+      const personIn = projectIds.find((id) => id === person.defaultProject)
+
+      return !!personIn
+    })
+
+    return persons
+  }
 }

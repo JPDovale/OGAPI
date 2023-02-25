@@ -5,7 +5,8 @@ import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
 import { IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
@@ -27,6 +28,8 @@ export class CreateSceneUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
+    @inject('NotifyUsersProvider')
+    private readonly notifyUsersProvider: INotifyUsersProvider,
   ) {}
 
   async execute({
@@ -47,7 +50,7 @@ export class CreateSceneUseCase {
       })
     }
 
-    await this.verifyPermissions.verify({
+    const { project, user } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
       userId,
       verifyPermissionTo: 'edit',
@@ -79,7 +82,7 @@ export class CreateSceneUseCase {
     const capitule: ICapitule = {
       ...capituleToUpdate,
       complete: false,
-      scenes: [...capituleToUpdate.scenes, newScene],
+      scenes: [...capituleToUpdate.scenes, { ...newScene }],
       updatedAt: this.dateProvider.getDate(new Date()),
     }
 
@@ -90,6 +93,19 @@ export class CreateSceneUseCase {
       capitules,
       id: bookId,
     })
+
+    await this.notifyUsersProvider.notify(
+      user,
+      project,
+      `${user.username} criou uma nova cena no capitulo: ${capitule.name}`,
+      `${user.username} acabou de criar uma nova cena no capitulo ${
+        capitule.name
+      } no livro ${book.title}${
+        book.subtitle ? ` ${book.subtitle}` : ''
+      } dentro do projeto: ${project.name}. Acesse a aba 'Livros -> ${
+        book.title
+      } -> capítulos -> ${capitule.name} -> cenas' para ver mais informações.`,
+    )
 
     return updatedBook
   }

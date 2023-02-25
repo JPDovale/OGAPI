@@ -1,11 +1,11 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { INotifyUsersProvider } from '@shared/container/provides/NotifyUsersProvider/INotifyUsersProvider'
-import { IStorageProvider } from '@shared/container/provides/StorageProvider/IStorageProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()
@@ -19,15 +19,16 @@ export class DeleteImageUseCase {
     private readonly dateProvider: IDateProvider,
     @inject('NotifyUsersProvider')
     private readonly notifyUsersProvider: INotifyUsersProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(userId: string, projectId: string): Promise<IProjectMongo> {
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project, user } = await permissionToEditProject.verify(
+    const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'edit',
-    )
+      verifyPermissionTo: 'edit',
+    })
 
     if (!project?.image.fileName) {
       throw new AppError({

@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import { container } from 'tsyringe'
 
 import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 import { IPlotProject } from './Plot'
 import { ITag } from './Tag'

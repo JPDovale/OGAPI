@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IRef, ITag, Tag } from '@modules/projects/infra/mongoose/entities/Tag'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
 interface IObject {

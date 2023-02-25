@@ -9,8 +9,8 @@ import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/reposit
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { IDateProvider } from '@shared/container/provides/DateProvider/IDateProvider'
-import { DayJsDateProvider } from '@shared/container/provides/DateProvider/implementations/DayJsDateProvider'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 import { CreateSessionUseCase } from '../createSession/CreateSessionUseCase'
 import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
