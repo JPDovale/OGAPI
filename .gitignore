@@ -1,7 +1,5 @@
 node_modules
 mocs
-tmp/*
-
 
 dist
 build
@@ -9,6 +7,6 @@ build
 .env
 productionenv
 
-!temp/.gitkeep
+!tmp/**/.gitkeep
 .env
 productionenv
