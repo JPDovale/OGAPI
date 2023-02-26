@@ -11,6 +11,7 @@ import { ICreateBook } from '../types/ICreateBook'
 import { IFindManyById } from '../types/IFindManyById'
 import { IUpdateCapitules } from '../types/IUpdateCapitules'
 import { IUpdateFrontCover } from '../types/IUpdateFrontCover'
+import { IUpdateGenres } from '../types/IUpdateGenres'
 
 @injectable()
 export class BooksMongoRepository implements IBooksRepository {
@@ -136,5 +137,16 @@ export class BooksMongoRepository implements IBooksRepository {
     const books = await BookMongo.find({ $or: projectsIds })
 
     return books
+  }
+
+  async updateGenres({ genres, id }: IUpdateGenres): Promise<IBook> {
+    await BookMongo.updateOne(
+      { id },
+      { generes: genres, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+
+    const book = await BookMongo.findOne({ id })
+
+    return book
   }
 }

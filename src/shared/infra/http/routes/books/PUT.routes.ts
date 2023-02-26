@@ -1,5 +1,6 @@
 import { Router } from 'express'
 
+import { RemoveGenreController } from '@modules/books/useCases/removeGenre/RemoveGenreController'
 import { ReorderCapitulesController } from '@modules/books/useCases/ReorderCapitules/ReorderCapitulesController'
 import { ReorderScenesController } from '@modules/books/useCases/ReorderScenes/ReorderScenesController'
 import { SetCompleteSceneController } from '@modules/books/useCases/SetCompleteScene/SetCompleteSceneController'
@@ -13,6 +14,7 @@ const setCompleteSceneController = new SetCompleteSceneController()
 const reorderScenesController = new ReorderScenesController()
 const updateSceneController = new UpdateSceneController()
 const reorderCapitulesController = new ReorderCapitulesController()
+const removeGenreController = new RemoveGenreController()
 
 booksRoutesPut.put('/capitules', updateCapituleController.handle)
 booksRoutesPut.put(
@@ -22,3 +24,4 @@ booksRoutesPut.put(
 booksRoutesPut.put('/capitules/scenes/reorder', reorderScenesController.handle)
 booksRoutesPut.put('/capitules/scenes', updateSceneController.handle)
 booksRoutesPut.put('/capitules/reorder', reorderCapitulesController.handle)
+booksRoutesPut.put('/genres', removeGenreController.handle)
