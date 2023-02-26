@@ -8,6 +8,7 @@ import { ICreateBook } from '../types/ICreateBook'
 import { IFindManyById } from '../types/IFindManyById'
 import { IUpdateCapitules } from '../types/IUpdateCapitules'
 import { IUpdateFrontCover } from '../types/IUpdateFrontCover'
+import { IUpdateGenres } from '../types/IUpdateGenres'
 
 export class BooksRepositoryInMemory implements IBooksRepository {
   books: IBook[] = []
@@ -113,5 +114,17 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     })
 
     return books
+  }
+
+  async updateGenres({ genres, id }: IUpdateGenres): Promise<IBook> {
+    const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
+    const bookToUpdate = this.books[indexOfBookToUpdate]
+
+    this.books[indexOfBookToUpdate] = {
+      ...bookToUpdate._doc,
+      generes: [...genres],
+    }
+
+    return this.books[indexOfBookToUpdate]
   }
 }

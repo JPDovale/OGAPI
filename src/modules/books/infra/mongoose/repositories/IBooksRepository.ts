@@ -3,6 +3,7 @@ import { ICreateBook } from './types/ICreateBook'
 import { IFindManyById } from './types/IFindManyById'
 import { IUpdateCapitules } from './types/IUpdateCapitules'
 import { IUpdateFrontCover } from './types/IUpdateFrontCover'
+import { IUpdateGenres } from './types/IUpdateGenres'
 
 export interface IBooksRepository {
   create: ({ projectId, book }: ICreateBook) => Promise<IBook>
@@ -18,4 +19,5 @@ export interface IBooksRepository {
   listPerUser: (userId: string) => Promise<IBook[]>
   deletePerProjectId: (projectId: string) => Promise<void>
   findByProjectIds: (projectIds: string[]) => Promise<IBook[]>
+  updateGenres: ({ genres, id }: IUpdateGenres) => Promise<IBook>
 }
