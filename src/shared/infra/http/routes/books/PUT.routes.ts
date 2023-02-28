@@ -4,6 +4,7 @@ import { RemoveGenreController } from '@modules/books/useCases/removeGenre/Remov
 import { ReorderCapitulesController } from '@modules/books/useCases/ReorderCapitules/ReorderCapitulesController'
 import { ReorderScenesController } from '@modules/books/useCases/ReorderScenes/ReorderScenesController'
 import { SetCompleteSceneController } from '@modules/books/useCases/SetCompleteScene/SetCompleteSceneController'
+import { UpdateBookController } from '@modules/books/useCases/UpdateBook/UpdateBookController'
 import { UpdateCapituleController } from '@modules/books/useCases/UpdateCapitule/UpdateCapituleController'
 import { UpdateSceneController } from '@modules/books/useCases/UpdateScene/UpdateSceneController'
 
@@ -15,6 +16,7 @@ const reorderScenesController = new ReorderScenesController()
 const updateSceneController = new UpdateSceneController()
 const reorderCapitulesController = new ReorderCapitulesController()
 const removeGenreController = new RemoveGenreController()
+const updateBookController = new UpdateBookController()
 
 booksRoutesPut.put('/capitules', updateCapituleController.handle)
 booksRoutesPut.put(
@@ -25,3 +27,4 @@ booksRoutesPut.put('/capitules/scenes/reorder', reorderScenesController.handle)
 booksRoutesPut.put('/capitules/scenes', updateSceneController.handle)
 booksRoutesPut.put('/capitules/reorder', reorderCapitulesController.handle)
 booksRoutesPut.put('/genres', removeGenreController.handle)
+booksRoutesPut.put('/', updateBookController.handle)

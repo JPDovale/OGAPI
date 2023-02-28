@@ -22,7 +22,7 @@ export class DeleteCapituleUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-  ) { }
+  ) {}
 
   async execute({ bookId, capituleId, userId }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
@@ -59,8 +59,9 @@ export class DeleteCapituleUseCase {
     const capituleToDeleteSequence = Number(capituleToDelete.sequence)
     const wordsToDeleteInBook = Number(capituleToDelete.words || '0')
     const numberOfWrittenWordsOnBook = Number(book.writtenWords)
-    const newNumberOfWrittenWordsOnBook = `${numberOfWrittenWordsOnBook - wordsToDeleteInBook
-      }`
+    const newNumberOfWrittenWordsOnBook = `${
+      numberOfWrittenWordsOnBook - wordsToDeleteInBook
+    }`
 
     const updatedCapitules = filteredCapitules.map((capitule) => {
       const capituleSequence = Number(capitule.sequence)
