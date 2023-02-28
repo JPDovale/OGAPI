@@ -9,6 +9,7 @@ import { IBook } from '../../entities/types/IBook'
 import { IBooksRepository } from '../IBooksRepository'
 import { ICreateBook } from '../types/ICreateBook'
 import { IFindManyById } from '../types/IFindManyById'
+import { IUpdateBook } from '../types/IUpdateBook'
 import { IUpdateCapitules } from '../types/IUpdateCapitules'
 import { IUpdateFrontCover } from '../types/IUpdateFrontCover'
 import { IUpdateGenres } from '../types/IUpdateGenres'
@@ -148,5 +149,30 @@ export class BooksMongoRepository implements IBooksRepository {
     const book = await BookMongo.findOne({ id })
 
     return book
+  }
+
+  async updateBook({
+    id,
+    updatedInfos: { isbn, literaryGenere, subtitle, title, words },
+  }: IUpdateBook): Promise<IBook> {
+    await BookMongo.updateOne(
+      { id },
+      {
+        isbn,
+        literaryGenere,
+        subtitle,
+        title,
+        words,
+        updateAt: this.dateProvider.getDate(new Date()),
+      },
+    )
+
+    const book = await BookMongo.findOne({ id })
+
+    return book
+  }
+
+  async deletePerId(id: string): Promise<void> {
+    await BookMongo.deleteOne({ id })
   }
 }
