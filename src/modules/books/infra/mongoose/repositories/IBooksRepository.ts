@@ -1,6 +1,7 @@
 import { IBook } from '../entities/types/IBook'
 import { ICreateBook } from './types/ICreateBook'
 import { IFindManyById } from './types/IFindManyById'
+import { IUpdateBook } from './types/IUpdateBook'
 import { IUpdateCapitules } from './types/IUpdateCapitules'
 import { IUpdateFrontCover } from './types/IUpdateFrontCover'
 import { IUpdateGenres } from './types/IUpdateGenres'
@@ -20,4 +21,6 @@ export interface IBooksRepository {
   deletePerProjectId: (projectId: string) => Promise<void>
   findByProjectIds: (projectIds: string[]) => Promise<IBook[]>
   updateGenres: ({ genres, id }: IUpdateGenres) => Promise<IBook>
+  updateBook: ({ id, updatedInfos }: IUpdateBook) => Promise<IBook>
+  deletePerId: (id: string) => Promise<void>
 }
