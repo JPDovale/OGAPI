@@ -14,52 +14,52 @@ export class PlotUpdateController {
       onePhrase: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       premise: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       storyteller: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       literaryGenere: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       subgenre: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       ambient: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       countTime: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       historicalFact: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       details: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       summary: z
         .string()
         .max(10000)
-        .regex(/^[^<>{}\\]+$/)
+        // .regex(/^[^<>{}\\]+$/)
         .optional(),
       persons: z.array(z.string().min(6).max(100)).optional(),
       urlOfText: z.string().max(400).optional(),
@@ -68,17 +68,17 @@ export class PlotUpdateController {
           act1: z
             .string()
             .max(10000)
-            .regex(/^[^<>{}\\]+$/)
+            // .regex(/^[^<>{}\\]+$/)
             .optional(),
           act2: z
             .string()
             .max(10000)
-            .regex(/^[^<>{}\\]+$/)
+            // .regex(/^[^<>{}\\]+$/)
             .optional(),
           act3: z
             .string()
             .max(10000)
-            .regex(/^[^<>{}\\]+$/)
+            // .regex(/^[^<>{}\\]+$/)
             .optional(),
         })
         .optional(),
