@@ -11,12 +11,7 @@ export class UpdatePersonController {
       person: z.object({
         name: z.string().min(1).max(60).optional(),
         lastName: z.string().min(1).max(60).optional(),
-        history: z
-          .string()
-          .min(1)
-          .max(10000)
-          .regex(/^[^<>{}\\]+$/)
-          .optional(),
+        history: z.string().min(1).max(10000).optional(),
         age: z.string().min(1).max(10).regex(/^\d+$/).optional(),
       }),
     })
