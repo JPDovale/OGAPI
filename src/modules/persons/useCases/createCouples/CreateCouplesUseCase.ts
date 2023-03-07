@@ -1,11 +1,11 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import { ICreateCoupleDTO } from '@modules/persons/dtos/ICreateCoupleDTO'
 import { Couple } from '@modules/persons/infra/mongoose/entities/Couple'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {
@@ -27,6 +27,8 @@ export class CreateCoupleUseCase {
     private readonly personsRepository: IPersonsRepository,
     @inject('ProjectsRepository')
     private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute({
@@ -48,12 +50,11 @@ export class CreateCoupleUseCase {
       })
     }
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    await permissionToEditProject.verify(
+    await this.verifyPermissions.verify({
       userId,
-      projectId || person.defaultProject,
-      'edit',
-    )
+      projectId: projectId || person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const coupleExisteToThisPerson = person.couples.find(
       (c) => c.personId === couple.personId,

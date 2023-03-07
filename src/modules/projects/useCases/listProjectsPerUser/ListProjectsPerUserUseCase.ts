@@ -4,6 +4,8 @@ import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/
 import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
@@ -14,6 +16,7 @@ interface IResponse {
   users: IUserInfosResponse[]
   persons: IPersonMongo[]
   books: IBook[]
+  boxes: IBox[]
 }
 @injectable()
 export class ListProjectsPerUserUseCase {
@@ -26,6 +29,8 @@ export class ListProjectsPerUserUseCase {
     private readonly personRepository: IPersonsRepository,
     @inject('BooksRepository')
     private readonly booksRepository: IBooksRepository,
+    @inject('BoxesRepository')
+    private readonly boxesRepository: IBoxesRepository,
   ) {}
 
   async execute(userId: string): Promise<IResponse> {
@@ -36,6 +41,7 @@ export class ListProjectsPerUserUseCase {
     const usersInfos: IUserInfosResponse[] = []
     let personsInfos: IPersonMongo[] = []
     let booksInfos: IBook[] = []
+    let boxesInfos: IBox[] = []
 
     if (projectsThisUser[0]) {
       const projectsIds: string[] = []
@@ -77,9 +83,11 @@ export class ListProjectsPerUserUseCase {
 
       const persons = await this.personRepository.findByProjectIds(projectsIds)
       const books = await this.booksRepository.findByProjectIds(projectsIds)
+      const boxes = await this.boxesRepository.findPerProjectIds(projectsIds)
 
       personsInfos = persons
       booksInfos = books
+      boxesInfos = boxes
     }
 
     const response = {
@@ -87,6 +95,7 @@ export class ListProjectsPerUserUseCase {
       users: usersInfos || [],
       persons: personsInfos || [],
       books: booksInfos || [],
+      boxes: boxesInfos,
     }
 
     return response

@@ -28,7 +28,7 @@ export class CreatePowersController {
 
     const createPowersUseCase = container.resolve(CreatePowerUseCase)
 
-    const { person, project } = await createPowersUseCase.execute({
+    const { person, box } = await createPowersUseCase.execute({
       userId: id,
       projectId,
       personId,
@@ -38,6 +38,6 @@ export class CreatePowersController {
       },
     })
 
-    return res.status(201).json({ person, project })
+    return res.status(201).json({ person, box })
   }
 }

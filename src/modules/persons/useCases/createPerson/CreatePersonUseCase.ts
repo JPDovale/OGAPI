@@ -1,12 +1,11 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 interface IRequest {
   userId: string
@@ -16,7 +15,7 @@ interface IRequest {
 
 interface IResponse {
   person: IPersonMongo
-  project: IProjectMongo
+  box: IBox
 }
 
 @injectable()
@@ -24,8 +23,10 @@ export class CreatePersonUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute({
@@ -33,12 +34,11 @@ export class CreatePersonUseCase {
     projectId,
     newPerson,
   }: IRequest): Promise<IResponse> {
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'edit',
-    )
+      verifyPermissionTo: 'edit',
+    })
 
     const person = await this.personsRepository.create(
       userId,
@@ -46,18 +46,15 @@ export class CreatePersonUseCase {
       newPerson,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.createOrUpdatePersons(
-      project.tags,
-      [person.id],
-      project.name,
-    )
-
-    const updatedProject = await this.projectsRepository.updateTag(
+    const box = await this.boxesControllers.controllerInternalBoxes({
+      name: 'persons',
       projectId,
-      tags,
-    )
+      projectName: project.name,
+      userId,
+      linkId: person.id,
+      withoutArchive: true,
+    })
 
-    return { person, project: updatedProject }
+    return { person, box }
   }
 }

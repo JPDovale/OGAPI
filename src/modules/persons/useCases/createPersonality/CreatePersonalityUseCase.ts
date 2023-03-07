@@ -1,13 +1,12 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { Personality } from '@modules/persons/infra/mongoose/entities/Personality'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {
@@ -19,7 +18,7 @@ interface IRequest {
 
 interface IResponse {
   person: IPersonMongo
-  project: IProjectMongo
+  box: IBox
 }
 
 @injectable()
@@ -27,8 +26,10 @@ export class CreatePersonalityUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute({
@@ -46,12 +47,11 @@ export class CreatePersonalityUseCase {
         statusCode: 404,
       })
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId || person.defaultProject,
-      'edit',
-    )
+      projectId: projectId || person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const personalityExistesToThiPerson = person.personality.find(
       (p) => p.title === personality.title,
@@ -65,26 +65,25 @@ export class CreatePersonalityUseCase {
       })
     }
 
-    const tagPersonality = project.tags.find(
-      (tag) => tag.type === 'persons/personality',
-    )
-
-    const personalityAlreadyExistsInTags = tagPersonality?.refs.find(
-      (ref) => ref.object.title === personality.title,
-    )
-    if (personalityAlreadyExistsInTags) {
-      throw new AppError({
-        title: 'Característica de personalidade já existe nas tags.',
-        message:
-          'Você já criou uma característica de personalidade com esse nome para outro personagem... Caso o medo seja a mesma característica de personalidade, tente atribui-la ao personagem, ou então escolha outro nome para a característica de personalidade.',
-        statusCode: 409,
-      })
-    }
-
     const newPersonality = new Personality({
       title: personality.title,
       consequences: personality.consequences || [],
       description: personality.description,
+    })
+
+    const box = await this.boxesControllers.controllerInternalBoxes({
+      archive: newPersonality,
+      error: {
+        title:
+          'Característica de personalidade já existe nos arquivos internos do projeto.',
+        message:
+          'Você já criou uma característica de personalidade  com esse nome para outro personagem... Caso o característica de personalidade  seja o mesma, tente atribui-lo ao personagem, ou então escolha outro nome.',
+      },
+      name: 'persons/personality',
+      projectId,
+      projectName: project.name,
+      userId,
+      linkId: person.id,
     })
 
     const updatePersonality = [newPersonality, ...person.personality]
@@ -93,20 +92,6 @@ export class CreatePersonalityUseCase {
       updatePersonality,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.createOrUpdate(
-      project.tags,
-      'persons/personality',
-      [newPersonality],
-      [personId],
-      project.name,
-    )
-
-    const updatedProject = await this.projectsRepository.updateTag(
-      projectId || person.defaultProject,
-      tags,
-    )
-
-    return { person: updatedPerson, project: updatedProject }
+    return { person: updatedPerson, box }
   }
 }

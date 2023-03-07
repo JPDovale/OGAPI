@@ -28,7 +28,7 @@ export class CreateFearsController {
 
     const createFearsUseCase = container.resolve(CreateFearUseCase)
 
-    const { person, project } = await createFearsUseCase.execute({
+    const { person, box } = await createFearsUseCase.execute({
       userId: id,
       projectId,
       personId,
@@ -38,6 +38,6 @@ export class CreateFearsController {
       },
     })
 
-    return res.status(201).json({ person, project })
+    return res.status(201).json({ person, box })
   }
 }
