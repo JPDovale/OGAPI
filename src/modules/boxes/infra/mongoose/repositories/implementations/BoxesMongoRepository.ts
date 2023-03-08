@@ -9,6 +9,7 @@ import { IBox } from '../../entities/types/IBox'
 import { IBoxesRepository } from '../IBoxesRepository'
 import { IAddArchive } from '../types/IAddArchive'
 import { IFindByNameAndProjectId } from '../types/IFindByNameAndProjectId'
+import { IUpdateArchives } from '../types/IUpdateArchives'
 
 @injectable()
 export class BoxesMongoRepository implements IBoxesRepository {
@@ -95,7 +96,23 @@ export class BoxesMongoRepository implements IBoxesRepository {
   }
 
   async addArchive({ archive, id }: IAddArchive): Promise<IBox> {
-    await BoxMongo.updateOne({ id }, { $push: { archives: archive } })
+    await BoxMongo.updateOne(
+      { id },
+      {
+        $push: { archives: archive },
+        updatedAt: this.dateProvider.getDate(new Date()),
+      },
+    )
+
+    const updatedBox = await BoxMongo.findOne({ id })
+    return updatedBox
+  }
+
+  async updateArchives({ archives, id }: IUpdateArchives): Promise<IBox> {
+    await BoxMongo.updateOne(
+      { id },
+      { archives, updatedAt: this.dateProvider.getDate(new Date()) },
+    )
 
     const updatedBox = await BoxMongo.findOne({ id })
     return updatedBox

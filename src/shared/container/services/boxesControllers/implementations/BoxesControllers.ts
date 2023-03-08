@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
+import { IArchive } from '@modules/boxes/infra/mongoose/entities/types/IArchive'
 import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
@@ -9,6 +10,9 @@ import { AppError } from '@shared/errors/AppError'
 
 import { IBoxesControllers } from '../IBoxesControllers'
 import { IControllerInternalBoxes } from '../types/IControllerInternalBoxes'
+import { ILinkObject } from '../types/ILinkObject'
+import { ILinkObjectResponse } from '../types/ILinkObjectResponse'
+import { IUnlinkObject } from '../types/IUnlinkObject'
 
 @injectable()
 export class BoxesControllers implements IBoxesControllers {
@@ -91,5 +95,133 @@ export class BoxesControllers implements IBoxesControllers {
     })
 
     return updatedBox
+  }
+
+  async unlinkObject({
+    archiveId,
+    boxName,
+    objectToUnlinkId,
+    projectId,
+    withoutArchive = false,
+  }: IUnlinkObject): Promise<IBox> {
+    const boxExistes = await this.boxesRepository.findByNameAndProjectId({
+      name: boxName,
+      projectId,
+    })
+
+    if (!boxExistes) {
+      throw new AppError({
+        title: 'Internal error',
+        message:
+          'Tivemos problemas ao processar as informações das boxes internas do projeto...',
+        statusCode: 500,
+      })
+    }
+
+    const archivesFiltered: IArchive[] = boxExistes.archives.filter(
+      (file) => file.archive.id !== archiveId,
+    )
+
+    let archiveToUpdate: IArchive | undefined
+
+    if (!withoutArchive) {
+      const archiveToUpdateFind: IArchive = boxExistes.archives.find(
+        (file) => file.archive.id === archiveId,
+      )
+
+      if (!archiveToUpdateFind) return boxExistes
+
+      archiveToUpdate = archiveToUpdateFind
+    } else {
+      archiveToUpdate = boxExistes.archives[0]
+    }
+
+    const archiveUpdated: IArchive = {
+      ...archiveToUpdate,
+      links: archiveToUpdate.links.filter(
+        (link) => link.id !== objectToUnlinkId,
+      ),
+    }
+
+    const updatedArchives: IArchive[] = [...archivesFiltered, archiveUpdated]
+
+    const box = await this.boxesRepository.updateArchives({
+      archives: updatedArchives,
+      id: boxExistes.id,
+    })
+
+    return box
+  }
+
+  async linkObject({
+    boxName,
+    projectId,
+    archiveId,
+    objectToLinkId,
+    withoutArchive = false,
+  }: ILinkObject): Promise<ILinkObjectResponse> {
+    const boxExistes = await this.boxesRepository.findByNameAndProjectId({
+      name: boxName,
+      projectId,
+    })
+
+    if (!boxExistes) {
+      throw new AppError({
+        title: 'Internal error',
+        message:
+          'Tivemos problemas ao processar as informações das boxes internas do projeto...',
+        statusCode: 500,
+      })
+    }
+
+    const archivesFiltered: IArchive[] = boxExistes.archives.filter(
+      (file) => file.archive.id !== archiveId,
+    )
+
+    let archiveToUpdate: IArchive | undefined
+
+    if (!withoutArchive) {
+      const archiveToUpdateFind: IArchive = boxExistes.archives.find(
+        (file) => file.archive.id === archiveId,
+      )
+
+      archiveToUpdate = archiveToUpdateFind
+    } else {
+      archiveToUpdate = boxExistes.archives[0]
+    }
+
+    if (!archiveToUpdate) {
+      throw new AppError({
+        title: 'Arquivo não existente nas boxes internas',
+        message: 'Você está tentando atribuir uma referencia inexistente...',
+        statusCode: 404,
+      })
+    }
+
+    const alreadyLinkedObject = archiveToUpdate.links.find(
+      (link) => link.id === objectToLinkId,
+    )
+
+    if (alreadyLinkedObject) {
+      throw new AppError({
+        title: 'Você já criou essa referencia',
+        message: 'Você já criou essa referencia anteriormente...',
+        statusCode: 404,
+      })
+    }
+
+    const archiveUpdated: IArchive = {
+      ...archiveToUpdate,
+      links: [...archiveToUpdate.links, { id: objectToLinkId, type: 'id' }],
+    }
+
+    const updatedArchives: IArchive[] = [...archivesFiltered, archiveUpdated]
+
+    const box = await this.boxesRepository.updateArchives({
+      archives: updatedArchives,
+      id: boxExistes.id,
+    })
+
+    return { box, archive: archiveToUpdate }
   }
 }

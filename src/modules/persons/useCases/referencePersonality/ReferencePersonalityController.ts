@@ -41,7 +41,7 @@ export class ReferencePersonalityController {
     const referencePersonalityUseCase = container.resolve(
       ReferencePersonalityUseCase,
     )
-    const personUpdated = await referencePersonalityUseCase.execute(
+    const { person, box } = await referencePersonalityUseCase.execute(
       id,
       projectId,
       personId,
@@ -49,6 +49,6 @@ export class ReferencePersonalityController {
       { consequences },
     )
 
-    return res.status(200).json(personUpdated)
+    return res.status(200).json({ person, box })
   }
 }

@@ -25,7 +25,7 @@ export class ReorderScenesUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-  ) { }
+  ) {}
 
   async execute({
     bookId,

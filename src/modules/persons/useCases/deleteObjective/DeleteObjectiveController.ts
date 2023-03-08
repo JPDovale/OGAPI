@@ -15,12 +15,12 @@ export class DeleteObjectiveController {
     const { personId, objectiveId } = deleteObjectiveBodySchema.parse(req.body)
 
     const deleteObjectiveUseCase = container.resolve(DeleteObjectiveUseCase)
-    const updatedPerson = await deleteObjectiveUseCase.execute(
+    const { person, box } = await deleteObjectiveUseCase.execute(
       id,
       personId,
       objectiveId,
     )
 
-    return res.status(200).json(updatedPerson)
+    return res.status(200).json({ person, box })
   }
 }
