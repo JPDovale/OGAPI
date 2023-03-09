@@ -18,13 +18,13 @@ export class ReferenceWisheController {
     )
 
     const referenceFeraUseCase = container.resolve(ReferenceWisheUseCase)
-    const personUpdated = await referenceFeraUseCase.execute(
+    const { person, box } = await referenceFeraUseCase.execute(
       id,
       projectId,
       personId,
       refId,
     )
 
-    return res.status(200).json(personUpdated)
+    return res.status(200).json({ person, box })
   }
 }

@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
@@ -20,6 +21,8 @@ export class DeleteProjectUseCase {
     private readonly notifyUsersProvider: INotifyUsersProvider,
     @inject('BooksRepository')
     private readonly booksRepository: IBooksRepository,
+    @inject('BoxesRepository')
+    private readonly boxesRepository: IBoxesRepository,
   ) {}
 
   async execute(projectId: string, userId: string): Promise<void> {
@@ -52,6 +55,7 @@ export class DeleteProjectUseCase {
     await this.projectsRepository.delete(projectId)
     await this.personsRepository.deletePerProjectId(projectId)
     await this.booksRepository.deletePerProjectId(projectId)
+    await this.boxesRepository.deletePerProjectId(projectId)
     await this.notifyUsersProvider.notify(
       user,
       project,

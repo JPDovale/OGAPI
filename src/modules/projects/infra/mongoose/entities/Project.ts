@@ -5,7 +5,6 @@ import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 import { IPlotProject } from './Plot'
-import { ITag } from './Tag'
 
 const dateProvider = container.resolve(DayJsDateProvider)
 
@@ -13,7 +12,6 @@ const ProjectSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   createdPerUser: { type: String, required: true, unique: false },
-  tags: { type: Array<ITag>, default: [] },
   users: { type: Array<ISharedWhitUsers>, default: [] },
   private: { type: Boolean, required: true },
   password: { type: String, default: '' },
@@ -42,7 +40,6 @@ export interface IProjectMongo {
   id?: string
   name: string
   createdPerUser: string
-  tags: ITag[]
   users: ISharedWhitUsers[]
   private: boolean
   password?: string

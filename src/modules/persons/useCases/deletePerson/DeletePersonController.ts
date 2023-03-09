@@ -14,8 +14,10 @@ export class DeletePersonController {
     const { personId } = deletePersonBodySchema.parse(req.body)
 
     const deletePersonUseCase = container.resolve(DeletePersonUseCase)
-    await deletePersonUseCase.execute(id, personId)
+    const { box } = await deletePersonUseCase.execute(id, personId)
 
-    return res.status(200).json({ success: 'Personagem deletado com sucesso' })
+    return res
+      .status(200)
+      .json({ success: 'Personagem deletado com sucesso', box })
   }
 }

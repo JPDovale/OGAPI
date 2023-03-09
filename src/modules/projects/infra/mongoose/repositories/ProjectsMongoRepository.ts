@@ -12,7 +12,6 @@ import {
   ISharedWhitUsers,
   ProjectMongo,
 } from '../entities/Project'
-import { ITag } from '../entities/Tag'
 import { IUpdateName } from './types/IUpdateName'
 
 @injectable()
@@ -101,17 +100,6 @@ export class ProjectsMongoRepository implements IProjectsRepository {
     return updatedProject
   }
 
-  async updateTag(id: string, tags: ITag[]): Promise<IProjectMongo> {
-    await ProjectMongo.findOneAndUpdate(
-      { id },
-      { tags, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-
-    const updatedProject = await ProjectMongo.findOne({ id })
-
-    return updatedProject
-  }
-
   async deletePerUserId(userId: string): Promise<void> {
     await ProjectMongo.deleteMany({ createdPerUser: userId })
   }
@@ -129,5 +117,9 @@ export class ProjectsMongoRepository implements IProjectsRepository {
 
     const project = await ProjectMongo.findOne({ id })
     return project
+  }
+
+  async removeTagsInAllProjects(): Promise<void> {
+    await ProjectMongo.updateMany({}, { $unset: { tags: 1 } })
   }
 }
