@@ -60,7 +60,7 @@ export class BoxesControllers implements IBoxesControllers {
     }
 
     if (!withoutArchive) {
-      const archiveExisteInArchives = boxExistes.archives.map(
+      const archiveExisteInArchives = boxExistes.archives.find(
         (a) => a.archive.title === archive.title,
       )
 
@@ -118,9 +118,7 @@ export class BoxesControllers implements IBoxesControllers {
       })
     }
 
-    const archivesFiltered: IArchive[] = boxExistes.archives.filter(
-      (file) => file.archive.id !== archiveId,
-    )
+    let archivesFiltered: IArchive[] = []
 
     let archiveToUpdate: IArchive | undefined
 
@@ -130,6 +128,10 @@ export class BoxesControllers implements IBoxesControllers {
       )
 
       if (!archiveToUpdateFind) return boxExistes
+
+      archivesFiltered = boxExistes.archives.filter(
+        (file) => file.archive.id !== archiveId,
+      )
 
       archiveToUpdate = archiveToUpdateFind
     } else {
@@ -174,15 +176,17 @@ export class BoxesControllers implements IBoxesControllers {
       })
     }
 
-    const archivesFiltered: IArchive[] = boxExistes.archives.filter(
-      (file) => file.archive.id !== archiveId,
-    )
+    let archivesFiltered: IArchive[] = []
 
     let archiveToUpdate: IArchive | undefined
 
     if (!withoutArchive) {
       const archiveToUpdateFind: IArchive = boxExistes.archives.find(
         (file) => file.archive.id === archiveId,
+      )
+
+      archivesFiltered = boxExistes.archives.filter(
+        (file) => file.archive.id !== archiveId,
       )
 
       archiveToUpdate = archiveToUpdateFind

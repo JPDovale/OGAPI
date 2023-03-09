@@ -20,6 +20,6 @@ export class Archive {
   constructor(archive: IArchive) {
     this.images = archive.images || []
     this.archive = archive.archive
-    this.links = this.links || []
+    this.links = archive.links || []
   }
 }

@@ -1,7 +1,8 @@
+import { z } from 'zod'
+
 import { AppError } from '@shared/errors/AppError'
 
 import 'dotenv/config'
-import { z } from 'zod'
 
 const envSchema = z.object({
   IS_DEV: z.coerce.boolean().default(true),
@@ -52,6 +53,7 @@ const _env = envSchema.safeParse(process.env)
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare
 if (_env.success === false) {
+  // eslint-disable-next-line no-console
   console.error('Invalid environment variables', _env.error.format())
 
   throw new AppError({

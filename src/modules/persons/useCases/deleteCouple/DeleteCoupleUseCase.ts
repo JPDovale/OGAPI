@@ -37,7 +37,7 @@ export class DeleteCoupleUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    if (!person || !couple) {
+    if (!person && !couple) {
       throw new AppError({
         title: 'O personagem não existe',
         message: 'Parece que esse personagem não existe na nossa base de dados',
