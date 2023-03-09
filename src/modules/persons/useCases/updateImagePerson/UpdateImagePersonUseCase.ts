@@ -9,6 +9,7 @@ import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 @injectable()
 export class UpdateImagePersonUseCase {
@@ -19,6 +20,8 @@ export class UpdateImagePersonUseCase {
     private readonly storageProvider: IStorageProvider,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -27,6 +30,12 @@ export class UpdateImagePersonUseCase {
     file: Express.Multer.File,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
+
+    await this.verifyPermissions.verify({
+      userId,
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     if (person?.image?.fileName) {
       await this.storageProvider.delete(person.image.fileName, 'persons/images')

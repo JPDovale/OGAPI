@@ -33,7 +33,7 @@ export class UpdateSceneUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-  ) { }
+  ) {}
 
   async execute({
     bookId,
@@ -112,8 +112,9 @@ export class UpdateSceneUseCase {
       Number(writtenWords) - Number(sceneToUpdate.writtenWords)
     const numberOfWordsInCapitule = Number(capituleToUpdate.words || '0')
 
-    const newNumberOfWordsInCapitule = `${numberOfWordsInCapitule + numberWrittenWordsToAdd
-      }`
+    const newNumberOfWordsInCapitule = `${
+      numberOfWordsInCapitule + numberWrittenWordsToAdd
+    }`
 
     const sceneIncomplete = scenes.find((scene) => !scene.complete)
 

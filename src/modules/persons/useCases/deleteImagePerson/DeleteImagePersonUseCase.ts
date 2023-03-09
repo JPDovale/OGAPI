@@ -1,10 +1,10 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 @injectable()
@@ -16,17 +16,18 @@ export class DeleteImagePersonUseCase {
     private readonly storageProvider: IStorageProvider,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(userId: string, personId: string): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     if (!project) {
       throw new AppError({

@@ -1,9 +1,9 @@
 import cors from 'cors'
-import dotenv from 'dotenv'
 import express, { NextFunction, Request, Response } from 'express'
 import morgan from 'morgan'
 import { ZodError } from 'zod'
 
+import { env } from '@env/index'
 import * as Sentry from '@sentry/node'
 import * as Tracing from '@sentry/tracing'
 import 'express-async-errors'
@@ -17,20 +17,18 @@ import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
 import { RateLimiter } from './middlewares/limiter'
 
-dotenv.config()
-
 const app = express()
-const appName = process.env.APP_NAME
-const appPort = process.env.APP_PORT
+const appName = env.APP_NAME
+const appPort = env.APP_PORT
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
-const isDev = JSON.parse(process.env.IS_DEV || 'false')
+const isDev = env.IS_DEV
 
 if (!isDev) {
   app.use(rateLimit.rete)
 
   Sentry.init({
-    dsn: process.env.DNS_SENTRY,
+    dsn: env.DNS_SENTRY,
     // environment: params.INSTANCE_NAME,
     integrations: [
       new Sentry.Integrations.Http({ tracing: true }),

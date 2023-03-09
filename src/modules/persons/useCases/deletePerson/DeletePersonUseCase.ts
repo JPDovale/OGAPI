@@ -1,16 +1,24 @@
 import { inject, injectable } from 'tsyringe'
 
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { AppError } from '@shared/errors/AppError'
+
+interface IResponse {
+  box: IBox
+}
 
 @injectable()
 export class DeletePersonUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
-  async execute(userId: string, personId: string): Promise<void> {
+  async execute(userId: string, personId: string): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) {
@@ -30,6 +38,15 @@ export class DeletePersonUseCase {
       })
     }
 
+    const box = await this.boxesControllers.unlinkObject({
+      boxName: 'persons',
+      objectToUnlinkId: personId,
+      projectId: person.defaultProject,
+      withoutArchive: true,
+    })
+
     await this.personsRepository.deleteById(personId)
+
+    return { box }
   }
 }
