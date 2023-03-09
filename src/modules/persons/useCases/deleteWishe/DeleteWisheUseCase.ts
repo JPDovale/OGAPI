@@ -1,33 +1,40 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
+
+interface IResponse {
+  person: IPersonMongo
+  box: IBox
+}
 
 @injectable()
 export class DeleteWisheUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute(
     userId: string,
     personId: string,
     wisheId: string,
-  ): Promise<IPersonMongo> {
+  ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     if (!person) {
       throw new AppError({
@@ -37,31 +44,19 @@ export class DeleteWisheUseCase {
       })
     }
 
-    if (person.fromUser !== userId) {
-      throw new AppError({
-        title: 'Permissão de alteração invalida.',
-        message:
-          'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
-        statusCode: 401,
-      })
-    }
-
     const filteredWishes = person.wishes.filter((wishe) => wishe.id !== wisheId)
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.deleteReferenceTag(
-      'persons/wishes',
-      wisheId,
-      personId,
-      project.tags,
-    )
-
-    await this.projectRepository.updateTag(project.id, tags)
+    const box = await this.boxesControllers.unlinkObject({
+      archiveId: wisheId,
+      boxName: 'persons/wishes',
+      objectToUnlinkId: personId,
+      projectId: project.id,
+    })
 
     const updatePerson = await this.personsRepository.updateWishes(
       personId,
       filteredWishes,
     )
-    return updatePerson
+    return { person: updatePerson, box }
   }
 }

@@ -1,9 +1,9 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
@@ -12,20 +12,24 @@ interface IRequest {
   bookId: string
 }
 
+interface IResponse {
+  box: IBox
+}
+
 @injectable()
 export class DeleteBookUseCase {
   constructor(
     @inject('BooksRepository')
     private readonly booksRepository: IBooksRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
     @inject('NotifyUsersProvider')
     private readonly notifyUsersProvider: INotifyUsersProvider,
     @inject('VerifyPermissions')
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ bookId, userId }: IRequest): Promise<void> {
+  async execute({ bookId, userId }: IRequest): Promise<IResponse> {
     const book = await this.booksRepository.findById(bookId)
 
     if (!book) {
@@ -42,24 +46,14 @@ export class DeleteBookUseCase {
       verifyPermissionTo: 'edit',
     })
 
+    const box = await this.boxesControllers.unlinkObject({
+      boxName: 'persons',
+      objectToUnlinkId: bookId,
+      projectId: book.defaultProject,
+      withoutArchive: true,
+    })
+
     await this.booksRepository.deletePerId(book.id)
-
-    const tagBooks = project.tags?.find((tag) => tag.type === 'books')
-    const filteredTagsOnProject = project.tags?.filter(
-      (tag) => tag.type !== 'books',
-    )
-
-    const refs = tagBooks.refs
-    refs[0].references = refs[0].references.filter((ref) => ref !== book.id)
-
-    const updatedTag: ITag = {
-      ...tagBooks,
-      refs,
-    }
-
-    const tags = [updatedTag, ...filteredTagsOnProject]
-
-    await this.projectsRepository.updateTag(project.id, tags)
 
     await this.notifyUsersProvider.notify(
       user,
@@ -69,5 +63,7 @@ export class DeleteBookUseCase {
         book.subtitle ? ` ${book.subtitle}` : ''
       } no projeto: ${project.name}. `,
     )
+
+    return { box }
   }
 }

@@ -15,12 +15,12 @@ export class DeleteCoupleController {
     const { personId, coupleId } = deleteCoupleBodySchema.parse(req.body)
 
     const deleteCoupleUseCase = container.resolve(DeleteCoupleUseCase)
-    const updatedPerson = await deleteCoupleUseCase.execute(
+    const { person, couple } = await deleteCoupleUseCase.execute(
       id,
       personId,
       coupleId,
     )
 
-    return res.status(200).json(updatedPerson)
+    return res.status(200).json({ person, couple })
   }
 }

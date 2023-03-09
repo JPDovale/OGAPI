@@ -9,7 +9,8 @@ export default defineConfig({
     'src/modules/books/**/*.ts',
     'src/modules/persons/**/*.ts',
     'src/modules/projects/**/*.ts',
-    'src/shared/**/*.ts'
+    'src/shared/**/*.ts',
+    'src/env/**/*.ts',
   ],
   format: 'cjs',
   plugins: [multiEntry()],

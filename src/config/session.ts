@@ -1,11 +1,10 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import { env } from '@env/index'
 
 export default {
-  secretToken: process.env.SECRET_TOKEN,
-  expiresInToken: process.env.EXPIRES_IN_TOKEN,
+  secretToken: env.SECRET_TOKEN,
+  expiresInToken: env.EXPIRES_IN_TOKEN,
 
-  secretRefreshToken: process.env.SECRET_REFRESH_TOKEN,
-  expiresInRefreshToken: process.env.EXPIRES_IN_REFRESH_TOKEN,
-  expiresRefreshTokenDays: Number(process.env.EXPIRES_IN_REFRESH_TOKEN_DAYS),
+  secretRefreshToken: env.SECRET_REFRESH_TOKEN,
+  expiresInRefreshToken: env.EXPIRES_IN_REFRESH_TOKEN,
+  expiresRefreshTokenDays: env.EXPIRES_IN_REFRESH_TOKEN_DAYS,
 }

@@ -15,10 +15,12 @@ export class DeleteTraumaController {
     const { personId, traumaId } = deleteTraumaBodySchema.parse(req.body)
 
     const deleteTraumaUseCase = container.resolve(DeleteTraumaUseCase)
-    await deleteTraumaUseCase.execute(id, personId, traumaId)
+    const { person, box } = await deleteTraumaUseCase.execute(
+      id,
+      personId,
+      traumaId,
+    )
 
-    return res
-      .status(200)
-      .json({ success: 'Característica de personalidade deletada' })
+    return res.status(200).json({ person, box })
   }
 }

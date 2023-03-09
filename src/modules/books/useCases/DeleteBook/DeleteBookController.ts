@@ -14,11 +14,11 @@ export class DeleteBookController {
     const { bookId } = deleteBookParamsSchema.parse(req.params)
 
     const deleteBookUseCase = container.resolve(DeleteBookUseCase)
-    await deleteBookUseCase.execute({
+    const { box } = await deleteBookUseCase.execute({
       userId: id,
       bookId,
     })
 
-    return res.status(204).end()
+    return res.status(204).json({ box })
   }
 }

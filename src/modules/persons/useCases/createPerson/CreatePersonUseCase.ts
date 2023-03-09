@@ -1,12 +1,15 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
+import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 
 interface IRequest {
   userId: string
@@ -16,7 +19,7 @@ interface IRequest {
 
 interface IResponse {
   person: IPersonMongo
-  project: IProjectMongo
+  box: IBox
 }
 
 @injectable()
@@ -24,8 +27,14 @@ export class CreatePersonUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
+    @inject('BoxesRepository')
+    private readonly boxesRepository: IBoxesRepository,
+    @inject('DateProvider')
+    private readonly dateProvider: IDateProvider,
   ) {}
 
   async execute({
@@ -33,12 +42,11 @@ export class CreatePersonUseCase {
     projectId,
     newPerson,
   }: IRequest): Promise<IResponse> {
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project } = await this.verifyPermissions.verify({
       userId,
       projectId,
-      'edit',
-    )
+      verifyPermissionTo: 'edit',
+    })
 
     const person = await this.personsRepository.create(
       userId,
@@ -46,18 +54,52 @@ export class CreatePersonUseCase {
       newPerson,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.createOrUpdatePersons(
-      project.tags,
-      [person.id],
-      project.name,
-    )
-
-    const updatedProject = await this.projectsRepository.updateTag(
+    const boxExistes = await this.boxesRepository.findByNameAndProjectId({
+      name: 'persons',
       projectId,
-      tags,
-    )
+    })
 
-    return { person, project: updatedProject }
+    if (!boxExistes) {
+      const newBox: ICreateBoxDTO = {
+        name: 'persons',
+        internal: true,
+        userId,
+        projectId,
+        tags: [
+          {
+            name: 'persons',
+          },
+          {
+            name: project.name,
+          },
+        ],
+      }
+
+      const createdBox = await this.boxesRepository.create(newBox)
+
+      const archivePersons = new Archive({
+        archive: {
+          id: '',
+          title: '',
+          description: '',
+          createdAt: this.dateProvider.getDate(new Date()),
+          updatedAt: this.dateProvider.getDate(new Date()),
+        },
+      })
+
+      await this.boxesRepository.addArchive({
+        archive: archivePersons,
+        id: createdBox.id,
+      })
+    }
+
+    const { box } = await this.boxesControllers.linkObject({
+      boxName: 'persons',
+      projectId,
+      objectToLinkId: person.id,
+      withoutArchive: true,
+    })
+
+    return { person, box }
   }
 }

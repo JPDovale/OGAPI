@@ -1,13 +1,12 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
+import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
 import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { Trauma } from '@modules/persons/infra/mongoose/entities/Trauma'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 interface IRequest {
@@ -19,15 +18,17 @@ interface IRequest {
 
 interface IResponse {
   person: IPersonMongo
-  project: IProjectMongo
+  box: IBox
 }
 @injectable()
 export class CreateTraumaUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute({
@@ -45,12 +46,11 @@ export class CreateTraumaUseCase {
         statusCode: 404,
       })
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId || person.defaultProject,
-      'edit',
-    )
+      projectId: projectId || person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const traumaExistesToThiPerson = person.traumas.find(
       (t) => t.title === trauma.title,
@@ -64,24 +64,24 @@ export class CreateTraumaUseCase {
       })
     }
 
-    const tagTrauma = project.tags.find((tag) => tag.type === 'persons/traumas')
-
-    const traumaAlreadyExistsInTags = tagTrauma?.refs.find(
-      (ref) => ref.object.title === trauma.title,
-    )
-    if (traumaAlreadyExistsInTags) {
-      throw new AppError({
-        title: 'Trauma já existe nas tags.',
-        message:
-          'Você já criou um trauma com esse nome para outro personagem... Caso o trauma seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o trauma.',
-        statusCode: 409,
-      })
-    }
-
     const newTrauma = new Trauma({
       title: trauma.title,
       consequences: trauma.consequences || [],
       description: trauma.description,
+    })
+
+    const box = await this.boxesControllers.controllerInternalBoxes({
+      archive: newTrauma,
+      error: {
+        title: 'trauma já existe nos arquivos internos do projeto.',
+        message:
+          'Você já criou um trauma com esse nome para outro personagem... Caso o trauma seja o mesma, tente atribui-lo ao personagem, ou então escolha outro nome.',
+      },
+      name: 'persons/traumas',
+      projectId,
+      projectName: project.name,
+      userId,
+      linkId: person.id,
     })
 
     const updateTraumas = [newTrauma, ...person.traumas]
@@ -90,20 +90,6 @@ export class CreateTraumaUseCase {
       updateTraumas,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.createOrUpdate(
-      project.tags,
-      'persons/traumas',
-      [newTrauma],
-      [personId],
-      project.name,
-    )
-
-    const updatedProject = await this.projectsRepository.updateTag(
-      projectId || person.defaultProject,
-      tags,
-    )
-
-    return { person: updatedPerson, project: updatedProject }
+    return { person: updatedPerson, box }
   }
 }

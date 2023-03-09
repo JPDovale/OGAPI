@@ -6,7 +6,6 @@ import {
   IProjectMongo,
   ISharedWhitUsers,
 } from '../infra/mongoose/entities/Project'
-import { ITag } from '../infra/mongoose/entities/Tag'
 import { IUpdateName } from '../infra/mongoose/repositories/types/IUpdateName'
 
 export interface IProjectsRepository {
@@ -23,8 +22,8 @@ export interface IProjectsRepository {
     projectId: string,
     plot: IUpdatePlotDTO,
   ) => Promise<IProjectMongo>
-  updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
   deletePerUserId: (userId: string) => Promise<void>
   listAll: () => Promise<IProjectMongo[]>
   updateName: ({ id, name }: IUpdateName) => Promise<IProjectMongo>
+  removeTagsInAllProjects: () => Promise<void>
 }

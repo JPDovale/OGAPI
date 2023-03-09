@@ -1,6 +1,5 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import { env } from '@env/index'
 
 export default {
-  databaseUrl: `${process.env.DATABASE_MONGO_URL}`,
+  databaseUrl: env.DATABASE_MONGO_URL,
 }

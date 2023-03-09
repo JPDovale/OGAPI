@@ -20,13 +20,13 @@ export class ReferenceAppearanceController {
     const referenceAppearanceUseCase = container.resolve(
       ReferenceAppearanceUseCase,
     )
-    const personUpdated = await referenceAppearanceUseCase.execute(
+    const { person, box } = await referenceAppearanceUseCase.execute(
       id,
       projectId,
       personId,
       refId,
     )
 
-    return res.status(200).json(personUpdated)
+    return res.status(200).json({ person, box })
   }
 }

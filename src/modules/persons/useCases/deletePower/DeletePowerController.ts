@@ -15,12 +15,12 @@ export class DeletePowerController {
     const { personId, powerId } = deletePowerBodySchema.parse(req.body)
 
     const deletePowerUseCase = container.resolve(DeletePowerUseCase)
-    const updatedPerson = await deletePowerUseCase.execute(
+    const { person, box } = await deletePowerUseCase.execute(
       id,
       personId,
       powerId,
     )
 
-    return res.status(200).json(updatedPerson)
+    return res.status(200).json({ person, box })
   }
 }

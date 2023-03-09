@@ -15,12 +15,12 @@ export class DeleteDreamController {
     const { personId, dreamId } = deleteDreamBodySchema.parse(req.body)
 
     const deleteDreamUseCase = container.resolve(DeleteDreamUseCase)
-    const updatedPerson = await deleteDreamUseCase.execute(
+    const { person, box } = await deleteDreamUseCase.execute(
       id,
       personId,
       dreamId,
     )
 
-    return res.status(200).json(updatedPerson)
+    return res.status(200).json({ person, box })
   }
 }

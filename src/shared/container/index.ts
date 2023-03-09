@@ -10,6 +10,8 @@ import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/reposi
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { BooksMongoRepository } from '@modules/books/infra/mongoose/repositories/implementations/BooksMongoRepository'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
+import { BoxesMongoRepository } from '@modules/boxes/infra/mongoose/repositories/implementations/BoxesMongoRepository'
 import { PersonsMongoRepository } from '@modules/persons/infra/mongoose/repositories/PersonsMongoRepository'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { ProjectsMongoRepository } from '@modules/projects/infra/mongoose/repositories/ProjectsMongoRepository'
@@ -38,4 +40,9 @@ container.registerSingleton<IPersonsRepository>(
 container.registerSingleton<IBooksRepository>(
   'BooksRepository',
   BooksMongoRepository,
+)
+
+container.registerSingleton<IBoxesRepository>(
+  'BoxesRepository',
+  BoxesMongoRepository,
 )
