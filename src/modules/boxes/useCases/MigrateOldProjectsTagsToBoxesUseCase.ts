@@ -67,6 +67,7 @@ export class MigrateOldProjectsTagsToBoxesUseCase {
     )
 
     await this.boxesRepository.createMany(newBoxes)
+
     await this.projectsRepository.removeTagsInAllProjects()
   }
 }
