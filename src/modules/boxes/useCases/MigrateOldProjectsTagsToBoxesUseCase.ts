@@ -22,7 +22,7 @@ export class MigrateOldProjectsTagsToBoxesUseCase {
     const allProjects = await this.projectsRepository.listAll()
 
     const newBoxesMul = allProjects.map((project) => {
-      const newBoxesToThisTags: ICreateBoxDTO[] = project.tags.map((tag) => {
+      const newBoxesToThisTags: ICreateBoxDTO[] = project?.tags?.map((tag) => {
         const newBoxToThisTag: ICreateBoxDTO = {
           name: tag.type,
           userId: project.createdPerUser,
@@ -36,7 +36,7 @@ export class MigrateOldProjectsTagsToBoxesUseCase {
               name: tag.type,
             },
           ],
-          archives: tag.refs.map((ref) => {
+          archives: tag?.refs?.map((ref) => {
             const INewArchive: IArchive = {
               archive: {
                 id: ref.object.id,
@@ -45,7 +45,7 @@ export class MigrateOldProjectsTagsToBoxesUseCase {
                 createdAt: this.dateProvider.getDate(new Date()),
                 updatedAt: this.dateProvider.getDate(new Date()),
               },
-              links: ref.references.map((reference) => {
+              links: ref?.references?.map((reference) => {
                 return { type: 'id', id: reference }
               }),
             }
@@ -62,7 +62,9 @@ export class MigrateOldProjectsTagsToBoxesUseCase {
 
     const newBoxes: ICreateBoxDTO[] = []
 
-    newBoxesMul.map((multiBoxes) => multiBoxes.map((box) => newBoxes.push(box)))
+    newBoxesMul?.map((multiBoxes) =>
+      multiBoxes?.map((box) => newBoxes.push(box)),
+    )
 
     await this.boxesRepository.createMany(newBoxes)
     await this.projectsRepository.removeTagsInAllProjects()
