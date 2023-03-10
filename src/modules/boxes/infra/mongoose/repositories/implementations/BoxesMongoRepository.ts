@@ -117,4 +117,16 @@ export class BoxesMongoRepository implements IBoxesRepository {
     const updatedBox = await BoxMongo.findOne({ id })
     return updatedBox
   }
+
+  async listPerUser(userId: string): Promise<IBox[]> {
+    const boxes = await BoxMongo.find({ userId })
+
+    return boxes
+  }
+
+  async numberOfBoxesByUserId(userId: string): Promise<number> {
+    const numbersOfRegister = await BoxMongo.countDocuments({ userId })
+
+    return numbersOfRegister
+  }
 }

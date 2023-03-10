@@ -6,6 +6,8 @@ import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/reposit
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
+import { BoxesRepositoryInMemory } from '@modules/boxes/infra/mongoose/repositories/inMemory/BoxesRepositoryInMemory'
 import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
@@ -15,6 +17,8 @@ import { IDateProvider } from '@shared/container/providers/DateProvider/IDatePro
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { NotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/implementations/NotifyUsersProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { BoxesControllers } from '@shared/container/services/boxesControllers/implementations/BoxesControllers'
 import { VerifyPermissions } from '@shared/container/services/verifyPermissions/implementations/VerifyPermissions'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
@@ -24,12 +28,14 @@ import { CreateBookUseCase } from './CreateBookUseCase'
 let usersRepositoryInMemory: IUsersRepository
 let booksRepositoryInMemory: IBooksRepository
 let projectsRepositoryInMemory: IProjectsRepository
+let boxesRepositoryInMemory: IBoxesRepository
 
 let dateProvider: IDateProvider
 let cacheProvider: ICacheProvider
 let notifyUsersProvider: INotifyUsersProvider
 
 let verifyPermissionsService: IVerifyPermissionsService
+let boxesControllers: IBoxesControllers
 
 let createBookUseCase: CreateBookUseCase
 
@@ -38,6 +44,7 @@ describe('Create book', () => {
     usersRepositoryInMemory = new UserRepositoryInMemory()
     booksRepositoryInMemory = new BooksRepositoryInMemory()
     projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
+    boxesRepositoryInMemory = new BoxesRepositoryInMemory()
 
     dateProvider = new DayJsDateProvider()
     cacheProvider = new RedisCacheProvider(dateProvider)
@@ -50,12 +57,18 @@ describe('Create book', () => {
       projectsRepositoryInMemory,
       usersRepositoryInMemory,
     )
+    boxesControllers = new BoxesControllers(
+      boxesRepositoryInMemory,
+      dateProvider,
+    )
 
     createBookUseCase = new CreateBookUseCase(
       booksRepositoryInMemory,
-      projectsRepositoryInMemory,
       notifyUsersProvider,
       verifyPermissionsService,
+      boxesControllers,
+      boxesRepositoryInMemory,
+      dateProvider,
     )
   })
 
@@ -103,7 +116,7 @@ describe('Create book', () => {
     expect(books.length).toEqual(1)
   })
 
-  it('Should be able to create tag to book in project', async () => {
+  it('Should be able to create box to book in project', async () => {
     const user = await usersRepositoryInMemory.create({
       age: '2312',
       email: 'test@test.com',
@@ -142,11 +155,12 @@ describe('Create book', () => {
       userId: user.id,
     })
 
-    const project = await projectsRepositoryInMemory.findById(newProject.id)
+    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user.id)
 
-    expect(project.tags.length).toEqual(1)
+    expect(boxesThisUser.length).toEqual(1)
   })
-  it('Should be able to update tag to book in project if another books already created', async () => {
+
+  it('Should be able to update box to book in project if another books already created', async () => {
     const user = await usersRepositoryInMemory.create({
       age: '2312',
       email: 'test@test.com',
@@ -196,10 +210,10 @@ describe('Create book', () => {
       userId: user.id,
     })
 
-    const project = await projectsRepositoryInMemory.findById(newProject.id)
+    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user.id)
 
-    expect(project.tags.length).toEqual(1)
-    expect(project.tags[0].refs[0].references.length).toEqual(2)
+    expect(boxesThisUser[0].archives[0].links.length).toEqual(2)
+    expect(boxesThisUser[0].archives.length).toEqual(1)
   })
 
   it('Should be able to notify users on project about new book', async () => {

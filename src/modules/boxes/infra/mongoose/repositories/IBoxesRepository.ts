@@ -18,4 +18,8 @@ export interface IBoxesRepository {
   addArchive: ({ archive, id }: IAddArchive) => Promise<IBox>
 
   updateArchives: ({ archives, id }: IUpdateArchives) => Promise<IBox>
+
+  listPerUser: (userId: string) => Promise<IBox[]>
+
+  numberOfBoxesByUserId: (userId: string) => Promise<number>
 }

@@ -28,6 +28,7 @@ export class UsersMongoRepository implements IUsersRepository {
       isSocialLogin,
       code,
       avatar,
+      payed,
     } = dataUserObj
 
     const mocUser = new UserMongo({
@@ -42,6 +43,7 @@ export class UsersMongoRepository implements IUsersRepository {
       isSocialLogin,
       code,
       avatar,
+      payed: payed || false,
     })
 
     const user = await mocUser.save()

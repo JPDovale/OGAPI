@@ -5,6 +5,8 @@ import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/reposit
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
+import { BoxesRepositoryInMemory } from '@modules/boxes/infra/mongoose/repositories/inMemory/BoxesRepositoryInMemory'
 import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { PersonsRepositoryInMemory } from '@modules/persons/repositories/inMemory/PersonsRepositoryInMemory'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
@@ -25,6 +27,7 @@ let projectsRepositoryInMemory: IProjectsRepository
 let usersRepositoryInMemory: IUsersRepository
 let personsRepositoryInMemory: IPersonsRepository
 let booksRepositoryInMemory: IBooksRepository
+let boxesRepositoryInMemory: IBoxesRepository
 
 let notifyUsersProvider: INotifyUsersProvider
 let cacheProvider: ICacheProvider
@@ -38,6 +41,7 @@ describe('Delete project', () => {
     usersRepositoryInMemory = new UserRepositoryInMemory()
     personsRepositoryInMemory = new PersonsRepositoryInMemory()
     booksRepositoryInMemory = new BooksRepositoryInMemory()
+    boxesRepositoryInMemory = new BoxesRepositoryInMemory()
 
     dateProvider = new DayJsDateProvider()
     cacheProvider = new RedisCacheProvider(dateProvider)
@@ -52,6 +56,7 @@ describe('Delete project', () => {
       personsRepositoryInMemory,
       notifyUsersProvider,
       booksRepositoryInMemory,
+      boxesRepositoryInMemory,
     )
   })
 
@@ -276,5 +281,51 @@ describe('Delete project', () => {
 
     expect(projectsThisUser.length).toEqual(0)
     expect(booksThisUser.length).toEqual(0)
+  })
+
+  it('Shout be able automatically delete boxes on project', async () => {
+    const user = await usersRepositoryInMemory.create({
+      age: '2312',
+      email: 'test@test.com',
+      name: 'test',
+      password: 'test',
+      sex: 'male',
+      username: 'test',
+    })
+
+    const newProjectTest: ICreateProjectDTO = {
+      name: 'test',
+      private: false,
+      type: 'book',
+      createdPerUser: user.id,
+      users: [
+        {
+          email: user.email,
+          id: user.id,
+          permission: 'edit',
+        },
+      ],
+      plot: {},
+    }
+
+    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+    await boxesRepositoryInMemory.create({
+      name: 'Teste',
+      tags: [],
+      userId: user.id,
+      projectId: newProject.id,
+      internal: true,
+    })
+
+    await deleteProjectUseCase.execute(newProject.id, user.id)
+
+    const projectsThisUser = await projectsRepositoryInMemory.listPerUser(
+      user.id,
+    )
+    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user.id)
+
+    expect(projectsThisUser.length).toEqual(0)
+    expect(boxesThisUser.length).toEqual(0)
   })
 })

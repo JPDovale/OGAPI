@@ -6,6 +6,9 @@ import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/
 import { ICreateBookDTO } from '@modules/books/dtos/ICreateBookDTO'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
+import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
+import { BoxesRepositoryInMemory } from '@modules/boxes/infra/mongoose/repositories/inMemory/BoxesRepositoryInMemory'
 import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { PersonsRepositoryInMemory } from '@modules/persons/repositories/inMemory/PersonsRepositoryInMemory'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
@@ -19,6 +22,7 @@ let projectsRepositoryInMemory: IProjectsRepository
 let usersRepositoryInMemory: IUsersRepository
 let personsRepositoryInMemory: IPersonsRepository
 let booksRepositoryInMemory: IBooksRepository
+let boxesRepositoryInMemory: IBoxesRepository
 
 let listProjectsPerUserUseCase: ListProjectsPerUserUseCase
 
@@ -28,12 +32,14 @@ describe('List project per user', () => {
     usersRepositoryInMemory = new UserRepositoryInMemory()
     personsRepositoryInMemory = new PersonsRepositoryInMemory()
     booksRepositoryInMemory = new BooksRepositoryInMemory()
+    boxesRepositoryInMemory = new BoxesRepositoryInMemory()
 
     listProjectsPerUserUseCase = new ListProjectsPerUserUseCase(
       projectsRepositoryInMemory,
       usersRepositoryInMemory,
       personsRepositoryInMemory,
       booksRepositoryInMemory,
+      boxesRepositoryInMemory,
     )
   })
 
@@ -215,5 +221,43 @@ describe('List project per user', () => {
 
     expect(response.projects.length).toEqual(1)
     expect(response.persons.length).toEqual(3)
+  })
+
+  it('should be able list boxes in projects when user list projects', async () => {
+    const user = await usersRepositoryInMemory.create({
+      age: 'uncharacterized',
+      email: 'test@test.com',
+      name: 'test',
+      password: 'password',
+      sex: 'uncharacterized',
+      username: 't',
+    })
+
+    const newProjectTest = await projectsRepositoryInMemory.create({
+      name: 'test',
+      private: false,
+      type: 'book',
+      createdPerUser: user.id,
+      users: [],
+      plot: {},
+    })
+
+    const newBox: ICreateBoxDTO = {
+      name: 'sabonete',
+      tags: [],
+      userId: user.id,
+      internal: true,
+      projectId: newProjectTest.id,
+    }
+
+    await boxesRepositoryInMemory.create(newBox)
+    await boxesRepositoryInMemory.create(newBox)
+    await boxesRepositoryInMemory.create(newBox)
+    await boxesRepositoryInMemory.create(newBox)
+
+    const response = await listProjectsPerUserUseCase.execute(user.id)
+
+    expect(response.projects.length).toEqual(1)
+    expect(response.boxes.length).toEqual(4)
   })
 })

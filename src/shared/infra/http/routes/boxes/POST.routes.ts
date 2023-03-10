@@ -1,13 +1,9 @@
 import { Router } from 'express'
 
-import { MigrateOldProjectsTagsToBoxesController } from '@modules/boxes/useCases/MigrateOldProjectsTagsToBoxesController'
-
-import { verifyIsAdmin } from '../../middlewares/verifyIsAdmin'
-
-const migrateOldProjectsTagsToBoxesController =
-  new MigrateOldProjectsTagsToBoxesController()
+import { CreateBoxController } from '@modules/boxes/useCases/CreateBox/CreateBoxController'
 
 export const boxesRoutesPots = Router()
 
-boxesRoutesPots.use(verifyIsAdmin)
-boxesRoutesPots.post('/migrate', migrateOldProjectsTagsToBoxesController.handle)
+const createBoxController = new CreateBoxController()
+
+boxesRoutesPots.post('/', createBoxController.handle)

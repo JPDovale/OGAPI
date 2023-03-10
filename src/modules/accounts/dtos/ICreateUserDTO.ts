@@ -11,4 +11,5 @@ export interface ICreateUserDTO {
   isSocialLogin?: boolean
   code?: string
   avatar?: IAvatar
+  payed?: boolean
 }

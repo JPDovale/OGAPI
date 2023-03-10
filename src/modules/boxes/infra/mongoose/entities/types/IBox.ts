@@ -4,6 +4,7 @@ export interface IBox {
   id: string
   name: string
   projectId?: string
+  userId: string
   internal: boolean
   type?: string
   tags: Array<{

@@ -42,6 +42,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
       code,
       isInitialized,
       isSocialLogin,
+      payed,
     } = dataUserObj
 
     const newUser = new UserMongo({
@@ -56,6 +57,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
       code,
       isInitialized,
       isSocialLogin,
+      payed: payed || false,
     })
 
     this.users.push(newUser)

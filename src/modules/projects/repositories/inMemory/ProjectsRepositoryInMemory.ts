@@ -8,7 +8,6 @@ import {
   ISharedWhitUsers,
   ProjectMongo,
 } from '@modules/projects/infra/mongoose/entities/Project'
-import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
 import { IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
 
 import { IProjectsRepository } from '../IProjectRepository'
@@ -101,15 +100,6 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     this.projects = filteredProjects
   }
 
-  async updateTag(projectId: string, tags: ITag[]): Promise<IProjectMongo> {
-    const indexOfProjectToUpdate = this.projects.findIndex(
-      (project) => project.id === projectId,
-    )
-    this.projects[indexOfProjectToUpdate].tags = tags
-
-    return this.projects[indexOfProjectToUpdate]
-  }
-
   listAll: () => Promise<IProjectMongo[]>
 
   async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
@@ -121,4 +111,6 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
     return this.projects[indexOfProjectToUpdate]
   }
+
+  removeTagsInAllProjects: () => Promise<void>
 }
