@@ -2,21 +2,16 @@ import multer from 'multer'
 import crypto from 'node:crypto'
 import Path from 'node:path'
 
+import { env } from '@env/index'
 import { AppError } from '@shared/errors/AppError'
 
 export class Uploads {
   upload: multer.Multer
 
   constructor(path: string, type: 'image') {
-    const filePath = Path.resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      '..',
-      'tmp',
-      path,
-    )
+    const filePath = env.IS_DEV
+      ? Path.resolve(__dirname, '..', '..', '..', '..', '..', 'tmp', path)
+      : Path.resolve(__dirname, '..', '..', '..', '..', 'tmp', path)
 
     this.upload = multer({
       dest: `${filePath}`,

@@ -6,6 +6,7 @@ import { CreateBoxUseCase } from './CreateBoxUseCase'
 
 interface ICreateBoxBodyType {
   name: string
+  description?: string
   tags?: Array<{ name: string }>
 }
 
@@ -13,6 +14,7 @@ export class CreateBoxController {
   async handle(req: Request, res: Response): Promise<Response> {
     const createBoxBodySchema = z.object({
       name: z.string().min(3).max(100),
+      description: z.string().max(300).optional(),
       tags: z
         .array(
           z.object({
@@ -23,12 +25,17 @@ export class CreateBoxController {
     })
 
     const { id } = req.user
-    const { name, tags } = createBoxBodySchema.parse(
+    const { name, tags, description } = createBoxBodySchema.parse(
       req.body,
     ) as ICreateBoxBodyType
 
     const createBoxUseCase = container.resolve(CreateBoxUseCase)
-    const { box } = await createBoxUseCase.execute({ name, tags, userId: id })
+    const { box } = await createBoxUseCase.execute({
+      name,
+      tags,
+      userId: id,
+      description,
+    })
 
     return res.status(201).json({ box })
   }

@@ -84,10 +84,12 @@ export class ListProjectsPerUserUseCase {
       const persons = await this.personRepository.findByProjectIds(projectsIds)
       const books = await this.booksRepository.findByProjectIds(projectsIds)
       const boxes = await this.boxesRepository.findPerProjectIds(projectsIds)
+      const boxesNotInternal =
+        await this.boxesRepository.findNotInternalPerUserId(user.id)
 
       personsInfos = persons
       booksInfos = books
-      boxesInfos = boxes
+      boxesInfos = [...boxes, ...boxesNotInternal]
     }
 
     const response = {

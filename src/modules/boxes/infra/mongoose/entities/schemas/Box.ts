@@ -7,6 +7,7 @@ const BoxSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   projectId: { type: String, default: '' },
   name: { type: String, required: true },
+  description: { type: String, default: '' },
   internal: { type: Boolean, required: true },
   type: { type: String, default: '' },
   tags: { type: Array<{ name: string }>, default: [] },

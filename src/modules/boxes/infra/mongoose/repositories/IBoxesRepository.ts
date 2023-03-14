@@ -22,4 +22,6 @@ export interface IBoxesRepository {
   listPerUser: (userId: string) => Promise<IBox[]>
 
   numberOfBoxesByUserId: (userId: string) => Promise<number>
+  findNotInternalPerUserId: (userId: string) => Promise<IBox[]>
+  numberOfBoxesNotInternalByUserId: (userId: string) => Promise<number>
 }

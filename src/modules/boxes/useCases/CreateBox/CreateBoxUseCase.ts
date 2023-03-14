@@ -9,6 +9,7 @@ import { AppError } from '@shared/errors/AppError'
 interface IRequest {
   userId: string
   name: string
+  description?: string
   tags?: Array<{
     name: string
   }>
@@ -27,7 +28,12 @@ export class CreateBoxUseCase {
     private readonly boxesRepository: IBoxesRepository,
   ) {}
 
-  async execute({ name, tags, userId }: IRequest): Promise<IResponse> {
+  async execute({
+    name,
+    tags,
+    userId,
+    description,
+  }: IRequest): Promise<IResponse> {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
@@ -38,11 +44,10 @@ export class CreateBoxUseCase {
       })
     }
 
-    const registersThisUser = await this.boxesRepository.numberOfBoxesByUserId(
-      userId,
-    )
+    const registersNotInternalThisUser =
+      await this.boxesRepository.numberOfBoxesNotInternalByUserId(userId)
 
-    if (registersThisUser >= 3 && !user.payed) {
+    if (registersNotInternalThisUser >= 3 && !user.payed) {
       throw new AppError({
         title: 'Limite atingido!.',
         message:
@@ -53,6 +58,7 @@ export class CreateBoxUseCase {
 
     const newBox: ICreateBoxDTO = {
       name,
+      description: description || '',
       tags: tags || [],
       userId,
       internal: false,

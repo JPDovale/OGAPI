@@ -20,6 +20,7 @@ export class BoxesMongoRepository implements IBoxesRepository {
 
   async create({
     name,
+    description,
     tags,
     archives,
     internal,
@@ -30,6 +31,7 @@ export class BoxesMongoRepository implements IBoxesRepository {
     const newBox = new BoxMongo({
       id: uuidV4(),
       name,
+      description,
       userId,
       projectId,
       archives: archives || [],
@@ -128,5 +130,23 @@ export class BoxesMongoRepository implements IBoxesRepository {
     const numbersOfRegister = await BoxMongo.countDocuments({ userId })
 
     return numbersOfRegister
+  }
+
+  async findNotInternalPerUserId(userId: string): Promise<IBox[]> {
+    const boxesNotInternalThisUser = await BoxMongo.find({
+      userId,
+      internal: false,
+    })
+
+    return boxesNotInternalThisUser
+  }
+
+  async numberOfBoxesNotInternalByUserId(userId: string): Promise<number> {
+    const numbersOfRegistersNotInternal = await BoxMongo.countDocuments({
+      userId,
+      internal: false,
+    })
+
+    return numbersOfRegistersNotInternal
   }
 }

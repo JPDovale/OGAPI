@@ -14,6 +14,7 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
 
   async create({
     name,
+    description,
     tags,
     userId,
     archives,
@@ -23,6 +24,7 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
   }: ICreateBoxDTO): Promise<IBox> {
     const newBox = new BoxMongo({
       archives: archives || [],
+      description: description || '',
       createdAt: new Date(),
       id: uuidV4(),
       internal: internal || false,
@@ -128,6 +130,22 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
 
   async numberOfBoxesByUserId(userId: string): Promise<number> {
     const filteredBoxes = this.boxes.filter((box) => box.userId === userId)
+
+    return filteredBoxes.length
+  }
+
+  async findNotInternalPerUserId(userId: string): Promise<IBox[]> {
+    const boxesNotInternalThisUser = this.boxes.filter(
+      (box) => box.userId === userId && !box.internal,
+    )
+
+    return boxesNotInternalThisUser
+  }
+
+  async numberOfBoxesNotInternalByUserId(userId: string): Promise<number> {
+    const filteredBoxes = this.boxes.filter(
+      (box) => box.userId === userId && !box.internal,
+    )
 
     return filteredBoxes.length
   }
