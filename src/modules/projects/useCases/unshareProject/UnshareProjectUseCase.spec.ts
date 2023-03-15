@@ -2,9 +2,9 @@ import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { type IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
 
 import { UnshareProjectUseCase } from './UnshareProjectUseCase'
@@ -181,7 +181,7 @@ describe('Unshare project', () => {
       })
 
       await unshareProjectUseCase.execute(
-        'testUserToRemove@test.com' || userToRemoveOnProject.email, // desativar error de variável não usada //,
+        'testUserToRemove@test.com' ?? userToRemoveOnProject.email, // desativar error de variável não usada //,
         newProjectTest.id,
         user.id,
       )

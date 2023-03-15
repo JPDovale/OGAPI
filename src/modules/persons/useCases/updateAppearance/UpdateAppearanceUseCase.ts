@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { IAppearance } from '@modules/persons/infra/mongoose/entities/Appearance'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type IAppearance } from '@modules/persons/infra/mongoose/entities/Appearance'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateAppearanceUseCase {
@@ -24,19 +26,13 @@ export class UpdateAppearanceUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
 
     const filteredAppearances = person.appearance.filter(
       (appearance) => appearance.id !== appearanceId,
@@ -45,9 +41,16 @@ export class UpdateAppearanceUseCase {
       (appearance) => appearance.id === appearanceId,
     )
 
+    if (!appearanceToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Aparência',
+      })
+    }
+
     const updatedAppearance: IAppearance = {
-      ...appearanceToUpdate,
-      ...appearance,
+      title: appearance.title ?? appearanceToUpdate.title,
+      description: appearance.description ?? appearanceToUpdate.description,
+      id: appearanceToUpdate.id,
     }
 
     const updatedAppearances = [...filteredAppearances, updatedAppearance]
@@ -56,6 +59,8 @@ export class UpdateAppearanceUseCase {
       personId,
       updatedAppearances,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

@@ -1,11 +1,11 @@
-import { IStructurePlotBook } from './IPlotBook'
+import { type IStructurePlotBook } from './IPlotBook'
 
 export interface IScene {
-  id?: string
+  id: string
   sequence: string
   objective: string
   complete: boolean
-  writtenWords?: string
+  writtenWords: string
   structure: IStructurePlotBook
   persons: string[]
 }

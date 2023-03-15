@@ -1,7 +1,7 @@
-import { ICapitule } from '../../entities/types/ICapitule'
+import { type ICapitule } from '../../entities/types/ICapitule'
 
 export interface IUpdateCapitules {
   capitules: ICapitule[]
-  writtenWords?: string
+  writtenWords: string
   id: string
 }

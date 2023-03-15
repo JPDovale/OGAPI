@@ -3,13 +3,14 @@ import { inject, injectable } from 'tsyringe'
 
 import {
   Avatar,
-  IAvatar,
+  type IAvatar,
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
 
 @injectable()
 export class AvatarUpdateUseCase {
@@ -28,14 +29,9 @@ export class AvatarUpdateUseCase {
   ): Promise<IUserInfosResponse> {
     const user = await this.usersRepository.findById(userId)
 
-    if (!user)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!user) throw makeErrorUserNotFound()
 
-    if (user?.avatar?.fileName) {
+    if (user.avatar?.fileName) {
       try {
         await this.storageProvider.delete(user.avatar.fileName, 'avatar')
       } catch (err) {
@@ -46,7 +42,7 @@ export class AvatarUpdateUseCase {
     const url = await this.storageProvider.upload(file, 'avatar')
     let avatarToUpdate: IAvatar
 
-    if (user.avatar.fileName) {
+    if (user.avatar?.fileName) {
       const avatar: IAvatar = {
         ...user.avatar,
         fileName: file.filename,
@@ -68,6 +64,8 @@ export class AvatarUpdateUseCase {
       userId,
       avatarToUpdate,
     )
+
+    if (!updatedUser) throw makeErrorUserNotUpdate()
 
     const response: IUserInfosResponse = {
       age: updatedUser.age,

@@ -20,13 +20,13 @@ const RefreshToken = new mongoose.Schema({
 })
 
 export interface IRefreshTokenMongo {
-  id?: string
+  id: string
   refreshToken: string
   userId: string
   accessCode?: string
   expiresDate: string
-  application?: 'OG-web' | 'OG-mobile' | string
-  createAt?: string
+  application: 'OG-web' | 'OG-mobile' | string
+  createAt: string
 }
 
 export const RefreshTokenMongo = mongoose.model('UserToken', RefreshToken)

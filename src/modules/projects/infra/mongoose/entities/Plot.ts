@@ -1,4 +1,4 @@
-import { IComment } from './Comment'
+import { type IComment } from './Comment'
 
 interface IStructure {
   act1?: string
@@ -7,6 +7,23 @@ interface IStructure {
 }
 
 export interface IPlotProject {
+  onePhrase: string
+  premise: string
+  storyteller: string
+  literaryGenere: string
+  subgenre: string
+  ambient: string
+  countTime: string
+  historicalFact: string
+  details: string
+  summary: string
+  persons: string[]
+  structure: IStructure
+  urlOfText: string
+  comments: IComment[]
+}
+
+interface IPlotProjectConstructor {
   onePhrase?: string
   premise?: string
   storyteller?: string
@@ -18,7 +35,11 @@ export interface IPlotProject {
   details?: string
   summary?: string
   persons?: string[]
-  structure?: IStructure
+  structure?: {
+    act1?: string
+    act2?: string
+    act3?: string
+  }
   urlOfText?: string
   comments?: IComment[]
 }
@@ -36,23 +57,33 @@ export class PlotProject {
   summary: string
   persons: string[]
   structure: IStructure
-  urlOfText?: string
+  urlOfText: string
   comments: IComment[]
 
-  constructor(plot: IPlotProject) {
-    this.onePhrase = plot.onePhrase || ''
-    this.premise = plot.premise || ''
-    this.storyteller = plot.storyteller || ''
-    this.literaryGenere = plot.literaryGenere || ''
-    this.subgenre = plot.subgenre || ''
-    this.ambient = plot.ambient || ''
-    this.countTime = plot.countTime || ''
-    this.historicalFact = plot.historicalFact || ''
-    this.details = plot.details || ''
-    this.summary = plot.summary || ''
-    this.persons = plot.persons || []
-    this.structure = plot.structure || {}
-    this.urlOfText = plot.urlOfText || ''
-    this.comments = plot.comments || []
+  constructor(plot: IPlotProjectConstructor) {
+    this.onePhrase = plot.onePhrase ?? ''
+    this.premise = plot.premise ?? ''
+    this.storyteller = plot.storyteller ?? ''
+    this.literaryGenere = plot.literaryGenere ?? ''
+    this.subgenre = plot.subgenre ?? ''
+    this.ambient = plot.ambient ?? ''
+    this.countTime = plot.countTime ?? ''
+    this.historicalFact = plot.historicalFact ?? ''
+    this.details = plot.details ?? ''
+    this.summary = plot.summary ?? ''
+    this.persons = plot.persons ?? []
+    this.structure = plot.structure
+      ? {
+          act1: plot.structure.act1 ?? '',
+          act2: plot.structure.act2 ?? '',
+          act3: plot.structure.act3 ?? '',
+        }
+      : {
+          act1: '',
+          act2: '',
+          act3: '',
+        }
+    this.urlOfText = plot.urlOfText ?? ''
+    this.comments = plot.comments ?? []
   }
 }

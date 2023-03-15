@@ -1,13 +1,13 @@
 import { v4 as uuidV4 } from 'uuid'
 
-import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 
 import { BoxMongo } from '../../entities/schemas/Box'
-import { IBox } from '../../entities/types/IBox'
-import { IBoxesRepository } from '../IBoxesRepository'
-import { IAddArchive } from '../types/IAddArchive'
-import { IFindByNameAndProjectId } from '../types/IFindByNameAndProjectId'
-import { IUpdateArchives } from '../types/IUpdateArchives'
+import { type IBox } from '../../entities/types/IBox'
+import { type IBoxesRepository } from '../IBoxesRepository'
+import { type IAddArchive } from '../types/IAddArchive'
+import { type IFindByNameAndProjectId } from '../types/IFindByNameAndProjectId'
+import { type IUpdateArchives } from '../types/IUpdateArchives'
 
 export class BoxesRepositoryInMemory implements IBoxesRepository {
   boxes: IBox[] = []
@@ -21,16 +21,16 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
     internal,
     projectId,
     type,
-  }: ICreateBoxDTO): Promise<IBox> {
+  }: ICreateBoxDTO): Promise<IBox | null | undefined> {
     const newBox = new BoxMongo({
-      archives: archives || [],
-      description: description || '',
+      archives: archives ?? [],
+      description: description ?? '',
       createdAt: new Date(),
       id: uuidV4(),
-      internal: internal || false,
+      internal: internal ?? false,
       name,
-      projectId: projectId || '',
-      tags: tags || [],
+      projectId: projectId ?? '',
+      tags: tags ?? [],
       type,
       updatedAt: new Date(),
       userId,
@@ -44,13 +44,13 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
   async createMany(boxesToCreate: ICreateBoxDTO[]): Promise<void> {
     boxesToCreate.map((box) => {
       const newBox = new BoxMongo({
-        archives: box.archives || [],
+        archives: box.archives ?? [],
         createdAt: new Date(),
         id: uuidV4(),
-        internal: box.internal || false,
+        internal: box.internal ?? false,
         name: box.name,
-        projectId: box.projectId || '',
-        tags: box.tags || [],
+        projectId: box.projectId ?? '',
+        tags: box.tags ?? [],
         type: box.type,
         updatedAt: new Date(),
         userId: box.userId,
@@ -94,7 +94,7 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
   async findByNameAndProjectId({
     name,
     projectId,
-  }: IFindByNameAndProjectId): Promise<IBox> {
+  }: IFindByNameAndProjectId): Promise<IBox | null | undefined> {
     const box = this.boxes.find(
       (box) => box.name === name && box.projectId === projectId,
     )
@@ -102,7 +102,10 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
     return box
   }
 
-  async addArchive({ archive, id }: IAddArchive): Promise<IBox> {
+  async addArchive({
+    archive,
+    id,
+  }: IAddArchive): Promise<IBox | null | undefined> {
     const indexOfBoxToEdit = this.boxes.findIndex((box) => box.id === id)
 
     this.boxes[indexOfBoxToEdit].archives.push(archive)
@@ -112,7 +115,10 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
     return updatedBox
   }
 
-  async updateArchives({ archives, id }: IUpdateArchives): Promise<IBox> {
+  async updateArchives({
+    archives,
+    id,
+  }: IUpdateArchives): Promise<IBox | null | undefined> {
     const indexOfBoxToEdit = this.boxes.findIndex((box) => box.id === id)
 
     this.boxes[indexOfBoxToEdit].archives = archives
@@ -148,5 +154,11 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
     )
 
     return filteredBoxes.length
+  }
+
+  async findById(boxId: string): Promise<IBox | null | undefined> {
+    const box = this.boxes.find((box) => box.id === boxId)
+
+    return box
   }
 }

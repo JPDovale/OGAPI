@@ -1,17 +1,17 @@
 import mongoose from 'mongoose'
 
-import { IAuthorBook } from '../types/IAuthorBook'
-import { ICapitule } from '../types/ICapitule'
-import { IGenereBook } from '../types/IGenereBook'
+import { type IAuthorBook } from '../types/IAuthorBook'
+import { type ICapitule } from '../types/ICapitule'
+import { type IGenereBook } from '../types/IGenereBook'
 
 const BookSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   title: { type: String, required: true },
-  subtitle: { type: String },
+  subtitle: { type: String, default: '' },
   createdPerUser: { type: String, required: true },
   defaultProject: { type: String, required: true },
   literaryGenere: { type: String, required: true },
-  isbn: { type: String },
+  isbn: { type: String, default: '' },
   frontCover: { type: Object, default: {} },
   generes: { type: Array<IGenereBook>, required: true, default: [] },
   authors: { type: Array<IAuthorBook>, required: true, default: [] },

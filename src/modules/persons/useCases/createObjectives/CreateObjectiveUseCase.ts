@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { ICreateObjectiveDTO } from '@modules/persons/dtos/ICreateObjectiveDTO'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateObjectiveDTO } from '@modules/persons/dtos/ICreateObjectiveDTO'
 import { Objective } from '@modules/persons/infra/mongoose/entities/Objective'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -40,31 +42,21 @@ export class CreateObjectiveUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person) throw makeErrorPersonNotFound()
 
     const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId: projectId || person.defaultProject,
+      projectId: projectId ?? person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
     const objectiveExistesToThiPerson = person.objectives.find(
       (o) => o.title === objective.title,
     )
-    if (objectiveExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe um objetivo com esse nome.',
-        message:
-          'Já existe um objetivo com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+    if (objectiveExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'um objetivo',
       })
-    }
 
     const newObjective = new Objective({
       avoiders: objective.avoiders,
@@ -93,6 +85,8 @@ export class CreateObjectiveUseCase {
       personId,
       updatedObjetives,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, box }
   }

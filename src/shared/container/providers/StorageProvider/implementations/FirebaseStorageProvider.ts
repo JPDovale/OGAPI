@@ -10,7 +10,7 @@ import path from 'node:path'
 import { storage } from '@config/storage'
 import { env } from '@env/index'
 
-import { IStorageProvider } from '../IStorageProvider'
+import { type IStorageProvider } from '../IStorageProvider'
 
 export class FirebaseStorageProvider implements IStorageProvider {
   async upload(file: Express.Multer.File, toFolder: string): Promise<string> {

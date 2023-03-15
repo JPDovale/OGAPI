@@ -1,19 +1,19 @@
 import { v4 as uuidV4 } from 'uuid'
 
-import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { INotification } from '@modules/accounts/infra/mongoose/entities/Notification'
+import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type INotification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import {
-  IUserMongo,
+  type IUserMongo,
   UserMongo,
 } from '@modules/accounts/infra/mongoose/entities/User'
 
-import { IUsersRepository } from '../IUsersRepository'
+import { type IUsersRepository } from '../IUsersRepository'
 
 export class UserRepositoryInMemory implements IUsersRepository {
   users: IUserMongo[] = []
 
-  async findByEmail(email: string): Promise<IUserMongo> {
+  async findByEmail(email: string): Promise<IUserMongo | null | undefined> {
     const user = this.users.find((user) => user.email === email)
     return user
   }
@@ -24,13 +24,15 @@ export class UserRepositoryInMemory implements IUsersRepository {
     return users
   }
 
-  async findById(userId: string): Promise<IUserMongo> {
+  async findById(userId: string): Promise<IUserMongo | null | undefined> {
     const user = this.users.find((user) => user.id === userId)
 
     return user
   }
 
-  async create(dataUserObj: ICreateUserDTO): Promise<IUserMongo> {
+  async create(
+    dataUserObj: ICreateUserDTO,
+  ): Promise<IUserMongo | null | undefined> {
     const {
       name,
       email,
@@ -55,9 +57,13 @@ export class UserRepositoryInMemory implements IUsersRepository {
       username,
       avatar,
       code,
-      isInitialized,
-      isSocialLogin,
-      payed: payed || false,
+      isInitialized: isInitialized ?? false,
+      isSocialLogin: isSocialLogin ?? false,
+      payed: payed ?? false,
+      notifications: [],
+      admin: false,
+      createAt: new Date(),
+      updateAt: new Date(),
     })
 
     this.users.push(newUser)
@@ -69,9 +75,14 @@ export class UserRepositoryInMemory implements IUsersRepository {
     this.users = filteredUsers
   }
 
-  async updateAvatar(userId: string, avatar: IAvatar): Promise<IUserMongo> {
+  async updateAvatar(
+    userId: string,
+    avatar: IAvatar,
+  ): Promise<IUserMongo | null | undefined> {
     const filteredUsers = this.users.filter((user) => user.id !== userId)
     const userToUpdate = this.users.find((user) => user.id === userId)
+
+    if (!userToUpdate) return undefined
 
     const updatedUser: IUserMongo = { ...userToUpdate, avatar }
 
@@ -87,9 +98,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
     email: string,
     age: string,
     sex: string,
-  ): Promise<IUserMongo> {
+  ): Promise<IUserMongo | null | undefined> {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
+
+    if (!userToUpdate) return undefined
 
     const updatedUser: IUserMongo = {
       ...userToUpdate,
@@ -105,17 +118,22 @@ export class UserRepositoryInMemory implements IUsersRepository {
     return updatedUser
   }
 
-  async findByUsername(username: string): Promise<IUserMongo> {
+  async findByUsername(
+    username: string,
+  ): Promise<IUserMongo | null | undefined> {
     const user = this.users.find((user) => user.username === username)
     return user
   }
 
-  async findByCode(code: string): Promise<IUserMongo> {
+  async findByCode(code: string): Promise<IUserMongo | null | undefined> {
     const user = this.users.find((user) => user.code === code)
     return user
   }
 
-  async getUser(id: string, updatedInfos: ICreateUserDTO): Promise<IUserMongo> {
+  async getUser(
+    id: string,
+    updatedInfos: ICreateUserDTO,
+  ): Promise<IUserMongo | null | undefined> {
     const {
       age,
       email,
@@ -131,17 +149,19 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
 
+    if (!userToUpdate) return undefined
+
     const updatedUser: IUserMongo = {
       ...userToUpdate,
-      username: username || userToUpdate.username,
-      email: email || userToUpdate.email,
-      age: age || userToUpdate.age,
-      sex: sex || userToUpdate.sex,
-      name: name || userToUpdate.name,
-      avatar: avatar || userToUpdate.avatar,
-      password: password || userToUpdate.password,
+      username: username ?? userToUpdate.username,
+      email: email ?? userToUpdate.email,
+      age: age ?? userToUpdate.age,
+      sex: sex ?? userToUpdate.sex,
+      name: name ?? userToUpdate.name,
+      avatar: avatar ?? userToUpdate.avatar,
+      password: password ?? userToUpdate.password,
       code,
-      isInitialized,
+      isInitialized: isInitialized ?? userToUpdate.isInitialized,
     }
 
     this.users = [...filteredUsers, updatedUser]
@@ -155,7 +175,9 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
 
-    const updatedUser: IUserMongo = { ...userToUpdate._doc, notifications }
+    if (!userToUpdate) return undefined
+
+    const updatedUser: IUserMongo = { ...userToUpdate, notifications }
     this.users = [...filteredUsers, updatedUser]
   }
 
@@ -163,7 +185,9 @@ export class UserRepositoryInMemory implements IUsersRepository {
     const filteredUsers = this.users.filter((user) => user.id !== id)
     const userToUpdate = this.users.find((user) => user.id === id)
 
-    const updatedUser: IUserMongo = { ...userToUpdate._doc, password }
+    if (!userToUpdate) return undefined
+
+    const updatedUser: IUserMongo = { ...userToUpdate, password }
 
     this.users = [...filteredUsers, updatedUser]
   }
@@ -187,7 +211,7 @@ export class UserRepositoryInMemory implements IUsersRepository {
 
       if (userIn) {
         const updatedUser: IUserMongo = {
-          ...user._doc,
+          ...user,
           notifications: [{ ...notification }, ...user.notifications],
         }
 

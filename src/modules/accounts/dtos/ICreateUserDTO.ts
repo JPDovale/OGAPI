@@ -1,4 +1,4 @@
-import { IAvatar } from '../infra/mongoose/entities/Avatar'
+import { type IAvatar } from '../infra/mongoose/entities/Avatar'
 
 export interface ICreateUserDTO {
   name: string

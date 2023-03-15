@@ -6,7 +6,9 @@ import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBo
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
+import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 @injectable()
 export class DeleteProjectUseCase {
@@ -29,28 +31,11 @@ export class DeleteProjectUseCase {
     const project = await this.projectsRepository.findById(projectId)
     const user = await this.usersRepository.findById(userId)
 
-    if (!user)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!user) throw makeErrorUserNotFound()
 
-    if (!project)
-      throw new AppError({
-        title: 'Projeto não encontrado.',
-        message: 'Parece que esse projeto não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!project) throw makeErrorProjectNotFound()
 
-    if (project.createdPerUser !== userId) {
-      throw new AppError({
-        title: 'Acesso negado!',
-        message:
-          'Você não tem permissão para deletar o projeto, pois ele pertence a outro usuário.',
-        statusCode: 401,
-      })
-    }
+    if (project.createdPerUser !== userId) throw makeErrorDeniedPermission()
 
     await this.projectsRepository.delete(projectId)
     await this.personsRepository.deletePerProjectId(projectId)

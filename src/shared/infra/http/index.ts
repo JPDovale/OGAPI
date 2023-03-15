@@ -1,5 +1,9 @@
 import cors from 'cors'
-import express, { NextFunction, Request, Response } from 'express'
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from 'express'
 import morgan from 'morgan'
 import { ZodError } from 'zod'
 

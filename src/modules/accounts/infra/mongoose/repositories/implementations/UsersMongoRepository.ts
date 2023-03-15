@@ -1,13 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
-import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
-import { IAvatar } from '../../entities/Avatar'
-import { INotification } from '../../entities/Notification'
-import { IUserMongo, UserMongo } from '../../entities/User'
-import { IUsersRepository } from '../IUsersRepository'
+import { type IAvatar } from '../../entities/Avatar'
+import { type INotification } from '../../entities/Notification'
+import { type IUserMongo, UserMongo } from '../../entities/User'
+import { type IUsersRepository } from '../IUsersRepository'
 
 @injectable()
 export class UsersMongoRepository implements IUsersRepository {
@@ -16,7 +16,9 @@ export class UsersMongoRepository implements IUsersRepository {
     private readonly dateProvider: IDateProvider,
   ) {}
 
-  async create(dataUserObj: ICreateUserDTO): Promise<IUserMongo> {
+  async create(
+    dataUserObj: ICreateUserDTO,
+  ): Promise<IUserMongo | null | undefined> {
     const {
       name,
       email,
@@ -39,11 +41,15 @@ export class UsersMongoRepository implements IUsersRepository {
       password,
       sex,
       username,
-      isInitialized,
-      isSocialLogin,
+      isInitialized: isInitialized ?? false,
+      isSocialLogin: isSocialLogin ?? false,
       code,
       avatar,
-      payed: payed || false,
+      payed: payed ?? false,
+      admin: false,
+      createAt: this.dateProvider.getDate(new Date()),
+      updateAt: this.dateProvider.getDate(new Date()),
+      notifications: [],
     })
 
     const user = await mocUser.save()
@@ -57,13 +63,13 @@ export class UsersMongoRepository implements IUsersRepository {
     return users
   }
 
-  async findByEmail(email: string): Promise<IUserMongo> {
+  async findByEmail(email: string): Promise<IUserMongo | null | undefined> {
     const user = await UserMongo.findOne({ email })
 
     return user
   }
 
-  async findById(id: string): Promise<IUserMongo> {
+  async findById(id: string): Promise<IUserMongo | null | undefined> {
     const user = await UserMongo.findOne({ id })
     return user
   }
@@ -72,7 +78,10 @@ export class UsersMongoRepository implements IUsersRepository {
     await UserMongo.deleteOne({ id })
   }
 
-  async updateAvatar(id: string, avatar: IAvatar): Promise<IUserMongo> {
+  async updateAvatar(
+    id: string,
+    avatar: IAvatar,
+  ): Promise<IUserMongo | null | undefined> {
     await UserMongo.findOneAndUpdate(
       { id },
       { avatar, updateAt: this.dateProvider.getDate(new Date()) },
@@ -89,7 +98,7 @@ export class UsersMongoRepository implements IUsersRepository {
     email: string,
     age: string,
     sex: string,
-  ): Promise<IUserMongo> {
+  ): Promise<IUserMongo | null | undefined> {
     await UserMongo.findOneAndUpdate(
       { id },
       {
@@ -106,17 +115,22 @@ export class UsersMongoRepository implements IUsersRepository {
     return updatedUser
   }
 
-  async findByUsername(username: string): Promise<IUserMongo> {
+  async findByUsername(
+    username: string,
+  ): Promise<IUserMongo | null | undefined> {
     const userExiste = await UserMongo.findOne({ username })
     return userExiste
   }
 
-  async findByCode(code: string): Promise<IUserMongo> {
+  async findByCode(code: string): Promise<IUserMongo | null | undefined> {
     const userExiste = await UserMongo.findOne({ code })
     return userExiste
   }
 
-  async getUser(id: string, updatedInfos: ICreateUserDTO): Promise<IUserMongo> {
+  async getUser(
+    id: string,
+    updatedInfos: ICreateUserDTO,
+  ): Promise<IUserMongo | null | undefined> {
     await UserMongo.findOneAndUpdate({ id }, { ...updatedInfos })
 
     const getUser = await UserMongo.findOne({ id })

@@ -1,12 +1,12 @@
-import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 
-import { IBox } from '../entities/types/IBox'
-import { IAddArchive } from './types/IAddArchive'
-import { IFindByNameAndProjectId } from './types/IFindByNameAndProjectId'
-import { IUpdateArchives } from './types/IUpdateArchives'
+import { type IBox } from '../entities/types/IBox'
+import { type IAddArchive } from './types/IAddArchive'
+import { type IFindByNameAndProjectId } from './types/IFindByNameAndProjectId'
+import { type IUpdateArchives } from './types/IUpdateArchives'
 
 export interface IBoxesRepository {
-  create: (box: ICreateBoxDTO) => Promise<IBox>
+  create: (box: ICreateBoxDTO) => Promise<IBox | null | undefined>
   createMany: (boxes: ICreateBoxDTO[]) => Promise<void>
   deletePerProjectId: (projectId: string) => Promise<void>
   findByUserId: (userId: string) => Promise<IBox[]>
@@ -14,14 +14,18 @@ export interface IBoxesRepository {
   findByNameAndProjectId: ({
     name,
     projectId,
-  }: IFindByNameAndProjectId) => Promise<IBox>
-  addArchive: ({ archive, id }: IAddArchive) => Promise<IBox>
+  }: IFindByNameAndProjectId) => Promise<IBox | null | undefined>
+  addArchive: ({ archive, id }: IAddArchive) => Promise<IBox | null | undefined>
 
-  updateArchives: ({ archives, id }: IUpdateArchives) => Promise<IBox>
+  updateArchives: ({
+    archives,
+    id,
+  }: IUpdateArchives) => Promise<IBox | null | undefined>
 
   listPerUser: (userId: string) => Promise<IBox[]>
 
   numberOfBoxesByUserId: (userId: string) => Promise<number>
   findNotInternalPerUserId: (userId: string) => Promise<IBox[]>
   numberOfBoxesNotInternalByUserId: (userId: string) => Promise<number>
+  findById: (boxId: string) => Promise<IBox | null | undefined>
 }

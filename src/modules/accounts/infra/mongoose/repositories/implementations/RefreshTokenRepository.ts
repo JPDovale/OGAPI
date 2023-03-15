@@ -1,20 +1,20 @@
 import { v4 as uuidV4 } from 'uuid'
 
-import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
+import { type ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
 
 import {
-  IRefreshTokenMongo,
+  type IRefreshTokenMongo,
   RefreshTokenMongo,
 } from '../../entities/RefreshToken'
 import {
-  IFindByRefreshToken,
-  IRefreshTokenRepository,
+  type IFindByRefreshToken,
+  type IRefreshTokenRepository,
 } from '../IRefreshTokenRepository'
 
 export class RefreshTokenRepository implements IRefreshTokenRepository {
   async create(
     dataUserTokenObj: ICreateUserTokenDTO,
-  ): Promise<IRefreshTokenMongo> {
+  ): Promise<IRefreshTokenMongo | null | undefined> {
     const { expiresDate, refreshToken, userId, accessCode } = dataUserTokenObj
 
     const tokenInAppAlreadyExists = await RefreshTokenMongo.findOne({
@@ -42,7 +42,7 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
   async findByUserIdAndRefreshToken(
     userId: string,
     refreshToken: string,
-  ): Promise<IRefreshTokenMongo> {
+  ): Promise<IRefreshTokenMongo | null | undefined> {
     const userToken = await RefreshTokenMongo.findOne({
       userId,
       refreshToken,
@@ -65,7 +65,7 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
 
   async findByRefreshToken({
     refreshToken,
-  }: IFindByRefreshToken): Promise<IRefreshTokenMongo> {
+  }: IFindByRefreshToken): Promise<IRefreshTokenMongo | null | undefined> {
     const token = await RefreshTokenMongo.findOne({
       refreshToken,
     })

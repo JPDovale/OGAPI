@@ -1,10 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBoxNotCreated } from '@shared/errors/boxes/makeErrorBoxNotCreated'
+import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
   userId: string
@@ -36,36 +38,27 @@ export class CreateBoxUseCase {
   }: IRequest): Promise<IResponse> {
     const user = await this.usersRepository.findById(userId)
 
-    if (!user) {
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!user) throw makeErrorUserNotFound()
 
     const registersNotInternalThisUser =
       await this.boxesRepository.numberOfBoxesNotInternalByUserId(userId)
 
-    if (registersNotInternalThisUser >= 3 && !user.payed) {
-      throw new AppError({
-        title: 'Limite atingido!.',
-        message:
-          'Parece que você atingiu o limite de criação de boxes para o plano free... Que tal tentar o nosso plano básico?',
-        statusCode: 400,
-      })
-    }
+    if (registersNotInternalThisUser >= 3 && !user.payed)
+      throw makeErrorLimitFreeInEnd()
 
     const newBox: ICreateBoxDTO = {
       name,
-      description: description || '',
-      tags: tags || [],
+      description: description ?? '',
+      tags: tags ?? [],
       userId,
       internal: false,
       type: 'default',
     }
 
     const box = await this.boxesRepository.create(newBox)
+
+    if (!box) throw makeErrorBoxNotCreated()
+
     return { box }
   }
 }

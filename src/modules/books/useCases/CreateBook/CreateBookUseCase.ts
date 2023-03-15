@@ -1,21 +1,22 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorBookNotCreated } from '@shared/errors/books/makeErrorBookNotCreated'
 
 interface IRequest {
   userId: string
   projectId: string
   title: string
-  subtitle: string
+  subtitle?: string
   authors: Array<{
     username?: string
     email?: string
@@ -23,7 +24,7 @@ interface IRequest {
   }>
   literaryGenere: string
   generes: Array<{ name?: string }>
-  isbn: string
+  isbn?: string
   words?: string
   writtenWords?: string
 }
@@ -83,6 +84,8 @@ export class CreateBookUseCase {
       },
     })
 
+    if (!newBook) throw makeErrorBookNotCreated()
+
     const boxExistes = await this.boxesRepository.findByNameAndProjectId({
       name: 'books',
       projectId,
@@ -105,6 +108,11 @@ export class CreateBookUseCase {
       }
 
       const createdBox = await this.boxesRepository.create(newBox)
+
+      if (!createdBox) {
+        await this.booksRepository.deletePerId(newBook.id)
+        throw makeErrorBookNotCreated()
+      }
 
       const archiveBooks = new Archive({
         archive: {

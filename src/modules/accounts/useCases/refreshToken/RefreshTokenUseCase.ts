@@ -6,7 +6,8 @@ import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorRefreshTokenInvalid } from '@shared/errors/refreshToken/makeErrorRefreshTokenInvalid'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IPayload {
   sub: string
@@ -44,15 +45,12 @@ export class RefreshTokenUseCase {
         token,
       )
 
-    if (!userToken) {
-      throw new AppError({
-        title: 'RefreshToken inexistente',
-        message: 'Esse token não existe.',
-      })
-    }
+    if (!userToken) throw makeErrorRefreshTokenInvalid()
 
-    const userExiste = await this.userRepository.findById(userId)
     await this.refreshTokenRepository.deleteById(userToken.id)
+    const userExiste = await this.userRepository.findById(userId)
+
+    if (!userExiste) throw makeErrorUserNotFound()
 
     const refreshToken = sign(
       {
@@ -68,7 +66,7 @@ export class RefreshTokenUseCase {
     )
 
     const expiresDate = this.dateProvider
-      .addDays(session.expiresRefreshTokenDays)
+      .addDays(Number(session.expiresRefreshTokenDays))
       .toString()
 
     await this.refreshTokenRepository.create({
