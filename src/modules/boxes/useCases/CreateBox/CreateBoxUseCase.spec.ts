@@ -37,7 +37,7 @@ describe('Create box', () => {
     })
 
     await createBoxUseCase.execute({
-      userId: user.id,
+      userId: user!.id,
       name: 'Teste box',
       tags: [
         {

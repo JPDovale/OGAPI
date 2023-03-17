@@ -12,6 +12,7 @@ import { IStorageProvider } from '@shared/container/providers/StorageProvider/IS
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 
 @injectable()
 export class UpdateImagePersonUseCase {
@@ -29,11 +30,12 @@ export class UpdateImagePersonUseCase {
   async execute(
     userId: string,
     personId: string,
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
     if (!person) throw makeErrorPersonNotFound()
+    if (!file) throw makeErrorFileNotUploaded()
 
     await this.verifyPermissions.verify({
       userId,

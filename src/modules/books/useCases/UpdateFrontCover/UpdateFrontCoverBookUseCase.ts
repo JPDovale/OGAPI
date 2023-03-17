@@ -13,11 +13,12 @@ import { IStorageProvider } from '@shared/container/providers/StorageProvider/IS
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 
 interface IRequest {
   userId: string
   bookId: string
-  file: Express.Multer.File
+  file: Express.Multer.File | undefined
 }
 
 @injectable()
@@ -39,6 +40,7 @@ export class UpdateFrontCoverBookUseCase {
     const book = await this.booksRepository.findById(bookId)
 
     if (!book) throw makeErrorBookNotFound()
+    if (!file) throw makeErrorFileNotUploaded()
 
     const { user, project } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,

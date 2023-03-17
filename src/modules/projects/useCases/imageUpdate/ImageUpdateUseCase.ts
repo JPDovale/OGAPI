@@ -12,6 +12,7 @@ import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersPro
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 
 @injectable()
 export class ImageUpdateUseCase {
@@ -31,8 +32,10 @@ export class ImageUpdateUseCase {
   async execute(
     userId: string,
     projectId: string,
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
   ): Promise<IProjectMongo> {
+    if (!file) throw makeErrorFileNotUploaded()
+
     const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,

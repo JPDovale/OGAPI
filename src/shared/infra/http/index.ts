@@ -10,6 +10,7 @@ import { ZodError } from 'zod'
 import { env } from '@env/index'
 import * as Sentry from '@sentry/node'
 import * as Tracing from '@sentry/tracing'
+
 import 'express-async-errors'
 import 'reflect-metadata'
 
@@ -81,10 +82,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ZodError) {
     if (isDev) console.log(err)
 
-    return res.status(401).json({
+    return res.status(400).json({
       errorTitle: 'Informações inválidas',
-      errorMessage:
-        'As informações fornecidas não são aceitas pela aplicação. Rastreamos o erro no seu dispositivo e resolveremos em breve',
+      errorMessage: 'Verefique as informações fornecidas e tente novamente',
     })
   }
 
@@ -93,7 +93,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
     res.status(500).json({
       errorTitle: 'Internal error',
-      errorMessage: 'Try again later.',
+      errorMessage: 'Internal error',
     })
   }
 })

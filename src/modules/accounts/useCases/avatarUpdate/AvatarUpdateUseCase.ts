@@ -9,6 +9,7 @@ import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/
 import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
 
@@ -24,12 +25,13 @@ export class AvatarUpdateUseCase {
   ) {}
 
   async execute(
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
     userId: string,
   ): Promise<IUserInfosResponse> {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) throw makeErrorUserNotFound()
+    if (!file) throw makeErrorFileNotUploaded()
 
     if (user.avatar?.fileName) {
       try {
