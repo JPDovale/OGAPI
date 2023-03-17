@@ -26,6 +26,7 @@ export class BooksRepositoryInMemory implements IBooksRepository {
       words,
       writtenWords,
       createdPerUser,
+      capitules,
     },
   }: ICreateBook): Promise<IBook | null | undefined> {
     const newBook = new BookMongo({
@@ -40,6 +41,7 @@ export class BooksRepositoryInMemory implements IBooksRepository {
       isbn,
       words,
       writtenWords,
+      capitules: capitules ?? [],
       plot: new PlotBook({}),
       createAt: new Date(),
       updateAt: new Date(),
@@ -77,7 +79,11 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     writtenWords,
   }: IUpdateCapitules): Promise<IBook | null | undefined> {
     const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
-    const bookToUpdate = this.books[indexOfBookToUpdate]
+    const book = this.books.find((book) => book.id === id)
+
+    if (!book) return undefined
+
+    const bookToUpdate = book.toObject()
 
     this.books[indexOfBookToUpdate] = {
       ...bookToUpdate,
@@ -125,7 +131,9 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     id,
   }: IUpdateGenres): Promise<IBook | null | undefined> {
     const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
-    const bookToUpdate = this.books[indexOfBookToUpdate]
+    const book = this.books[indexOfBookToUpdate]
+
+    const bookToUpdate = book.toObject()
 
     this.books[indexOfBookToUpdate] = {
       ...bookToUpdate,
@@ -140,7 +148,9 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     updatedInfos,
   }: IUpdateBook): Promise<IBook | null | undefined> {
     const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
-    const bookToUpdate = this.books[indexOfBookToUpdate]
+    const book = this.books[indexOfBookToUpdate]
+
+    const bookToUpdate = book.toObject()
 
     this.books[indexOfBookToUpdate] = {
       ...bookToUpdate,

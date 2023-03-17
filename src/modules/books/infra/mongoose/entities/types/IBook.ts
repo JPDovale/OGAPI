@@ -24,4 +24,5 @@ export interface IBook {
   comments: IComment[]
   createAt: string
   updateAt: string
+  toObject: () => IBook
 }

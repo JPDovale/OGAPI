@@ -52,6 +52,7 @@ export interface IUserMongo {
   createAt: string
   updateAt: string
   notifications: INotification[]
+  toObject: () => IUserMongo
 }
 
 export const UserMongo = mongoose.model('User', UserSchema)

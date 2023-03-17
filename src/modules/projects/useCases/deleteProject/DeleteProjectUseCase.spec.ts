@@ -123,8 +123,8 @@ describe('Delete project', () => {
           permission: 'edit',
         },
         {
-          email: user!.email,
-          id: user!.id,
+          email: user2!.email,
+          id: user2!.id,
           permission: 'edit',
         },
       ],
@@ -140,7 +140,6 @@ describe('Delete project', () => {
       user!.id,
     )
     const user2Notified = await usersRepositoryInMemory.findById(user2!.id)
-    console.log(user2Notified)
 
     expect(projectsThisUser.length).toEqual(1)
     expect(user2Notified!.notifications.length).toEqual(1)
@@ -170,15 +169,15 @@ describe('Delete project', () => {
         name: 'test',
         private: false,
         type: 'book',
-        createdPerUser: user.id,
+        createdPerUser: user!.id,
         users: [],
-        plot: {},
+        plot: new PlotProject({}),
       }
 
       await projectsRepositoryInMemory.create(newProjectTest)
       const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
-      await deleteProjectUseCase.execute(newProject.id, user2.id)
+      await deleteProjectUseCase.execute(newProject!.id, user2!.id)
     })
       .rejects.toBeInstanceOf(AppError)
       .catch((err) => {
@@ -200,15 +199,15 @@ describe('Delete project', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
@@ -221,16 +220,18 @@ describe('Delete project', () => {
     }
 
     await personsRepositoryInMemory.create(
-      user.id,
-      newProject.id,
+      user!.id,
+      newProject!.id,
       newPersonTest,
     )
-    await deleteProjectUseCase.execute(newProject.id, user.id)
+    await deleteProjectUseCase.execute(newProject!.id, user!.id)
 
     const projectsThisUser = await projectsRepositoryInMemory.listPerUser(
-      user.id,
+      user!.id,
     )
-    const personsThisUser = await personsRepositoryInMemory.listPerUser(user.id)
+    const personsThisUser = await personsRepositoryInMemory.listPerUser(
+      user!.id,
+    )
 
     expect(projectsThisUser.length).toEqual(0)
     expect(personsThisUser.length).toEqual(0)
@@ -250,36 +251,36 @@ describe('Delete project', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
     await booksRepositoryInMemory.create({
-      projectId: newProject.id,
+      projectId: newProject!.id,
       book: {
         authors: [],
-        createdPerUser: user.id,
+        createdPerUser: user!.id,
         generes: [{ name: 'teste' }],
         literaryGenere: 'teste',
         title: 'teste',
       },
     })
 
-    await deleteProjectUseCase.execute(newProject.id, user.id)
+    await deleteProjectUseCase.execute(newProject!.id, user!.id)
 
     const projectsThisUser = await projectsRepositoryInMemory.listPerUser(
-      user.id,
+      user!.id,
     )
-    const booksThisUser = await booksRepositoryInMemory.listPerUser(user.id)
+    const booksThisUser = await booksRepositoryInMemory.listPerUser(user!.id)
 
     expect(projectsThisUser.length).toEqual(0)
     expect(booksThisUser.length).toEqual(0)
@@ -299,15 +300,15 @@ describe('Delete project', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
@@ -315,17 +316,17 @@ describe('Delete project', () => {
     await boxesRepositoryInMemory.create({
       name: 'Teste',
       tags: [],
-      userId: user.id,
-      projectId: newProject.id,
+      userId: user!.id,
+      projectId: newProject!.id,
       internal: true,
     })
 
-    await deleteProjectUseCase.execute(newProject.id, user.id)
+    await deleteProjectUseCase.execute(newProject!.id, user!.id)
 
     const projectsThisUser = await projectsRepositoryInMemory.listPerUser(
-      user.id,
+      user!.id,
     )
-    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user.id)
+    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user!.id)
 
     expect(projectsThisUser.length).toEqual(0)
     expect(boxesThisUser.length).toEqual(0)

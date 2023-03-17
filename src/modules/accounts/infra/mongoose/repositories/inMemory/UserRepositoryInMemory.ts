@@ -26,7 +26,6 @@ export class UserRepositoryInMemory implements IUsersRepository {
 
   async findById(userId: string): Promise<IUserMongo | null | undefined> {
     const user = this.users.find((user) => user.id === userId)
-
     return user
   }
 
@@ -80,9 +79,10 @@ export class UserRepositoryInMemory implements IUsersRepository {
     avatar: IAvatar,
   ): Promise<IUserMongo | null | undefined> {
     const filteredUsers = this.users.filter((user) => user.id !== userId)
-    const userToUpdate = this.users.find((user) => user.id === userId)
+    const user = this.users.find((user) => user.id === userId)
+    if (!user) return undefined
 
-    if (!userToUpdate) return undefined
+    const userToUpdate = user.toObject()
 
     const updatedUser: IUserMongo = { ...userToUpdate, avatar }
 
@@ -100,9 +100,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
     sex: string,
   ): Promise<IUserMongo | null | undefined> {
     const filteredUsers = this.users.filter((user) => user.id !== id)
-    const userToUpdate = this.users.find((user) => user.id === id)
+    const user = this.users.find((user) => user.id === id)
 
-    if (!userToUpdate) return undefined
+    if (!user) return undefined
+
+    const userToUpdate = user.toObject()
 
     const updatedUser: IUserMongo = {
       ...userToUpdate,
@@ -147,9 +149,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
     } = updatedInfos
 
     const filteredUsers = this.users.filter((user) => user.id !== id)
-    const userToUpdate = this.users.find((user) => user.id === id)
+    const user = this.users.find((user) => user.id === id)
 
-    if (!userToUpdate) return undefined
+    if (!user) return undefined
+
+    const userToUpdate = user.toObject()
 
     const updatedUser: IUserMongo = {
       ...userToUpdate,
@@ -173,9 +177,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
     notifications: INotification[],
   ): Promise<void> {
     const filteredUsers = this.users.filter((user) => user.id !== id)
-    const userToUpdate = this.users.find((user) => user.id === id)
+    const user = this.users.find((user) => user.id === id)
 
-    if (!userToUpdate) return undefined
+    if (!user) return undefined
+
+    const userToUpdate = user.toObject()
 
     const updatedUser: IUserMongo = { ...userToUpdate, notifications }
     this.users = [...filteredUsers, updatedUser]
@@ -183,9 +189,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
 
   async updatePassword(id: string, password: string): Promise<void> {
     const filteredUsers = this.users.filter((user) => user.id !== id)
-    const userToUpdate = this.users.find((user) => user.id === id)
+    const user = this.users.find((user) => user.id === id)
 
-    if (!userToUpdate) return undefined
+    if (!user) return undefined
+
+    const userToUpdate = user.toObject()
 
     const updatedUser: IUserMongo = { ...userToUpdate, password }
 
@@ -210,9 +218,11 @@ export class UserRepositoryInMemory implements IUsersRepository {
       const userIn = ids.find((id) => user.id === id)
 
       if (userIn) {
+        const userToNotify = user.toObject()
+
         const updatedUser: IUserMongo = {
-          ...user,
-          notifications: [{ ...notification }, ...user.notifications],
+          ...userToNotify,
+          notifications: [{ ...notification }, ...userToNotify.notifications],
         }
 
         return updatedUser

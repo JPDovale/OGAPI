@@ -33,6 +33,7 @@ export class BooksMongoRepository implements IBooksRepository {
       subtitle,
       words,
       writtenWords,
+      capitules,
     },
   }: ICreateBook): Promise<IBook | null | undefined> {
     const newBook = new BookMongo({
@@ -47,6 +48,7 @@ export class BooksMongoRepository implements IBooksRepository {
       isbn,
       words,
       writtenWords,
+      capitules: capitules ?? [],
       plot: new PlotBook({}),
       createAt: this.dateProvider.getDate(new Date()),
       updateAt: this.dateProvider.getDate(new Date()),
