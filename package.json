@@ -14,7 +14,7 @@
     "dev:compile": "node build/shared/infra/http/index.js",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test": "vitest",
+    "test": "vitest run",
     "typeorm": "ts-node-dev -r tsconfig-paths/register ./node_modules/typeorm/cli -d src/shared/infra/typeorm/dataSource.ts",
     "createM": "ts-node-dev ./node_modules/typeorm/cli",
     "lint": "eslint ."

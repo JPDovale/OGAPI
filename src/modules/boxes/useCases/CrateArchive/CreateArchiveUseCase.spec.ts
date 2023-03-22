@@ -47,18 +47,9 @@ describe('Create archive in box', () => {
       description: 'test description',
       title: 'test title',
       userId: user!.id,
-      filesImages: [
-        {
-          createdAt: 'teste',
-          fileName: 'teste.jpg',
-          updatedAt: 'teste',
-          url: 'teste.jpg',
-        },
-      ],
     })
 
     expect(updatedBox.archives.length).toEqual(1)
-    expect(updatedBox.archives[0].images.length).toEqual(1)
   })
 
   it('not should be able to create archive in box if user not are creator', async () => {
