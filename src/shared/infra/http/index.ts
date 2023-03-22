@@ -9,6 +9,7 @@ import { ZodError } from 'zod'
 
 import { env } from '@env/index'
 import * as Sentry from '@sentry/node'
+// eslint-disable-next-line import-helpers/order-imports
 import * as Tracing from '@sentry/tracing'
 
 import 'express-async-errors'
@@ -84,7 +85,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
     return res.status(400).json({
       errorTitle: 'Informações inválidas',
-      errorMessage: 'Verefique as informações fornecidas e tente novamente',
+      errorMessage: 'Verifique as informações fornecidas e tente novamente',
     })
   }
 

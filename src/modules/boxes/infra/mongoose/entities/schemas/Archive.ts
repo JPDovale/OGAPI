@@ -1,13 +1,20 @@
 import { randomUUID } from 'node:crypto'
 import { container } from 'tsyringe'
 
-import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
 const dateProvider = container.resolve(DayJsDateProvider)
 
+export interface IImageArchive {
+  fileName: string
+  url: string
+  createdAt: string
+  updatedAt: string
+  id: string
+}
+
 interface IArchiveConstructor {
-  images?: IAvatar[]
+  images?: IImageArchive[]
   archive: {
     id?: string
     title: string
@@ -22,7 +29,7 @@ interface IArchiveConstructor {
 }
 
 export class Archive {
-  images: IAvatar[]
+  images: IImageArchive[]
   archive: {
     id: string
     title: string

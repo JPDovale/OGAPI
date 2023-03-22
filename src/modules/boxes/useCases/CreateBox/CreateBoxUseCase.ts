@@ -43,7 +43,7 @@ export class CreateBoxUseCase {
     const registersNotInternalThisUser =
       await this.boxesRepository.numberOfBoxesNotInternalByUserId(userId)
 
-    if (registersNotInternalThisUser >= 3 && !user.payed)
+    if (registersNotInternalThisUser >= 1 && !user.payed && !user.admin)
       throw makeErrorLimitFreeInEnd()
 
     const newBox: ICreateBoxDTO = {

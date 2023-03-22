@@ -37,7 +37,6 @@ export class CreateArchiveUseCase {
     description,
     title,
     userId,
-    filesImages,
   }: IRequest): Promise<IResponse> {
     const box = await this.boxesRepository.findById(boxId)
     const user = await this.usersRepository.findById(userId)
@@ -45,14 +44,14 @@ export class CreateArchiveUseCase {
     if (!box) throw makeErrorBoxNotFound()
     if (!user) throw makeErrorUserNotFound()
     if (box.userId !== userId) throw makeErrorDeniedPermission()
-    if (box.archives.length >= 5 && !user.payed) throw makeErrorLimitFreeInEnd()
+    if (box.archives.length >= 3 && !user.payed && !user.admin)
+      throw makeErrorLimitFreeInEnd()
 
     const archive = new Archive({
       archive: {
         title,
         description,
       },
-      images: filesImages,
     })
 
     const updatedBox = await this.boxesRepository.addArchive({
