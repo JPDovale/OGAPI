@@ -31,29 +31,30 @@ export class FirebaseStorageProvider implements IStorageProvider {
     }
 
     const folder = toFolder.split('/')[0]
-    const filePath = env.IS_DEV
-      ? path.resolve(
-          __dirname,
-          '..',
-          '..',
-          '..',
-          '..',
-          '..',
-          '..',
-          'tmp',
-          folder,
-          file.filename,
-        )
-      : path.resolve(
-          __dirname,
-          '..',
-          '..',
-          '..',
-          '..',
-          'tmp',
-          folder,
-          file.filename,
-        )
+    const filePath =
+      env.NODE_ENV === 'dev'
+        ? path.resolve(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            '..',
+            '..',
+            '..',
+            'tmp',
+            folder,
+            file.filename,
+          )
+        : path.resolve(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            '..',
+            'tmp',
+            folder,
+            file.filename,
+          )
 
     const image = fs.readFileSync(filePath)
 

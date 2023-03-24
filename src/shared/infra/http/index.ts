@@ -30,9 +30,8 @@ const appName = env.APP_NAME
 const appPort = env.APP_PORT
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
-const isDev = env.IS_DEV
 
-if (!isDev) {
+if (env.NODE_ENV !== 'dev') {
   app.use(rateLimit.rete)
 
   Sentry.init({
@@ -56,13 +55,13 @@ app.use(
 )
 app.use(express.json())
 
-if (!isDev) {
+if (env.NODE_ENV !== 'dev') {
   app.use(morgan('combined'))
 }
 
 getConnectionMongoDb()
   .then(() => {
-    if (isDev) console.log('Database connected')
+    if (env.NODE_ENV === 'dev') console.log('Database connected')
   })
   .catch((err) => {
     throw err
@@ -70,7 +69,7 @@ getConnectionMongoDb()
 
 app.use(router)
 
-if (!isDev) {
+if (env.NODE_ENV !== 'dev') {
   app.use(Sentry.Handlers.errorHandler())
 }
 
@@ -83,7 +82,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 
   if (err instanceof ZodError) {
-    if (isDev) console.log(err)
+    if (env.NODE_ENV === 'dev') console.log(err)
 
     return res.status(400).json({
       errorTitle: 'Informações inválidas',
@@ -100,7 +99,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 
   if (err instanceof Error) {
-    if (isDev) console.log(err)
+    if (env.NODE_ENV === 'dev') console.log(err)
 
     res.status(500).json({
       errorTitle: 'Internal error',
@@ -110,5 +109,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 app.listen(appPort, () => {
-  if (isDev) console.log(`${appName} running on port ${appPort}`)
+  if (env.NODE_ENV === 'dev')
+    console.log(`${appName} running on port ${appPort}`)
 })
