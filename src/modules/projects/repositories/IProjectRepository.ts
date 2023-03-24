@@ -34,4 +34,5 @@ export interface IProjectsRepository {
     name,
   }: IUpdateName) => Promise<IProjectMongo | null | undefined>
   removeTagsInAllProjects: () => Promise<void>
+  getNumberOfProjectsByUserId: (userId: string) => Promise<number>
 }

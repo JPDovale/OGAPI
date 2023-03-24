@@ -81,4 +81,5 @@ export interface IPersonsRepository {
   findManyById: (ids: string[]) => Promise<IPersonMongo[]>
   listPerUser: (userId: string) => Promise<IPersonMongo[]>
   findByProjectIds: (projectIds: string[]) => Promise<IPersonMongo[]>
+  getNumberOfPersonsByProjectId: (projectId: string) => Promise<number>
 }

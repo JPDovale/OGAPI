@@ -121,4 +121,12 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
   }
 
   removeTagsInAllProjects: () => Promise<void>
+
+  async getNumberOfProjectsByUserId(userId: string): Promise<number> {
+    const numberOfProjects = this.projects.filter(
+      (project) => project.createdPerUser === userId,
+    )
+
+    return numberOfProjects.length
+  }
 }

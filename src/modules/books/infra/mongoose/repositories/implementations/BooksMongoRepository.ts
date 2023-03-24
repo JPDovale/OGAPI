@@ -180,4 +180,12 @@ export class BooksMongoRepository implements IBooksRepository {
   async deletePerId(id: string): Promise<void> {
     await BookMongo.deleteOne({ id })
   }
+
+  async findNumberOfBooksByProjectId(projectId: string): Promise<number> {
+    const numberOfRegisters = await BookMongo.countDocuments({
+      defaultProject: projectId,
+    })
+
+    return numberOfRegisters
+  }
 }

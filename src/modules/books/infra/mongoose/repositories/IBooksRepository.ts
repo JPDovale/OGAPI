@@ -35,4 +35,5 @@ export interface IBooksRepository {
     updatedInfos,
   }: IUpdateBook) => Promise<IBook | null | undefined>
   deletePerId: (id: string) => Promise<void>
+  findNumberOfBooksByProjectId: (projectId: string) => Promise<number>
 }
