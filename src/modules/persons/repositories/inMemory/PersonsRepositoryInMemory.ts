@@ -150,4 +150,12 @@ export class PersonsRepositoryInMemory implements IPersonsRepository {
 
     return persons
   }
+
+  async getNumberOfPersonsByProjectId(projectId: string): Promise<number> {
+    const persons = this.persons.filter(
+      (person) => person.defaultProject === projectId,
+    )
+
+    return persons.length
+  }
 }

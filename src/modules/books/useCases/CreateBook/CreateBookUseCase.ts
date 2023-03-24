@@ -11,6 +11,7 @@ import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersPro
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorBookNotCreated } from '@shared/errors/books/makeErrorBookNotCreated'
+import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
 
 interface IRequest {
   userId: string
@@ -68,6 +69,12 @@ export class CreateBookUseCase {
       projectId,
       verifyPermissionTo: 'edit',
     })
+
+    const numbersOfBooksInProject =
+      await this.booksRepository.findNumberOfBooksByProjectId(project.id)
+
+    if (numbersOfBooksInProject >= 3 && !user.payed && !user.admin)
+      throw makeErrorLimitFreeInEnd()
 
     const newBook = await this.booksRepository.create({
       projectId,

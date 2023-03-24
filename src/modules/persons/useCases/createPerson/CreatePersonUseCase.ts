@@ -11,6 +11,7 @@ import { IDateProvider } from '@shared/container/providers/DateProvider/IDatePro
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorPersonNotCreated } from '@shared/errors/persons/makeErrorPersonNotCreated'
+import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
 
 interface IRequest {
   userId: string
@@ -43,11 +44,17 @@ export class CreatePersonUseCase {
     projectId,
     newPerson,
   }: IRequest): Promise<IResponse> {
-    const { project } = await this.verifyPermissions.verify({
+    const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
       verifyPermissionTo: 'edit',
     })
+
+    const numberOfPersonsInProject =
+      await this.personsRepository.getNumberOfPersonsByProjectId(project.id)
+
+    if (numberOfPersonsInProject >= 15 && !user.payed && !user.admin)
+      throw makeErrorLimitFreeInEnd()
 
     const person = await this.personsRepository.create(
       userId,

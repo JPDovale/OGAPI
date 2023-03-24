@@ -133,4 +133,12 @@ export class ProjectsMongoRepository implements IProjectsRepository {
   async removeTagsInAllProjects(): Promise<void> {
     await ProjectMongo.updateMany({}, { $unset: { tags: 1 } })
   }
+
+  async getNumberOfProjectsByUserId(userId: string): Promise<number> {
+    const numberOfProjects = await ProjectMongo.countDocuments({
+      createdPerUser: userId,
+    })
+
+    return numberOfProjects
+  }
 }

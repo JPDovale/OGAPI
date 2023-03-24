@@ -271,4 +271,12 @@ export class PersonsMongoRepository implements IPersonsRepository {
 
     return persons
   }
+
+  async getNumberOfPersonsByProjectId(projectId: string): Promise<number> {
+    const numberOfRegisters = await PersonMongo.countDocuments({
+      defaultProject: projectId,
+    })
+
+    return numberOfRegisters
+  }
 }

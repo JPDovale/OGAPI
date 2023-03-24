@@ -165,4 +165,12 @@ export class BooksRepositoryInMemory implements IBooksRepository {
 
     this.books = filteredBooks
   }
+
+  async findNumberOfBooksByProjectId(projectId: string): Promise<number> {
+    const filteredBooks = this.books.filter(
+      (book) => book.defaultProject === projectId,
+    )
+
+    return filteredBooks.length
+  }
 }

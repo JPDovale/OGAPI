@@ -31,6 +31,7 @@ export class UsersMongoRepository implements IUsersRepository {
       code,
       avatar,
       payed,
+      admin,
     } = dataUserObj
 
     const mocUser = new UserMongo({
@@ -46,7 +47,7 @@ export class UsersMongoRepository implements IUsersRepository {
       code,
       avatar,
       payed: payed ?? false,
-      admin: false,
+      admin: admin ?? false,
       createAt: this.dateProvider.getDate(new Date()),
       updateAt: this.dateProvider.getDate(new Date()),
       notifications: [],
