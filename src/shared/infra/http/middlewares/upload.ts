@@ -10,9 +10,10 @@ export class Uploads {
   upload: multer.Multer
 
   constructor(path: string, type: 'image') {
-    const filePath = env.IS_DEV
-      ? Path.resolve(__dirname, '..', '..', '..', '..', '..', 'tmp', path)
-      : Path.resolve(__dirname, '..', '..', '..', '..', 'tmp', path)
+    const filePath =
+      env.NODE_ENV === 'dev'
+        ? Path.resolve(__dirname, '..', '..', '..', '..', '..', 'tmp', path)
+        : Path.resolve(__dirname, '..', '..', '..', '..', 'tmp', path)
 
     this.upload = multer({
       dest: `${filePath}`,
