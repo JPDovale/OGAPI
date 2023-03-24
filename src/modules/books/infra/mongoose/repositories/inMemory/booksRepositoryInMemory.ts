@@ -2,14 +2,14 @@ import { v4 as uuidV4 } from 'uuid'
 
 import { BookMongo } from '../../entities/schemas/Book'
 import { PlotBook } from '../../entities/schemas/PlotBook'
-import { IBook } from '../../entities/types/IBook'
-import { IBooksRepository } from '../IBooksRepository'
-import { ICreateBook } from '../types/ICreateBook'
-import { IFindManyById } from '../types/IFindManyById'
-import { IUpdateBook } from '../types/IUpdateBook'
-import { IUpdateCapitules } from '../types/IUpdateCapitules'
-import { IUpdateFrontCover } from '../types/IUpdateFrontCover'
-import { IUpdateGenres } from '../types/IUpdateGenres'
+import { type IBook } from '../../entities/types/IBook'
+import { type IBooksRepository } from '../IBooksRepository'
+import { type ICreateBook } from '../types/ICreateBook'
+import { type IFindManyById } from '../types/IFindManyById'
+import { type IUpdateBook } from '../types/IUpdateBook'
+import { type IUpdateCapitules } from '../types/IUpdateCapitules'
+import { type IUpdateFrontCover } from '../types/IUpdateFrontCover'
+import { type IUpdateGenres } from '../types/IUpdateGenres'
 
 export class BooksRepositoryInMemory implements IBooksRepository {
   books: IBook[] = []
@@ -26,8 +26,9 @@ export class BooksRepositoryInMemory implements IBooksRepository {
       words,
       writtenWords,
       createdPerUser,
+      capitules,
     },
-  }: ICreateBook): Promise<IBook> {
+  }: ICreateBook): Promise<IBook | null | undefined> {
     const newBook = new BookMongo({
       id: uuidV4(),
       title,
@@ -40,6 +41,7 @@ export class BooksRepositoryInMemory implements IBooksRepository {
       isbn,
       words,
       writtenWords,
+      capitules: capitules ?? [],
       plot: new PlotBook({}),
       createAt: new Date(),
       updateAt: new Date(),
@@ -60,24 +62,31 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     return books
   }
 
-  async findById(id: string): Promise<IBook> {
+  async findById(id: string): Promise<IBook | null | undefined> {
     const book = this.books.find((book) => book.id === id)
 
     return book
   }
 
-  updateFrontCover: ({ id, frontCover }: IUpdateFrontCover) => Promise<IBook>
+  updateFrontCover: ({
+    id,
+    frontCover,
+  }: IUpdateFrontCover) => Promise<IBook | null | undefined>
 
   async updateCapitules({
     id,
     capitules,
     writtenWords,
-  }: IUpdateCapitules): Promise<IBook> {
+  }: IUpdateCapitules): Promise<IBook | null | undefined> {
     const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
-    const bookToUpdate = this.books[indexOfBookToUpdate]
+    const book = this.books.find((book) => book.id === id)
+
+    if (!book) return undefined
+
+    const bookToUpdate = book.toObject()
 
     this.books[indexOfBookToUpdate] = {
-      ...bookToUpdate._doc,
+      ...bookToUpdate,
       capitules: [...capitules],
       writtenWords,
     }
@@ -117,24 +126,34 @@ export class BooksRepositoryInMemory implements IBooksRepository {
     return books
   }
 
-  async updateGenres({ genres, id }: IUpdateGenres): Promise<IBook> {
+  async updateGenres({
+    genres,
+    id,
+  }: IUpdateGenres): Promise<IBook | null | undefined> {
     const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
-    const bookToUpdate = this.books[indexOfBookToUpdate]
+    const book = this.books[indexOfBookToUpdate]
+
+    const bookToUpdate = book.toObject()
 
     this.books[indexOfBookToUpdate] = {
-      ...bookToUpdate._doc,
+      ...bookToUpdate,
       generes: [...genres],
     }
 
     return this.books[indexOfBookToUpdate]
   }
 
-  async updateBook({ id, updatedInfos }: IUpdateBook): Promise<IBook> {
+  async updateBook({
+    id,
+    updatedInfos,
+  }: IUpdateBook): Promise<IBook | null | undefined> {
     const indexOfBookToUpdate = this.books.findIndex((book) => book.id === id)
-    const bookToUpdate = this.books[indexOfBookToUpdate]
+    const book = this.books[indexOfBookToUpdate]
+
+    const bookToUpdate = book.toObject()
 
     this.books[indexOfBookToUpdate] = {
-      ...bookToUpdate._doc,
+      ...bookToUpdate,
       ...updatedInfos,
     }
 

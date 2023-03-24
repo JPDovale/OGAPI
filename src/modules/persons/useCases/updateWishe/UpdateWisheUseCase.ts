@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IWishe } from '@modules/persons/infra/mongoose/entities/Wishe'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IWishe } from '@modules/persons/infra/mongoose/entities/Wishe'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateWisheUseCase {
@@ -24,26 +26,27 @@ export class UpdateWisheUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
     const filteredWishes = person.wishes.filter((wishe) => wishe.id !== wisheId)
     const wisheToUpdate = person.wishes.find((wishe) => wishe.id === wisheId)
 
+    if (!wisheToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Desejo',
+      })
+    }
+
     const updatedWishe: IWishe = {
-      ...wisheToUpdate,
-      ...wishe,
+      description: wishe.description ?? wisheToUpdate.description,
+      title: wishe.title ?? wisheToUpdate.title,
+      id: wisheToUpdate.id,
     }
 
     const updatedWishes = [...filteredWishes, updatedWishe]
@@ -52,6 +55,8 @@ export class UpdateWisheUseCase {
       personId,
       updatedWishes,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

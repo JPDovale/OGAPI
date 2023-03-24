@@ -1,13 +1,13 @@
 import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
-import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
+import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { PersonsRepositoryInMemory } from '@modules/persons/repositories/inMemory/PersonsRepositoryInMemory'
-import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
 import { FirebaseStorageProvider } from '@shared/container/providers/StorageProvider/implementations/FirebaseStorageProvider'
 

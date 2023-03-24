@@ -4,7 +4,7 @@ import 'dayjs/locale/pt-br'
 
 import { injectable } from 'tsyringe'
 
-import { IDateProvider, IIsBefore } from '../IDateProvider'
+import { type IDateProvider, type IIsBefore } from '../IDateProvider'
 
 dayjs.extend(utc)
 dayjs.locale('pt-br')

@@ -1,7 +1,7 @@
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type IImageArchive } from '../schemas/Archive'
 
 export interface IArchive {
-  images?: IAvatar[]
+  images: IImageArchive[]
   archive: {
     id: string
     title: string
@@ -9,7 +9,7 @@ export interface IArchive {
     createdAt: string
     updatedAt: string
   }
-  links?: Array<{
+  links: Array<{
     type: 'id'
     id: string
   }>

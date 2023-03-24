@@ -4,10 +4,11 @@ import {
   injectable,
 } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 
 interface IResponse {
   person: IPersonMongo
@@ -31,19 +32,13 @@ export class DeleteCoupleUseCase {
     const person = await this.personsRepository.findById(personId)
     const couple = await this.personsRepository.findById(coupleId)
 
+    if (!person && !couple) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
-
-    if (!person && !couple) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
 
     const filteredCouples = person.couples.filter(
       (couple) => couple.id !== coupleId,
@@ -60,6 +55,9 @@ export class DeleteCoupleUseCase {
       coupleId,
       filteredCouplesOfCouple,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+    if (!updatedCouple) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, couple: updatedCouple }
   }

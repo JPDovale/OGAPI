@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { IGenereBook } from '@modules/books/infra/mongoose/entities/types/IGenereBook'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type IGenereBook } from '@modules/books/infra/mongoose/entities/types/IGenereBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookMinGenresExpected } from '@shared/errors/books/makeErrorBookMinGenresExpected'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
 
 interface IRequest {
   userId: string
@@ -27,13 +29,7 @@ export class RemoveGenreUseCase {
   async execute({ userId, bookId, genre }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     const { project, user } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -41,14 +37,7 @@ export class RemoveGenreUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    if (book.generes.length <= 1) {
-      throw new AppError({
-        title: 'O livre precisa ter pelo menos um gênero',
-        message:
-          'O livre precisa ter pelo menos um gênero para um controle maior da objetividade da sua escrita',
-        statusCode: 400,
-      })
-    }
+    if (book.generes.length <= 1) throw makeErrorBookMinGenresExpected()
 
     const updatedGenres: IGenereBook[] = book.generes.filter(
       (genere) => genere.name !== genre,
@@ -57,6 +46,8 @@ export class RemoveGenreUseCase {
       id: book.id,
       genres: updatedGenres,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

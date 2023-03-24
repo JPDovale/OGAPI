@@ -1,10 +1,11 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
 
 @injectable()
 export class DeleteAvatarUseCase {
@@ -20,14 +21,9 @@ export class DeleteAvatarUseCase {
   async execute(id: string): Promise<IUserInfosResponse> {
     const user = await this.usersRepository.findById(id)
 
-    if (!user)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!user) throw makeErrorUserNotFound()
 
-    if (user?.avatar?.fileName) {
+    if (user.avatar?.fileName) {
       await this.storageProvider.delete(user.avatar.fileName, 'avatar')
     }
 
@@ -35,7 +31,11 @@ export class DeleteAvatarUseCase {
       fileName: '',
       url: '',
       updatedAt: this.dateProvider.getDate(new Date()),
+      createdAt:
+        user.avatar?.createdAt ?? this.dateProvider.getDate(new Date()),
     })
+
+    if (!updatedUser) throw makeErrorUserNotUpdate()
 
     return {
       age: updatedUser.age,

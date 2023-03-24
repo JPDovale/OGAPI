@@ -1,11 +1,11 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 
 interface IRequest {
   userId: string
@@ -32,13 +32,7 @@ export class DeleteBookUseCase {
   async execute({ bookId, userId }: IRequest): Promise<IResponse> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     const { project, user } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,

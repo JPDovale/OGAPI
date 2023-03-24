@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { IFear } from '@modules/persons/infra/mongoose/entities/Fear'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type IFear } from '@modules/persons/infra/mongoose/entities/Fear'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateFearUseCase {
@@ -24,26 +26,27 @@ export class UpdateFearUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
     const filteredFears = person.fears.filter((fear) => fear.id !== fearId)
     const fearToUpdate = person.fears.find((fear) => fear.id === fearId)
 
+    if (!fearToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Medo',
+      })
+    }
+
     const updatedFear: IFear = {
-      ...fearToUpdate,
-      ...fear,
+      description: fear.description ?? fearToUpdate.description,
+      title: fear.title ?? fearToUpdate.title,
+      id: fearToUpdate.id,
     }
 
     const updatedFears = [...filteredFears, updatedFear]
@@ -52,6 +55,8 @@ export class UpdateFearUseCase {
       personId,
       updatedFears,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

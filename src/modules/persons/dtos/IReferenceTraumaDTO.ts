@@ -1,6 +1,6 @@
 export interface IReferenceTraumaDTO {
   consequences: Array<{
-    title?: string
-    description?: string
+    title: string
+    description: string
   }>
 }

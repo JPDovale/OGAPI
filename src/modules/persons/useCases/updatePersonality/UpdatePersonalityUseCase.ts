@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdatePersonalityDTO } from '@modules/persons/dtos/IUpdatePersonalityDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPersonality } from '@modules/persons/infra/mongoose/entities/Personality'
+import { type IUpdatePersonalityDTO } from '@modules/persons/dtos/IUpdatePersonalityDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonality } from '@modules/persons/infra/mongoose/entities/Personality'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdatePersonalityUseCase {
@@ -24,19 +26,13 @@ export class UpdatePersonalityUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
 
     const filteredPersonality = person.personality.filter(
       (personality) => personality.id !== personalityId,
@@ -45,9 +41,18 @@ export class UpdatePersonalityUseCase {
       (personality) => personality.id === personalityId,
     )
 
+    if (!personalityToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Característica de personalidade',
+      })
+    }
+
     const updatedPersonality: IPersonality = {
-      ...personalityToUpdate,
-      ...personality,
+      consequences:
+        personality.consequences ?? personalityToUpdate.consequences,
+      description: personality.description ?? personalityToUpdate.description,
+      title: personality.title ?? personalityToUpdate.title,
+      id: personalityToUpdate.id,
     }
 
     const updatePersonality = [...filteredPersonality, updatedPersonality]
@@ -56,6 +61,8 @@ export class UpdatePersonalityUseCase {
       personId,
       updatePersonality,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

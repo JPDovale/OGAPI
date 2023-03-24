@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { IDream } from '@modules/persons/infra/mongoose/entities/Dream'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type IDream } from '@modules/persons/infra/mongoose/entities/Dream'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateDreamUseCase {
@@ -24,26 +26,26 @@ export class UpdateDreamUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
     const filteredDreams = person.dreams.filter((dream) => dream.id !== dreamId)
     const dreamToUpdate = person.dreams.find((dream) => dream.id === dreamId)
 
+    if (!dreamToUpdate)
+      throw makeErrorNotFound({
+        whatsNotFound: 'Sonho',
+      })
+
     const updatedDream: IDream = {
-      ...dreamToUpdate,
-      ...dream,
+      description: dream.description ?? dreamToUpdate.description,
+      title: dream.title ?? dreamToUpdate.title,
+      id: dreamToUpdate.id,
     }
 
     const updatedDreams = [...filteredDreams, updatedDream]
@@ -52,6 +54,8 @@ export class UpdateDreamUseCase {
       personId,
       updatedDreams,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

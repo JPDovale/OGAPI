@@ -1,14 +1,16 @@
 import { inject, injectable } from 'tsyringe'
 
 import { Scene } from '@modules/books/infra/mongoose/entities/schemas/Scene'
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
-import { IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { type IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
 
 interface IRequest {
   userId: string
@@ -42,13 +44,7 @@ export class CreateSceneUseCase {
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     const { project, user } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -63,13 +59,8 @@ export class CreateSceneUseCase {
       (capitule) => capitule.id === capituleId,
     )
 
-    if (!capituleToUpdate || indexOfCapituleToUpdate < 0) {
-      throw new AppError({
-        title: 'O capítulo não existe',
-        message: 'Parece que esse capítulo não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!capituleToUpdate || indexOfCapituleToUpdate < 0)
+      throw makeErrorCapituleNotFound()
 
     const newScene = new Scene({
       complete: false,
@@ -92,7 +83,10 @@ export class CreateSceneUseCase {
     const updatedBook = await this.booksRepository.updateCapitules({
       capitules,
       id: bookId,
+      writtenWords: book.writtenWords,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

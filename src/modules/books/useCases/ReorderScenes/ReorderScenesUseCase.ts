@@ -1,12 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
-import { IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { type IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { makeErrorReorderValues } from '@shared/errors/books/makeErrorReorderValues'
 
 interface IRequest {
   userId: string
@@ -36,13 +39,7 @@ export class ReorderScenesUseCase {
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -57,13 +54,8 @@ export class ReorderScenesUseCase {
       (capitule) => capitule.id === capituleId,
     )
 
-    if (!capituleToUpdate || indexOfCapituleToUpdate < 0) {
-      throw new AppError({
-        title: 'O capítulo não existe',
-        message: 'Parece que esse capítulo não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!capituleToUpdate || indexOfCapituleToUpdate < 0)
+      throw makeErrorCapituleNotFound()
 
     const sequenceFromInNumber = Number(sequenceFrom)
     const indexOfSceneFrom = capituleToUpdate.scenes.findIndex(
@@ -75,19 +67,13 @@ export class ReorderScenesUseCase {
     )
     const scenesSequenceLength = capituleToUpdate.scenes.length
 
-    if (
+    const isInvalidSequenceTo =
       sequenceToInNumber > scenesSequenceLength ||
       sequenceFromInNumber > scenesSequenceLength ||
       sequenceFromInNumber <= 0 ||
       sequenceToInNumber <= 0
-    ) {
-      throw new AppError({
-        title: 'Valor recebido não equivalente',
-        message:
-          'Você passou um número maior que o número de cenas... Siga as instruções e forneça um valor até o máximo permitido',
-        statusCode: 404,
-      })
-    }
+
+    if (isInvalidSequenceTo) throw makeErrorReorderValues()
 
     let scenesReordered: IScene[] = []
 
@@ -154,7 +140,10 @@ export class ReorderScenesUseCase {
     const updatedBook = await this.booksRepository.updateCapitules({
       id: book.id,
       capitules,
+      writtenWords: book.writtenWords,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate
 
     return updatedBook
   }
