@@ -1,4 +1,5 @@
 import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type IUpdateBoxDTO } from '@modules/boxes/dtos/IUpdateBoxDTO'
 
 import { type IBox } from '../entities/types/IBox'
 import { type IAddArchive } from './types/IAddArchive'
@@ -28,4 +29,11 @@ export interface IBoxesRepository {
   findNotInternalPerUserId: (userId: string) => Promise<IBox[]>
   numberOfBoxesNotInternalByUserId: (userId: string) => Promise<number>
   findById: (boxId: string) => Promise<IBox | null | undefined>
+  update: ({
+    id,
+    name,
+    description,
+    tags,
+  }: IUpdateBoxDTO) => Promise<IBox | null | undefined>
+  deletePerId: (boxId: string) => Promise<void>
 }

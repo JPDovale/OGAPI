@@ -76,6 +76,10 @@ export class SaveImageUseCase {
 
     const archiveUpdated: IArchive = {
       ...archive,
+      archive: {
+        ...archive.archive,
+        updatedAt: this.dateProvider.getDate(new Date()),
+      },
       images: [...archive.images, newImage],
     }
 

@@ -23,6 +23,8 @@ import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
 import { RateLimiter } from './middlewares/limiter'
 
+import { MulterError } from 'multer'
+
 const app = express()
 const appName = env.APP_NAME
 const appPort = env.APP_PORT
@@ -86,6 +88,14 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     return res.status(400).json({
       errorTitle: 'Informações inválidas',
       errorMessage: 'Verifique as informações fornecidas e tente novamente',
+    })
+  }
+
+  if (err instanceof MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      errorTitle: 'Imagem maior que 2 mb',
+      errorMessage:
+        'O limite de tamanho de imagens aceito é 2 mb nos planos free.',
     })
   }
 

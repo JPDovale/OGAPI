@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
 import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type IUpdateBoxDTO } from '@modules/boxes/dtos/IUpdateBoxDTO'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
 import { BoxMongo } from '../../entities/schemas/Box'
@@ -160,5 +161,32 @@ export class BoxesMongoRepository implements IBoxesRepository {
     const box = await BoxMongo.findOne({ id })
 
     return box
+  }
+
+  async update({
+    id,
+    name,
+    description,
+    tags,
+  }: IUpdateBoxDTO): Promise<IBox | null | undefined> {
+    await BoxMongo.updateOne(
+      {
+        id,
+      },
+      {
+        name,
+        description,
+        tags,
+        updatedAt: this.dateProvider.getDate(new Date()),
+      },
+    )
+
+    const box = await BoxMongo.findOne({ id })
+
+    return box
+  }
+
+  async deletePerId(id: string): Promise<void> {
+    await BoxMongo.deleteOne({ id })
   }
 }

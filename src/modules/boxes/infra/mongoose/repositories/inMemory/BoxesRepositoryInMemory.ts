@@ -1,6 +1,7 @@
 import { v4 as uuidV4 } from 'uuid'
 
 import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type IUpdateBoxDTO } from '@modules/boxes/dtos/IUpdateBoxDTO'
 
 import { BoxMongo } from '../../entities/schemas/Box'
 import { type IBox } from '../../entities/types/IBox'
@@ -160,5 +161,26 @@ export class BoxesRepositoryInMemory implements IBoxesRepository {
     const box = this.boxes.find((box) => box.id === boxId)
 
     return box
+  }
+
+  async update({
+    id,
+    description,
+    name,
+    tags,
+  }: IUpdateBoxDTO): Promise<IBox | null | undefined> {
+    const indexOfBoxToEdit = this.boxes.findIndex((box) => box.id === id)
+
+    this.boxes[indexOfBoxToEdit].name = name
+    this.boxes[indexOfBoxToEdit].description = description
+    this.boxes[indexOfBoxToEdit].tags = tags
+
+    const updatedBox = this.boxes.find((box) => box.id === id)
+
+    return updatedBox
+  }
+
+  async deletePerId(id: string): Promise<void> {
+    this.boxes = this.boxes.filter((box) => box.id !== id)
   }
 }
