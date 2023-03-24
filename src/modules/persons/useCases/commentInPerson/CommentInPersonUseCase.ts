@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
+import { type ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import {
   Comment,
-  IComment,
+  type IComment,
 } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 
 interface IRequest {
   userId: string
@@ -33,6 +35,8 @@ export class CommentInPersonUseCase {
 
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     const { user } = await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
@@ -52,6 +56,9 @@ export class CommentInPersonUseCase {
       personId,
       comments,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+
     return updatedPerson
   }
 }

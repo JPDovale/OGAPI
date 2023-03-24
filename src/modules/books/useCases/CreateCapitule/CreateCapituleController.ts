@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -40,7 +40,11 @@ export class CreateCapituleController {
       bookId,
       name,
       objective,
-      structure,
+      structure: {
+        act1: structure?.act1,
+        act2: structure?.act2,
+        act3: structure?.act3,
+      },
       userId: id,
     })
 

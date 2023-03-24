@@ -1,7 +1,8 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { makeErrorUserNotCreated } from '@shared/errors/users/makeErrorUserNotCreated'
 
 interface IRequest {
   name: string
@@ -26,12 +27,14 @@ export class CreateUserPerAdminUseCase {
       name,
       email: ' ',
       password: ' ',
-      age: age || 'uncharacterized',
-      sex: sex || 'uncharacterized',
-      username: username || name,
+      age: age ?? 'uncharacterized',
+      sex: sex ?? 'uncharacterized',
+      username: username ?? name,
       isInitialized: true,
       code,
     })
+
+    if (!newUser) throw makeErrorUserNotCreated()
 
     const response: IUserInfosResponse = {
       age: newUser.age,

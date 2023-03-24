@@ -1,11 +1,17 @@
 import cors from 'cors'
-import express, { NextFunction, Request, Response } from 'express'
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from 'express'
 import morgan from 'morgan'
 import { ZodError } from 'zod'
 
 import { env } from '@env/index'
 import * as Sentry from '@sentry/node'
+// eslint-disable-next-line import-helpers/order-imports
 import * as Tracing from '@sentry/tracing'
+
 import 'express-async-errors'
 import 'reflect-metadata'
 
@@ -16,6 +22,8 @@ import { router } from '@shared/infra/http/routes'
 import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
 import { RateLimiter } from './middlewares/limiter'
+
+import { MulterError } from 'multer'
 
 const app = express()
 const appName = env.APP_NAME
@@ -77,10 +85,17 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ZodError) {
     if (isDev) console.log(err)
 
-    return res.status(401).json({
+    return res.status(400).json({
       errorTitle: 'Informações inválidas',
+      errorMessage: 'Verifique as informações fornecidas e tente novamente',
+    })
+  }
+
+  if (err instanceof MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      errorTitle: 'Imagem maior que 2 mb',
       errorMessage:
-        'As informações fornecidas não são aceitas pela aplicação. Rastreamos o erro no seu dispositivo e resolveremos em breve',
+        'O limite de tamanho de imagens aceito é 2 mb nos planos free.',
     })
   }
 
@@ -89,7 +104,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
     res.status(500).json({
       errorTitle: 'Internal error',
-      errorMessage: 'Try again later.',
+      errorMessage: 'Internal error',
     })
   }
 })

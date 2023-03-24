@@ -1,9 +1,9 @@
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 
-import { IControllerInternalBoxes } from './types/IControllerInternalBoxes'
-import { ILinkObject } from './types/ILinkObject'
-import { ILinkObjectResponse } from './types/ILinkObjectResponse'
-import { IUnlinkObject } from './types/IUnlinkObject'
+import { type IControllerInternalBoxes } from './types/IControllerInternalBoxes'
+import { type ILinkObject } from './types/ILinkObject'
+import { type ILinkObjectResponse } from './types/ILinkObjectResponse'
+import { type IUnlinkObject } from './types/IUnlinkObject'
 
 export interface IBoxesControllers {
   controllerInternalBoxes: ({

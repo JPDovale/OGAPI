@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { Trauma } from '@modules/persons/infra/mongoose/entities/Trauma'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -39,34 +41,25 @@ export class CreateTraumaUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person)
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
+    if (!person) throw makeErrorPersonNotFound()
 
     const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId: projectId || person.defaultProject,
+      projectId: projectId ?? person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
     const traumaExistesToThiPerson = person.traumas.find(
       (t) => t.title === trauma.title,
     )
-    if (traumaExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe um trauma com esse nome.',
-        message:
-          'Já existe um trauma com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+    if (traumaExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'um trauma',
       })
-    }
 
     const newTrauma = new Trauma({
       title: trauma.title,
-      consequences: trauma.consequences || [],
+      consequences: trauma.consequences ?? [],
       description: trauma.description,
     })
 
@@ -89,6 +82,8 @@ export class CreateTraumaUseCase {
       personId,
       updateTraumas,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, box }
   }

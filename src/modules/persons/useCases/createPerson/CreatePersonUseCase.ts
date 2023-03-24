@@ -1,15 +1,16 @@
 import { inject, injectable } from 'tsyringe'
 
-import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
-import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotCreated } from '@shared/errors/persons/makeErrorPersonNotCreated'
 
 interface IRequest {
   userId: string
@@ -54,6 +55,8 @@ export class CreatePersonUseCase {
       newPerson,
     )
 
+    if (!person) throw makeErrorPersonNotCreated()
+
     const boxExistes = await this.boxesRepository.findByNameAndProjectId({
       name: 'persons',
       projectId,
@@ -76,6 +79,11 @@ export class CreatePersonUseCase {
       }
 
       const createdBox = await this.boxesRepository.create(newBox)
+
+      if (!createdBox) {
+        await this.personsRepository.deleteById(person.id)
+        throw makeErrorPersonNotCreated()
+      }
 
       const archivePersons = new Archive({
         archive: {

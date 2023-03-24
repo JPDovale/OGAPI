@@ -1,12 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
+import { makeErrorImageNotFound } from '@shared/errors/useFull/makeErrorImageNotFound'
 
 @injectable()
 export class DeleteImageUseCase {
@@ -30,23 +31,20 @@ export class DeleteImageUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    if (!project?.image.fileName) {
-      throw new AppError({
-        title: 'Image não encontrada.',
-        message: 'Não existe uma imagem para esse projeto.',
-        statusCode: 404,
-      })
-    }
+    if (!project?.image?.fileName) throw makeErrorImageNotFound()
 
     const updatedProject = await this.projectsRepository.updateImage(
       {
         fileName: '',
         url: '',
         updatedAt: this.dateProvider.getDate(new Date()),
-        createdAt: project.image.createdAt,
+        createdAt:
+          project.image.createdAt || this.dateProvider.getDate(new Date()),
       },
       projectId,
     )
+
+    if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     await this.storageProvider.delete(project.image.fileName, 'projects/images')
 

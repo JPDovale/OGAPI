@@ -1,23 +1,23 @@
 import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IComment } from '@modules/projects/infra/mongoose/entities/Comment'
+import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
+import { type IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { type IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
-import { IAppearance } from '../entities/Appearance'
-import { ICouple } from '../entities/Couple'
-import { IDream } from '../entities/Dream'
-import { IFear } from '../entities/Fear'
-import { Objective } from '../entities/Objective'
-import { IPersonMongo, PersonMongo } from '../entities/Person'
-import { IPersonality } from '../entities/Personality'
-import { IPower } from '../entities/Power'
-import { ITrauma } from '../entities/Trauma'
-import { IValue } from '../entities/Value'
-import { IWishe } from '../entities/Wishe'
+import { type IAppearance } from '../entities/Appearance'
+import { type ICouple } from '../entities/Couple'
+import { type IDream } from '../entities/Dream'
+import { type IFear } from '../entities/Fear'
+import { type Objective } from '../entities/Objective'
+import { type IPersonMongo, PersonMongo } from '../entities/Person'
+import { type IPersonality } from '../entities/Personality'
+import { type IPower } from '../entities/Power'
+import { type ITrauma } from '../entities/Trauma'
+import { type IValue } from '../entities/Value'
+import { type IWishe } from '../entities/Wishe'
 
 @injectable()
 export class PersonsMongoRepository implements IPersonsRepository {
@@ -29,7 +29,7 @@ export class PersonsMongoRepository implements IPersonsRepository {
     userId: string,
     projectId: string,
     person: ICreatePersonDTO,
-  ): Promise<IPersonMongo> {
+  ): Promise<IPersonMongo | null | undefined> {
     const { age, history, lastName, name } = person
 
     const newPerson = new PersonMongo({
@@ -45,10 +45,11 @@ export class PersonsMongoRepository implements IPersonsRepository {
     })
 
     await newPerson.save()
+
     return newPerson
   }
 
-  async findById(id: string): Promise<IPersonMongo> {
+  async findById(id: string): Promise<IPersonMongo | null | undefined> {
     const person = await PersonMongo.findOne({ id })
     return person
   }
@@ -56,7 +57,7 @@ export class PersonsMongoRepository implements IPersonsRepository {
   async updateObjectives(
     id: string,
     objectives: Objective[],
-  ): Promise<IPersonMongo> {
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { objectives, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -73,7 +74,7 @@ export class PersonsMongoRepository implements IPersonsRepository {
   async updatePerson(
     id: string,
     person: ICreatePersonDTO,
-  ): Promise<IPersonMongo> {
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       {
@@ -97,7 +98,7 @@ export class PersonsMongoRepository implements IPersonsRepository {
   async updatePersonality(
     id: string,
     personality: IPersonality[],
-  ): Promise<IPersonMongo> {
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { personality, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -106,7 +107,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateValues(id: string, values: IValue[]): Promise<IPersonMongo> {
+  async updateValues(
+    id: string,
+    values: IValue[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { values, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -115,7 +119,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateDreams(id: string, dreams: IDream[]): Promise<IPersonMongo> {
+  async updateDreams(
+    id: string,
+    dreams: IDream[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { dreams, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -124,7 +131,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateFears(id: string, fears: IFear[]): Promise<IPersonMongo> {
+  async updateFears(
+    id: string,
+    fears: IFear[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { fears, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -133,7 +143,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateWishes(id: string, wishes: IWishe[]): Promise<IPersonMongo> {
+  async updateWishes(
+    id: string,
+    wishes: IWishe[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { wishes, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -142,7 +155,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateImage(image: IAvatar, id: string): Promise<IPersonMongo> {
+  async updateImage(
+    image: IAvatar,
+    id: string,
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { image, updateAt: this.dateProvider.getDate(new Date()) },
@@ -154,7 +170,7 @@ export class PersonsMongoRepository implements IPersonsRepository {
   async updateCommentsPerson(
     id: string,
     comments: IComment[],
-  ): Promise<IPersonMongo> {
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { comments, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -173,7 +189,7 @@ export class PersonsMongoRepository implements IPersonsRepository {
   async updateAppearance(
     id: string,
     appearance: IAppearance[],
-  ): Promise<IPersonMongo> {
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { appearance, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -182,7 +198,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateTraumas(id: string, traumas: ITrauma[]): Promise<IPersonMongo> {
+  async updateTraumas(
+    id: string,
+    traumas: ITrauma[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { traumas, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -191,7 +210,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updatePowers(id: string, powers: IPower[]): Promise<IPersonMongo> {
+  async updatePowers(
+    id: string,
+    powers: IPower[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { powers, id, updateAt: this.dateProvider.getDate(new Date()) },
@@ -200,7 +222,10 @@ export class PersonsMongoRepository implements IPersonsRepository {
     return updatedPerson
   }
 
-  async updateCouples(id: string, couples: ICouple[]): Promise<IPersonMongo> {
+  async updateCouples(
+    id: string,
+    couples: ICouple[],
+  ): Promise<IPersonMongo | null | undefined> {
     await PersonMongo.findOneAndUpdate(
       { id },
       { couples, id, updateAt: this.dateProvider.getDate(new Date()) },

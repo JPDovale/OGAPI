@@ -1,10 +1,12 @@
 import { hashSync } from 'bcryptjs'
 import { inject, injectable } from 'tsyringe'
 
-import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
+import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserAlreadyExistes } from '@shared/errors/users/makeErrorUserAlreadyExistes'
+import { makeErrorUserNotCreated } from '@shared/errors/users/makeErrorUserNotCreated'
 
 interface IRequest {
   code: string
@@ -31,22 +33,16 @@ export class GetUserPerCodeUseCase {
 
     const userAlreadyExiste = await this.usersRepository.findByEmail(email)
 
-    if (userAlreadyExiste) {
-      throw new AppError({
-        title: 'O email está sendo usado por outro usuário.',
-        message:
-          'Parece que alguém já está usando esse email. Por favor tente outro.',
-      })
-    }
+    if (userAlreadyExiste) throw makeErrorUserAlreadyExistes()
 
     const passwordHash = hashSync(password, 8)
 
     const infosToSave: ICreateUserDTO = {
       email,
       password: passwordHash,
-      age: age || 'uncharacterized',
-      sex: sex || 'uncharacterized',
-      username: username || name,
+      age: age ?? 'uncharacterized',
+      sex: sex ?? 'uncharacterized',
+      username: username ?? name,
       name,
       code: ' ',
       isInitialized: true,
@@ -56,6 +52,8 @@ export class GetUserPerCodeUseCase {
       getUserPerCode.id,
       infosToSave,
     )
+
+    if (!user) throw makeErrorUserNotCreated()
 
     return user
   }

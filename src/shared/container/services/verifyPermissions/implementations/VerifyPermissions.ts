@@ -3,10 +3,11 @@ import { inject, injectable } from 'tsyringe'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
-import { IVerifyPermissionsService } from '../IVerifyPermissions'
-import { IRequestVerify } from '../types/IRequestVerify'
-import { IResponseVerify } from '../types/IResponseVerify'
+import { type IVerifyPermissionsService } from '../IVerifyPermissions'
+import { type IRequestVerify } from '../types/IRequestVerify'
+import { type IResponseVerify } from '../types/IResponseVerify'
 
 @injectable()
 export class VerifyPermissions implements IVerifyPermissionsService {
@@ -24,12 +25,7 @@ export class VerifyPermissions implements IVerifyPermissionsService {
   }: IRequestVerify): Promise<IResponseVerify> {
     const user = await this.usersRepository.findById(userId)
 
-    if (!user)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!user) throw makeErrorUserNotFound()
 
     const project = await this.projectsRepository.findById(projectId)
 

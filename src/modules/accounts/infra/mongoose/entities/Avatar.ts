@@ -7,6 +7,13 @@ const dateProvider = container.resolve(DayJsDateProvider)
 export interface IAvatar {
   fileName: string
   url: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface IAvatarConstructor {
+  fileName: string
+  url: string
   createdAt?: string
   updatedAt?: string
 }
@@ -17,7 +24,7 @@ export class Avatar {
   createdAt: string
   updatedAt: string
 
-  constructor(newImage: IAvatar) {
+  constructor(newImage: IAvatarConstructor) {
     this.fileName = newImage.fileName
     this.url = newImage.url
     this.createdAt = dateProvider.getDate(new Date())

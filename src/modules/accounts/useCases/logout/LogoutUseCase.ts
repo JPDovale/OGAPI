@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 @injectable()
 export class LogoutUseCase {
@@ -16,13 +16,7 @@ export class LogoutUseCase {
   async execute(id: string): Promise<void> {
     const user = await this.usersRepository.findById(id)
 
-    if (!user) {
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!user) throw makeErrorUserNotFound()
 
     await this.refreshTokenRepository.deletePerUserId(id)
   }

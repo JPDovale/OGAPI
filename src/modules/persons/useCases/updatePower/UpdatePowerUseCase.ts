@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPower } from '@modules/persons/infra/mongoose/entities/Power'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPower } from '@modules/persons/infra/mongoose/entities/Power'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdatePowerUseCase {
@@ -24,26 +26,26 @@ export class UpdatePowerUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
     const filteredPowers = person.powers.filter((power) => power.id !== powerId)
     const powerToUpdate = person.powers.find((power) => power.id === powerId)
 
+    if (!powerToUpdate)
+      throw makeErrorNotFound({
+        whatsNotFound: 'Poder',
+      })
+
     const updatedPower: IPower = {
-      ...powerToUpdate,
-      ...power,
+      id: powerToUpdate.id,
+      title: power.title ?? powerToUpdate.title,
+      description: power.description ?? powerToUpdate.description,
     }
 
     const updatedPowers = [...filteredPowers, updatedPower]
@@ -52,6 +54,8 @@ export class UpdatePowerUseCase {
       personId,
       updatedPowers,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

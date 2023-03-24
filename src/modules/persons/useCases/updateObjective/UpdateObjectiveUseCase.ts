@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateObjectiveDTO } from '@modules/persons/dtos/IUpdateObjectiveDTO'
-import { IObjective } from '@modules/persons/infra/mongoose/entities/Objective'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateObjectiveDTO } from '@modules/persons/dtos/IUpdateObjectiveDTO'
+import { type IObjective } from '@modules/persons/infra/mongoose/entities/Objective'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateObjectiveUseCase {
@@ -24,19 +26,13 @@ export class UpdateObjectiveUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
 
     const filteredObjectives = person.objectives.filter(
       (objective) => objective.id !== objectiveId,
@@ -45,9 +41,19 @@ export class UpdateObjectiveUseCase {
       (objective) => objective.id === objectiveId,
     )
 
+    if (!objectiveToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Objetivo',
+      })
+    }
+
     const updatedObjetive: IObjective = {
-      ...objectiveToUpdate,
-      ...objective,
+      avoiders: objective.avoiders ?? objectiveToUpdate.avoiders,
+      supporting: objective.supporting ?? objectiveToUpdate.supporting,
+      title: objective.title ?? objectiveToUpdate.title,
+      description: objective.description ?? objectiveToUpdate.description,
+      objectified: objective.objectified ?? objectiveToUpdate.objectified,
+      id: objectiveToUpdate.id,
     }
 
     const updatedObjetives = [...filteredObjectives, updatedObjetive]
@@ -56,6 +62,8 @@ export class UpdateObjectiveUseCase {
       personId,
       updatedObjetives,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

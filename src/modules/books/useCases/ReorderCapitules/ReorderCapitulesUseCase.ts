@@ -1,11 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorReorderValues } from '@shared/errors/books/makeErrorReorderValues'
 
 interface IRequest {
   userId: string
@@ -21,8 +22,6 @@ export class ReorderCapitulesUseCase {
     private readonly booksRepository: IBooksRepository,
     @inject('VerifyPermissions')
     private readonly verifyPermissions: IVerifyPermissionsService,
-    @inject('DateProvider')
-    private readonly dateProvider: IDateProvider,
   ) {}
 
   async execute({
@@ -33,13 +32,7 @@ export class ReorderCapitulesUseCase {
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -57,19 +50,13 @@ export class ReorderCapitulesUseCase {
     )
     const capitulesSequenceLength = book.capitules.length
 
-    if (
+    const isInvalidSequenceTo =
       sequenceToInNumber > capitulesSequenceLength ||
       sequenceFromInNumber > capitulesSequenceLength ||
       sequenceFromInNumber <= 0 ||
       sequenceToInNumber <= 0
-    ) {
-      throw new AppError({
-        title: 'Valor recebido não equivalente',
-        message:
-          'Você passou um número maior que o número de capítulos... Siga as instruções e forneça um valor até o máximo permitido',
-        statusCode: 404,
-      })
-    }
+
+    if (isInvalidSequenceTo) throw makeErrorReorderValues()
 
     let capitulesReordered: ICapitule[] = []
 
@@ -124,7 +111,10 @@ export class ReorderCapitulesUseCase {
     const updatedBook = await this.booksRepository.updateCapitules({
       id: book.id,
       capitules: capitulesReordered,
+      writtenWords: book.writtenWords,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     return updatedBook
   }

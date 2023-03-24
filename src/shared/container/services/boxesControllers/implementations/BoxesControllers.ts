@@ -1,18 +1,19 @@
 import { inject, injectable } from 'tsyringe'
 
-import { ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
+import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
-import { IArchive } from '@modules/boxes/infra/mongoose/entities/types/IArchive'
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IArchive } from '@modules/boxes/infra/mongoose/entities/types/IArchive'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { AppError } from '@shared/errors/AppError'
+import { makeInternalError } from '@shared/errors/useFull/makeInternalError'
 
-import { IBoxesControllers } from '../IBoxesControllers'
-import { IControllerInternalBoxes } from '../types/IControllerInternalBoxes'
-import { ILinkObject } from '../types/ILinkObject'
-import { ILinkObjectResponse } from '../types/ILinkObjectResponse'
-import { IUnlinkObject } from '../types/IUnlinkObject'
+import { type IBoxesControllers } from '../IBoxesControllers'
+import { type IControllerInternalBoxes } from '../types/IControllerInternalBoxes'
+import { type ILinkObject } from '../types/ILinkObject'
+import { type ILinkObjectResponse } from '../types/ILinkObjectResponse'
+import { type IUnlinkObject } from '../types/IUnlinkObject'
 
 @injectable()
 export class BoxesControllers implements IBoxesControllers {
@@ -59,10 +60,15 @@ export class BoxesControllers implements IBoxesControllers {
       boxExistes = createdBox
     }
 
+    if (!boxExistes) throw makeInternalError()
+    if (!archive) throw makeInternalError()
+
     if (!withoutArchive) {
       const archiveExisteInArchives = boxExistes.archives.find(
         (a) => a.archive.title === archive.title,
       )
+
+      if (!error) throw makeInternalError()
 
       if (archiveExisteInArchives) {
         throw new AppError({
@@ -94,6 +100,8 @@ export class BoxesControllers implements IBoxesControllers {
       id: boxExistes.id,
     })
 
+    if (!updatedBox) throw makeInternalError()
+
     return updatedBox
   }
 
@@ -109,21 +117,13 @@ export class BoxesControllers implements IBoxesControllers {
       projectId,
     })
 
-    if (!boxExistes) {
-      throw new AppError({
-        title: 'Internal error',
-        message:
-          'Tivemos problemas ao processar as informações das boxes internas do projeto...',
-        statusCode: 500,
-      })
-    }
+    if (!boxExistes) throw makeInternalError()
 
     let archivesFiltered: IArchive[] = []
-
     let archiveToUpdate: IArchive | undefined
 
     if (!withoutArchive) {
-      const archiveToUpdateFind: IArchive = boxExistes.archives.find(
+      const archiveToUpdateFind = boxExistes.archives.find(
         (file) => file.archive.id === archiveId,
       )
 
@@ -152,6 +152,8 @@ export class BoxesControllers implements IBoxesControllers {
       id: boxExistes.id,
     })
 
+    if (!box) throw makeInternalError()
+
     return box
   }
 
@@ -167,21 +169,13 @@ export class BoxesControllers implements IBoxesControllers {
       projectId,
     })
 
-    if (!boxExistes) {
-      throw new AppError({
-        title: 'Internal error',
-        message:
-          'Tivemos problemas ao processar as informações das boxes internas do projeto...',
-        statusCode: 500,
-      })
-    }
+    if (!boxExistes) throw makeInternalError()
 
     let archivesFiltered: IArchive[] = []
-
     let archiveToUpdate: IArchive | undefined
 
     if (!withoutArchive) {
-      const archiveToUpdateFind: IArchive = boxExistes.archives.find(
+      const archiveToUpdateFind = boxExistes.archives.find(
         (file) => file.archive.id === archiveId,
       )
 
@@ -225,6 +219,8 @@ export class BoxesControllers implements IBoxesControllers {
       archives: updatedArchives,
       id: boxExistes.id,
     })
+
+    if (!box) throw makeInternalError()
 
     return { box, archive: archiveToUpdate }
   }

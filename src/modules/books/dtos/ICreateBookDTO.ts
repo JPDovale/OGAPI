@@ -1,3 +1,5 @@
+import { type ICapitule } from '../infra/mongoose/entities/types/ICapitule'
+
 export interface ICreateBookDTO {
   title: string
   subtitle?: string
@@ -12,4 +14,5 @@ export interface ICreateBookDTO {
   isbn?: string
   words?: string
   writtenWords?: string
+  capitules?: ICapitule[]
 }

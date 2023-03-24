@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateGenericObjectWithConsequencesDTO } from '@modules/persons/dtos/ICreateGenericObjectWithConsequencesDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { Personality } from '@modules/persons/infra/mongoose/entities/Personality'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -40,34 +42,25 @@ export class CreatePersonalityUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person)
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
+    if (!person) throw makeErrorPersonNotFound()
 
     const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId: projectId || person.defaultProject,
+      projectId: projectId ?? person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
     const personalityExistesToThiPerson = person.personality.find(
       (p) => p.title === personality.title,
     )
-    if (personalityExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe uma característica de personalidade com esse nome.',
-        message:
-          'Já existe uma característica de personalidade com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+    if (personalityExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'uma característica de personalidade',
       })
-    }
 
     const newPersonality = new Personality({
       title: personality.title,
-      consequences: personality.consequences || [],
+      consequences: personality.consequences ?? [],
       description: personality.description,
     })
 
@@ -91,6 +84,8 @@ export class CreatePersonalityUseCase {
       personId,
       updatePersonality,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, box }
   }

@@ -1,12 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
-import { IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { type IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { makeErrorSceneNotFound } from '@shared/errors/books/makeErrorSceneNotFound'
 
 interface IRequest {
   userId: string
@@ -36,13 +39,7 @@ export class SetCompleteSceneUseCase {
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -57,13 +54,8 @@ export class SetCompleteSceneUseCase {
       (capitule) => capitule.id === capituleId,
     )
 
-    if (!capituleToUpdate || indexOfCapituleToUpdate < 0) {
-      throw new AppError({
-        title: 'O capítulo não existe',
-        message: 'Parece que esse capítulo não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!capituleToUpdate || indexOfCapituleToUpdate < 0)
+      throw makeErrorCapituleNotFound()
 
     const sceneToUpdate = capituleToUpdate.scenes.find(
       (scene) => scene.id === sceneId,
@@ -72,13 +64,8 @@ export class SetCompleteSceneUseCase {
       (scene) => scene.id === sceneId,
     )
 
-    if (!sceneToUpdate || indexOfSceneToUpdate < 0) {
-      throw new AppError({
-        title: 'A cena não existe',
-        message: 'Parece que essa cena não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!sceneToUpdate || indexOfSceneToUpdate < 0)
+      throw makeErrorSceneNotFound()
 
     const scene: IScene = {
       ...sceneToUpdate,
@@ -90,7 +77,7 @@ export class SetCompleteSceneUseCase {
     scenes[indexOfSceneToUpdate] = scene
 
     const numberWrittenWordsToAdd = Number(writtenWords)
-    const numberOfWordsInCapitule = Number(capituleToUpdate.words || '0')
+    const numberOfWordsInCapitule = Number(capituleToUpdate.words ?? '0')
 
     const newNumberOfWordsInCapitule = `${
       numberOfWordsInCapitule + numberWrittenWordsToAdd
@@ -124,6 +111,8 @@ export class SetCompleteSceneUseCase {
       capitules,
       writtenWords: `${wordsInBook}`,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     return updatedBook
   }

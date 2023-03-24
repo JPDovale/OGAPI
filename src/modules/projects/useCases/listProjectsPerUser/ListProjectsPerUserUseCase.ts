@@ -1,15 +1,16 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IResponse {
   projects: IProjectMongo[]
@@ -35,6 +36,9 @@ export class ListProjectsPerUserUseCase {
 
   async execute(userId: string): Promise<IResponse> {
     const user = await this.usersRepository.findById(userId)
+
+    if (!user) throw makeErrorUserNotFound()
+
     const projectsThisUser = user.admin
       ? await this.projectsRepository.listAll()
       : await this.projectsRepository.listPerUser(userId)
@@ -45,13 +49,14 @@ export class ListProjectsPerUserUseCase {
 
     if (projectsThisUser[0]) {
       const projectsIds: string[] = []
-      const userIds = []
+      const userIds: string[] = []
 
       projectsThisUser.forEach((project) => {
         projectsIds.push(project.id)
 
         project.users.map((user) => {
           if (user.id === userId) return ''
+
           return userIds.push(user.id)
         })
       })
@@ -84,18 +89,20 @@ export class ListProjectsPerUserUseCase {
       const persons = await this.personRepository.findByProjectIds(projectsIds)
       const books = await this.booksRepository.findByProjectIds(projectsIds)
       const boxes = await this.boxesRepository.findPerProjectIds(projectsIds)
+      const boxesNotInternal =
+        await this.boxesRepository.findNotInternalPerUserId(user.id)
 
       personsInfos = persons
       booksInfos = books
-      boxesInfos = boxes
+      boxesInfos = [...boxes, ...boxesNotInternal]
     }
 
     const response = {
-      projects: projectsThisUser || [],
-      users: usersInfos || [],
-      persons: personsInfos || [],
-      books: booksInfos || [],
-      boxes: boxesInfos,
+      projects: projectsThisUser ?? [],
+      users: usersInfos ?? [],
+      persons: personsInfos ?? [],
+      books: booksInfos ?? [],
+      boxes: boxesInfos ?? [],
     }
 
     return response

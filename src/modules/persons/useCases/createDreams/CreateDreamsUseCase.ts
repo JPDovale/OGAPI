@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
 import { Dream } from '@modules/persons/infra/mongoose/entities/Dream'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -40,17 +42,11 @@ export class CreateDreamUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person) throw makeErrorPersonNotFound()
 
     const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId: projectId || person.defaultProject,
+      projectId: projectId ?? person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
@@ -58,14 +54,10 @@ export class CreateDreamUseCase {
       (d) => d.title === dream.title,
     )
 
-    if (dreamExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe um sonho com esse nome.',
-        message:
-          'Já existe um sonho com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+    if (dreamExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'um sonho',
       })
-    }
 
     const newDream = new Dream({
       description: dream.description,
@@ -91,6 +83,8 @@ export class CreateDreamUseCase {
       personId,
       updatedDreams,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, box }
   }

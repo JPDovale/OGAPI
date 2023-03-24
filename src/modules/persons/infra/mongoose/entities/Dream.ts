@@ -1,9 +1,15 @@
 import { v4 as uuidV4 } from 'uuid'
 
 export interface IDream {
-  id?: string
+  id: string
   title: string
   description: string
+}
+
+interface IDreamConstructor {
+  id?: string
+  title?: string
+  description?: string
 }
 
 export class Dream {
@@ -11,9 +17,9 @@ export class Dream {
   title: string
   description: string
 
-  constructor(dream: IDream) {
-    this.id = uuidV4()
-    this.title = dream.title
-    this.description = dream.description
+  constructor(dream: IDreamConstructor) {
+    this.id = dream.id ?? uuidV4()
+    this.title = dream.title ?? ''
+    this.description = dream.description ?? ''
   }
 }

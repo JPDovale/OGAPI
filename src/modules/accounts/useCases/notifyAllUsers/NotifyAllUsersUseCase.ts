@@ -1,11 +1,9 @@
-import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
-import { AppError } from '@shared/errors/AppError'
-dotenv.config()
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
   title: string
@@ -26,13 +24,7 @@ export class NotifyAllUsersUseCase {
   async execute({ content, title }: IRequest): Promise<void> {
     const user = await this.usersRepository.findByEmail('ognare.app@gmail.com')
 
-    if (!user) {
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!user) throw makeErrorUserNotFound()
 
     await this.notifyUsersProvider.notifyAll({ sendBy: user, content, title })
     await this.cacheProvider.refresh()

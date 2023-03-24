@@ -1,12 +1,12 @@
 import dotenv from 'dotenv'
 import fs from 'fs'
 import handlebars from 'handlebars'
-import nodemailer, { Transporter } from 'nodemailer'
+import nodemailer, { type Transporter } from 'nodemailer'
 import { injectable } from 'tsyringe'
 
 import { AppError } from '@shared/errors/AppError'
 
-import { IMailProvider, ISendMail } from '../IMailProvider'
+import { type IMailProvider, type ISendMail } from '../IMailProvider'
 dotenv.config()
 
 @injectable()
