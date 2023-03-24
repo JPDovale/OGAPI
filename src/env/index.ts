@@ -12,9 +12,9 @@ const envSchema = z.object({
     .string()
     .url()
     .default('http://localhost:3000/user/password/reset?token='),
-  FRONT_URL: z.string(),
+  FRONT_URL: z.string().url().default('http://localhost:3000/'),
 
-  APP_NAME: z.string(),
+  APP_NAME: z.string().default('OG API'),
   APP_PORT: z.coerce.number().default(3030),
 
   DATABASE_MONGO_URL: z.string().url(),

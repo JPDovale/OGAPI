@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { type ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { RedisCacheProvider } from '@shared/container/providers/CacheProvider/implementations/RedisCacheProvider'
-import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { type IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { AppError } from '@shared/errors/AppError'
 

@@ -1,4 +1,4 @@
-import { IUpdateBookDTO } from '@modules/books/dtos/IUpdateBookDTO'
+import { type IUpdateBookDTO } from '@modules/books/dtos/IUpdateBookDTO'
 
 export interface IUpdateBook {
   updatedInfos: IUpdateBookDTO

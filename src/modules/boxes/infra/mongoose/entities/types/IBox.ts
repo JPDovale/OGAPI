@@ -1,11 +1,13 @@
-import { IArchive } from './IArchive'
+import { type IArchive } from './IArchive'
 
 export interface IBox {
   id: string
   name: string
-  projectId?: string
+  description: string
+  projectId: string
+  userId: string
   internal: boolean
-  type?: string
+  type: string
   tags: Array<{
     name: string
   }>

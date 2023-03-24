@@ -1,11 +1,14 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { IGenereBook } from '@modules/books/infra/mongoose/entities/types/IGenereBook'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type IGenereBook } from '@modules/books/infra/mongoose/entities/types/IGenereBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookGenreAlreadyExistes } from '@shared/errors/books/makeErrorBookGenreAlreadyExistes'
+import { makeErrorBookMaxGenresAdded } from '@shared/errors/books/makeErrorBookMaxGenresAdded'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
 
 interface IRequest {
   userId: string
@@ -27,13 +30,7 @@ export class AddGenreUseCase {
   async execute({ userId, bookId, genre }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     const { project, user } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -41,25 +38,12 @@ export class AddGenreUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    if (book.generes.length >= 6) {
-      throw new AppError({
-        title: 'Adicione apenas 6 gêneros',
-        message:
-          'Adicione apenas 6 gêneros para um controle maior da objetividade da sua escrita',
-        statusCode: 400,
-      })
-    }
+    if (book.generes.length >= 6) throw makeErrorBookMaxGenresAdded()
 
     const genreAlreadyExists = book.generes.find(
       (g) => g.name.toLowerCase() === genre.toLowerCase(),
     )
-    if (genreAlreadyExists) {
-      throw new AppError({
-        title: 'Esse gênero já existe',
-        message: 'Esse gênero já existe nesse livro, tente adicionar outro',
-        statusCode: 400,
-      })
-    }
+    if (genreAlreadyExists) throw makeErrorBookGenreAlreadyExistes()
 
     const genreToAdd: IGenereBook = {
       name: genre,
@@ -70,6 +54,8 @@ export class AddGenreUseCase {
       id: book.id,
       genres: updatedGenres,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

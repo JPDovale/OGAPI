@@ -1,12 +1,13 @@
 import mongoose from 'mongoose'
 
-import { IArchive } from '../types/IArchive'
+import { type IArchive } from '../types/IArchive'
 
 const BoxSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   projectId: { type: String, default: '' },
   name: { type: String, required: true },
+  description: { type: String, default: '' },
   internal: { type: Boolean, required: true },
   type: { type: String, default: '' },
   tags: { type: Array<{ name: string }>, default: [] },

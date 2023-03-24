@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
 import { container } from 'tsyringe'
 
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 
-import { IPlotProject } from './Plot'
+import { type IPlotProject } from './Plot'
 
 const dateProvider = container.resolve(DayJsDateProvider)
 
@@ -37,16 +37,16 @@ export interface ISharedWhitUsers {
 }
 
 export interface IProjectMongo {
-  id?: string
+  id: string
   name: string
   createdPerUser: string
   users: ISharedWhitUsers[]
   private: boolean
   password?: string
   type: string
-  createAt?: string
-  updateAt?: string
-  image?: IAvatar
+  createAt: string
+  updateAt: string
+  image: IAvatar
   plot: IPlotProject
 }
 

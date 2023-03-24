@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { ICreateGenericObjectWithExceptionsDTO } from '@modules/persons/dtos/ICreateGenericObjectWithExceptionsDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateGenericObjectWithExceptionsDTO } from '@modules/persons/dtos/ICreateGenericObjectWithExceptionsDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { Value } from '@modules/persons/infra/mongoose/entities/Value'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -40,36 +42,26 @@ export class CreateValueUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person) throw makeErrorPersonNotFound()
 
     const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId: projectId || person.defaultProject,
+      projectId: projectId ?? person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
     const valueExistesToThiPerson = person.values.find(
       (t) => t.title === value.title,
     )
-    if (valueExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe um valor com esse nome.',
-        message:
-          'Já existe um valor com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+    if (valueExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'um valor',
       })
-    }
 
     const newValue = new Value({
       description: value.description,
       title: value.title,
-      exceptions: value.exceptions || [],
+      exceptions: value.exceptions ?? [],
     })
 
     const box = await this.boxesControllers.controllerInternalBoxes({
@@ -91,6 +83,8 @@ export class CreateValueUseCase {
       personId,
       updatedObjetives,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, box }
   }

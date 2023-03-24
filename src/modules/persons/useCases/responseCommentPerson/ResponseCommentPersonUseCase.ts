@@ -1,14 +1,17 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
+import { type IResponseCommentPlotProjectDTO } from '@modules/projects/dtos/IResponseCommentPlotProjectDTO'
 import {
-  Comment,
-  IComment,
+  type Comment,
+  type IComment,
   Response,
 } from '@modules/projects/infra/mongoose/entities/Comment'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorCommentNotFound } from '@shared/errors/useFull/makeErrorCommentNotFound'
 
 @injectable()
 export class ResponseCommentPersonUseCase {
@@ -29,6 +32,8 @@ export class ResponseCommentPersonUseCase {
 
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     const { user } = await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
@@ -41,16 +46,18 @@ export class ResponseCommentPersonUseCase {
       username: user.username,
     })
 
-    const comment: IComment = person.comments.find(
+    const comment = person.comments.find(
       (comment: Comment) => comment.id === commentId,
     )
     const filteredComments = person.comments.filter(
       (comment: Comment) => comment.id !== commentId,
-    ) as Comment[]
+    )
+
+    if (!comment) throw makeErrorCommentNotFound()
 
     const updatedComment: IComment = {
       ...comment,
-      responses: [newResponse, ...comment.responses],
+      responses: [newResponse, ...comment?.responses],
     }
 
     const updatedComments: IComment[] = [updatedComment, ...filteredComments]
@@ -59,6 +66,9 @@ export class ResponseCommentPersonUseCase {
       personId,
       updatedComments,
     )
+
+    if (!personUpdated) throw makeErrorPersonNotUpdate()
+
     return personUpdated
   }
 }

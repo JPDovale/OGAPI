@@ -2,7 +2,8 @@ import { compareSync, hashSync } from 'bcryptjs'
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { makeErrorUserWrongPassword } from '@shared/errors/users/makeErrorUserWrongPassword'
 
 interface IRequest {
   id: string
@@ -19,21 +20,12 @@ export class PasswordUpdateUseCase {
 
   async execute({ id, oldPassword, password }: IRequest): Promise<void> {
     const user = await this.usersRepository.findById(id)
-    if (!user)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+
+    if (!user) throw makeErrorUserNotFound()
 
     const passwordCorrect = compareSync(oldPassword, user.password)
 
-    if (!passwordCorrect)
-      throw new AppError({
-        title: 'Senha invalida.',
-        message:
-          'Senha invalida, coso tenha esquecido a senha, faça o logout e acesse "esqueci a minha senha".',
-      })
+    if (!passwordCorrect) throw makeErrorUserWrongPassword()
 
     const passwordHash = hashSync(password, 8)
 

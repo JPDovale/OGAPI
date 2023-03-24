@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { ICouple } from '@modules/persons/infra/mongoose/entities/Couple'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type ICouple } from '@modules/persons/infra/mongoose/entities/Couple'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateCoupleUseCase {
@@ -24,19 +26,13 @@ export class UpdateCoupleUseCase {
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
+    if (!person) throw makeErrorPersonNotFound()
+
     await this.verifyPermissions.verify({
       userId,
       projectId: person.defaultProject,
       verifyPermissionTo: 'edit',
     })
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
 
     const filteredCouples = person.couples.filter(
       (couple) => couple.id !== coupleId,
@@ -45,9 +41,18 @@ export class UpdateCoupleUseCase {
       (couple) => couple.id === coupleId,
     )
 
+    if (!coupleToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Casal',
+      })
+    }
+
     const updatedCouple: ICouple = {
-      ...coupleToUpdate,
-      ...couple,
+      description: couple.description ?? coupleToUpdate.description,
+      title: couple.title ?? coupleToUpdate.title,
+      final: coupleToUpdate.final,
+      personId: coupleToUpdate.personId,
+      id: coupleToUpdate.id,
     }
 
     const updatedCouples = [...filteredCouples, updatedCouple]
@@ -56,6 +61,8 @@ export class UpdateCoupleUseCase {
       personId,
       updatedCouples,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
+import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 
 @injectable()

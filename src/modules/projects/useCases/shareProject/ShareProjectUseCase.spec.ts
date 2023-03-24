@@ -2,9 +2,9 @@ import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { type IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
 
 import { ShareProjectUseCase } from './ShareProjectUseCase'
@@ -132,7 +132,7 @@ describe('Share project', () => {
 
       await shareProjectUseCase.execute(
         {
-          email: 'testUserToAdd@test.com' || userToAddOnProject.email, // desativar error de variável não usada //
+          email: 'testUserToAdd@test.com' ?? userToAddOnProject.email, // desativar error de variável não usada //
           permission: 'edit',
         },
         newProjectTest.id,
@@ -211,7 +211,7 @@ describe('Share project', () => {
 
       await shareProjectUseCase.execute(
         {
-          email: 'testUserToAdd@test.com' || userToAddOnProject.email, // desativar error de variável não usada //
+          email: 'testUserToAdd@test.com' ?? userToAddOnProject.email, // desativar error de variável não usada //
           permission: 'edit',
         },
         newProjectTest.id,

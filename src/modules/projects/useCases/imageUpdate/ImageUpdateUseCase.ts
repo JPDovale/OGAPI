@@ -3,14 +3,16 @@ import { inject, injectable } from 'tsyringe'
 
 import {
   Avatar,
-  IAvatar,
+  type IAvatar,
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 
 @injectable()
 export class ImageUpdateUseCase {
@@ -30,8 +32,10 @@ export class ImageUpdateUseCase {
   async execute(
     userId: string,
     projectId: string,
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
   ): Promise<IProjectMongo> {
+    if (!file) throw makeErrorFileNotUploaded()
+
     const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
@@ -71,6 +75,8 @@ export class ImageUpdateUseCase {
       projectId,
     )
     fs.rmSync(file.path)
+
+    if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

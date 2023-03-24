@@ -1,18 +1,18 @@
 import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
-import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { type IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
+import { type IPlotProject } from '../entities/Plot'
 import {
-  IProjectMongo,
-  ISharedWhitUsers,
+  type IProjectMongo,
+  type ISharedWhitUsers,
   ProjectMongo,
 } from '../entities/Project'
-import { IUpdateName } from './types/IUpdateName'
+import { type IUpdateName } from './types/IUpdateName'
 
 @injectable()
 export class ProjectsMongoRepository implements IProjectsRepository {
@@ -21,7 +21,9 @@ export class ProjectsMongoRepository implements IProjectsRepository {
     private readonly dateProvider: IDateProvider,
   ) {}
 
-  async create(dataProjectObj: ICreateProjectDTO): Promise<IProjectMongo> {
+  async create(
+    dataProjectObj: ICreateProjectDTO,
+  ): Promise<IProjectMongo | null | undefined> {
     const {
       createdPerUser,
       name,
@@ -61,7 +63,7 @@ export class ProjectsMongoRepository implements IProjectsRepository {
     return projects
   }
 
-  async findById(id: string): Promise<IProjectMongo> {
+  async findById(id: string): Promise<IProjectMongo | null | undefined> {
     const project = await ProjectMongo.findOne({ id })
     return project
   }
@@ -69,14 +71,17 @@ export class ProjectsMongoRepository implements IProjectsRepository {
   async addUsers(
     users: ISharedWhitUsers[],
     id: string,
-  ): Promise<IProjectMongo> {
+  ): Promise<IProjectMongo | null | undefined> {
     await ProjectMongo.findOneAndUpdate({ id }, { users })
 
     const updatedProject = await ProjectMongo.findOne({ id })
     return updatedProject
   }
 
-  async updateImage(image: IAvatar, id: string): Promise<IProjectMongo> {
+  async updateImage(
+    image: IAvatar,
+    id: string,
+  ): Promise<IProjectMongo | null | undefined> {
     await ProjectMongo.findOneAndUpdate(
       { id },
       { image, updateAt: this.dateProvider.getDate(new Date()) },
@@ -89,7 +94,10 @@ export class ProjectsMongoRepository implements IProjectsRepository {
     await ProjectMongo.findOneAndDelete({ id })
   }
 
-  async updatePlot(id: string, plot: IUpdatePlotDTO): Promise<IProjectMongo> {
+  async updatePlot(
+    id: string,
+    plot: IPlotProject,
+  ): Promise<IProjectMongo | null | undefined> {
     await ProjectMongo.findOneAndUpdate(
       { id },
       { plot, updateAt: this.dateProvider.getDate(new Date()) },
@@ -109,7 +117,10 @@ export class ProjectsMongoRepository implements IProjectsRepository {
     return allProjects
   }
 
-  async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
+  async updateName({
+    id,
+    name,
+  }: IUpdateName): Promise<IProjectMongo | null | undefined> {
     await ProjectMongo.updateOne(
       { id },
       { name, updateAt: this.dateProvider.getDate(new Date()) },

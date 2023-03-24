@@ -3,20 +3,21 @@ import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { type IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
-import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { type IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { type ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { RedisCacheProvider } from '@shared/container/providers/CacheProvider/implementations/RedisCacheProvider'
-import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { type IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { NotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/implementations/NotifyUsersProvider'
-import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { type INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { VerifyPermissions } from '@shared/container/services/verifyPermissions/implementations/VerifyPermissions'
-import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { type IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 import { CreateSceneUseCase } from './CreateSceneUseCase'
@@ -59,7 +60,7 @@ describe('Create book', () => {
     )
   })
 
-  it('Should be able to create capitule in book', async () => {
+  it('Should be able to create scene to capitule in book', async () => {
     const user = await usersRepositoryInMemory.create({
       age: '2312',
       email: 'test@test.com',
@@ -73,51 +74,55 @@ describe('Create book', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
-    await projectsRepositoryInMemory.create(newProjectTest)
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
     const newBook = await booksRepositoryInMemory.create({
-      projectId: newProject.id,
+      projectId: newProject!.id,
       book: {
-        authors: [{ email: user.email, id: user.id, username: user.username }],
-        createdPerUser: user.id,
+        authors: [
+          { email: user!.email, id: user!.id, username: user!.username },
+        ],
+        createdPerUser: user!.id,
         generes: [{ name: 'test' }],
         literaryGenere: 'test',
         title: 'teste',
         isbn: 'undefined',
         writtenWords: '0',
+        capitules: [
+          {
+            id: '1',
+            name: 'test',
+            complete: false,
+            objective: 'testear',
+            sequence: '1',
+            scenes: [],
+            words: '0',
+            structure: {
+              act1: '',
+              act2: '',
+              act3: '',
+            },
+            createdAt: 'teste',
+            updatedAt: 'teste',
+          },
+        ],
       },
     })
 
-    const bookWithCapitule = await booksRepositoryInMemory.updateCapitules({
-      id: newBook.id,
-      capitules: [
-        {
-          id: '1',
-          name: 'test',
-          complete: false,
-          objective: 'testear',
-          sequence: '1',
-          scenes: [],
-          words: '0',
-        },
-      ],
-    })
-
     const updatedBook = await createSceneUseCase.execute({
-      capituleId: bookWithCapitule.capitules[0].id,
-      bookId: bookWithCapitule.id,
+      capituleId: newBook!.capitules[0].id,
+      bookId: newBook!.id,
       persons: [],
       structure: {
         act1: 'teste',
@@ -125,7 +130,7 @@ describe('Create book', () => {
         act3: 'teste',
       },
       objective: 'testar',
-      userId: user.id,
+      userId: user!.id,
     })
 
     expect(updatedBook.capitules.length).toEqual(1)
@@ -154,55 +159,60 @@ describe('Create book', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
         {
-          email: userToNotify.email,
-          id: userToNotify.id,
+          email: userToNotify!.email,
+          id: userToNotify!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
     await projectsRepositoryInMemory.create(newProjectTest)
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
     const newBook = await booksRepositoryInMemory.create({
-      projectId: newProject.id,
+      projectId: newProject!.id,
       book: {
-        authors: [{ email: user.email, id: user.id, username: user.username }],
-        createdPerUser: user.id,
+        authors: [
+          { email: user!.email, id: user!.id, username: user!.username },
+        ],
+        createdPerUser: user!.id,
         generes: [{ name: 'test' }],
         literaryGenere: 'test',
         title: 'teste',
         isbn: 'undefined',
         writtenWords: '0',
+        capitules: [
+          {
+            id: '1',
+            name: 'test',
+            complete: false,
+            objective: 'testear',
+            sequence: '1',
+            scenes: [],
+            words: '0',
+            structure: {
+              act1: '',
+              act2: '',
+              act3: '',
+            },
+            createdAt: 'teste',
+            updatedAt: 'teste',
+          },
+        ],
       },
     })
 
-    const bookWithCapitule = await booksRepositoryInMemory.updateCapitules({
-      id: newBook.id,
-      capitules: [
-        {
-          id: '1',
-          name: 'test',
-          complete: false,
-          objective: 'testear',
-          sequence: '1',
-          scenes: [],
-          words: '0',
-        },
-      ],
-    })
-
     await createSceneUseCase.execute({
-      capituleId: bookWithCapitule.capitules[0].id,
-      bookId: bookWithCapitule.id,
+      capituleId: newBook!.capitules[0].id,
+      bookId: newBook!.id,
       persons: [],
       structure: {
         act1: 'teste',
@@ -210,12 +220,14 @@ describe('Create book', () => {
         act3: 'teste',
       },
       objective: 'testar',
-      userId: user.id,
+      userId: user!.id,
     })
 
-    const userNotified = await usersRepositoryInMemory.findById(userToNotify.id)
+    const userNotified = await usersRepositoryInMemory.findById(
+      userToNotify!.id,
+    )
 
-    expect(userNotified.notifications.length).toEqual(1)
+    expect(userNotified!.notifications.length).toEqual(1)
   })
 
   it("not should be able to create capitule in book if user doesn't not permission", async () => {
@@ -242,57 +254,60 @@ describe('Create book', () => {
         name: 'test',
         private: false,
         type: 'book',
-        createdPerUser: user.id,
+        createdPerUser: user!.id,
         users: [
           {
-            email: user.email,
-            id: user.id,
+            email: user!.email,
+            id: user!.id,
             permission: 'edit',
           },
           {
-            email: user2.email,
-            id: user2.id,
+            email: user2!.email,
+            id: user2!.id,
             permission: 'view',
           },
         ],
-        plot: {},
+        plot: new PlotProject({}),
       }
 
       await projectsRepositoryInMemory.create(newProjectTest)
       const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
       const newBook = await booksRepositoryInMemory.create({
-        projectId: newProject.id,
+        projectId: newProject!.id,
         book: {
           authors: [
-            { email: user.email, id: user.id, username: user.username },
+            { email: user!.email, id: user!.id, username: user!.username },
           ],
-          createdPerUser: user.id,
+          createdPerUser: user!.id,
           generes: [{ name: 'test' }],
           literaryGenere: 'test',
           title: 'teste',
           isbn: 'undefined',
+          capitules: [
+            {
+              id: '1',
+              name: 'test',
+              complete: false,
+              objective: 'testear',
+              sequence: '1',
+              scenes: [],
+              words: '0',
+              structure: {
+                act1: '',
+                act2: '',
+                act3: '',
+              },
+              createdAt: 'teste',
+              updatedAt: 'teste',
+            },
+          ],
         },
       })
 
-      const bookWithCapitule = await booksRepositoryInMemory.updateCapitules({
-        id: newBook.id,
-        capitules: [
-          {
-            id: '1',
-            name: 'test',
-            complete: false,
-            objective: 'testear',
-            sequence: '1',
-            scenes: [],
-            words: '0',
-          },
-        ],
-      })
-
       await createSceneUseCase.execute({
-        capituleId: bookWithCapitule.capitules[0].id,
-        bookId: bookWithCapitule.id,
+        capituleId: newBook!.capitules[0].id,
+        bookId: newBook!.id,
         persons: [],
         structure: {
           act1: 'teste',
@@ -300,7 +315,7 @@ describe('Create book', () => {
           act3: 'teste',
         },
         objective: 'testar',
-        userId: user2.id,
+        userId: user2!.id,
       })
     })
       .rejects.toBeInstanceOf(AppError)

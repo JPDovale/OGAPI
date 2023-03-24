@@ -1,13 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
 import { Fear } from '@modules/persons/infra/mongoose/entities/Fear'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -40,31 +42,22 @@ export class CreateFearUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person) throw makeErrorPersonNotFound()
 
     const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId: projectId || person.defaultProject,
+      projectId: projectId ?? person.defaultProject,
       verifyPermissionTo: 'edit',
     })
 
     const fearExistesToThiPerson = person.fears.find(
       (f) => f.title === fear.title,
     )
-    if (fearExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe um medo com esse nome.',
-        message:
-          'Já existe um medo com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+
+    if (fearExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'um medo',
       })
-    }
 
     const newFear = new Fear({
       description: fear.description,
@@ -90,6 +83,8 @@ export class CreateFearUseCase {
       personId,
       updatedFears,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return { person: updatedPerson, box }
   }

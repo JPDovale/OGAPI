@@ -2,9 +2,10 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorProjectNotCreated } from '@shared/errors/projects/makeErrorProjectNotCreated'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
   user: {
@@ -34,12 +35,7 @@ export class CreateProjectUseCase {
 
     const infoUser = await this.usersRepository.findById(id)
 
-    if (!infoUser)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!infoUser) throw makeErrorUserNotFound()
 
     const newProject = await this.projectsRepository.create({
       name,
@@ -56,6 +52,8 @@ export class CreateProjectUseCase {
       ],
       plot: new PlotProject({}),
     })
+
+    if (!newProject) throw makeErrorProjectNotCreated()
 
     return newProject
   }

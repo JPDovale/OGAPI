@@ -2,9 +2,15 @@ import { inject, injectable } from 'tsyringe'
 
 import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { AppError } from '@shared/errors/AppError'
+import { makeErrorProjectAlreadySharadWithUser } from '@shared/errors/projects/makeErrorProjectAlreadySharadWithUser'
+import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
+import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
+import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'
+import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IUserRequest {
   email: string
@@ -29,57 +35,29 @@ export class ShareProjectUseCase {
   ): Promise<IProjectMongo> {
     const project = await this.projectsRepository.findById(projectId)
 
-    if (!project) {
-      throw new AppError({
-        title: 'Projeto não encontrado.',
-        message: 'Parece que esse projeto não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!project) throw makeErrorProjectNotFound()
+
     const thisProjectAreFromUser = project.createdPerUser === userId
-
-    if (!thisProjectAreFromUser) {
-      throw new AppError({
-        title: 'Acesso negado!',
-        message: 'Você não tem permissão para alterar o projeto.',
-        statusCode: 401,
-      })
-    }
-
-    if (project.users.length >= 5) {
-      throw new AppError({
-        title: 'Limite de compartilhamento',
-        message:
-          'Você pode compartilhar o projeto com apenas 5 pessoas ao mesmo tempo.',
-      })
-    }
-
     const userCreatorOfProject = await this.usersRepository.findById(
       project.createdPerUser,
     )
 
+    if (!thisProjectAreFromUser || !userCreatorOfProject)
+      throw makeErrorDeniedPermission()
+
+    if (project.users.length >= 5) throw makeErrorLimitFreeInEnd()
+
     const isShared = project.users.find((u) => u.email === userToShare.email)
 
-    if (isShared) {
-      throw new AppError({
-        title: 'Esse usuário já tem acesso ao projeto...',
-        message:
-          'Você está tentando adicionar um usuário que já tem acesso ao projeto... Caso queira alterar a permissão, vá até as configurações do projeto.',
-      })
-    }
+    if (isShared) throw makeErrorProjectAlreadySharadWithUser()
+
     const userExist = await this.usersRepository.findByEmail(userToShare.email)
 
-    if (!userExist) {
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!userExist) throw makeErrorUserNotFound()
 
     const isValidPermission =
-      userToShare.permission === 'edit' ||
-      userToShare.permission === 'view' ||
+      userToShare.permission === 'edit' ??
+      userToShare.permission === 'view' ??
       userToShare.permission === 'comment'
 
     if (!isValidPermission) {
@@ -103,6 +81,8 @@ export class ShareProjectUseCase {
       usersAdded,
       projectId,
     )
+
+    if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     const newNotification = new Notification({
       title: 'Projeto compartilhado',
