@@ -5,8 +5,8 @@ import { AppError } from '@shared/errors/AppError'
 import 'dotenv/config'
 
 const envSchema = z.object({
-  IS_DEV: z.coerce.boolean().default(true),
-  NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),
+  IS_DEV: z.coerce.boolean().default(false),
+  NODE_ENV: z.enum(['dev', 'test', 'production']).default('production'),
 
   FORGOT_MAIL_URL: z
     .string()
