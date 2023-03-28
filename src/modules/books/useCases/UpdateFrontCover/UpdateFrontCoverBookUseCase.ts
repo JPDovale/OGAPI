@@ -3,20 +3,22 @@ import { inject, injectable } from 'tsyringe'
 
 import {
   Avatar,
-  IAvatar,
+  type IAvatar,
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 
 interface IRequest {
   userId: string
   bookId: string
-  file: Express.Multer.File
+  file: Express.Multer.File | undefined
 }
 
 @injectable()
@@ -37,13 +39,8 @@ export class UpdateFrontCoverBookUseCase {
   async execute({ bookId, file, userId }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
+    if (!file) throw makeErrorFileNotUploaded()
 
     const { user, project } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -83,6 +80,8 @@ export class UpdateFrontCoverBookUseCase {
       frontCover: frontCoverToUpdate,
       id: bookId,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

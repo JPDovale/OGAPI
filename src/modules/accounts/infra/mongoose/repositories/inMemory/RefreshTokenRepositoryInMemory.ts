@@ -1,14 +1,14 @@
 import { v4 as uuidV4 } from 'uuid'
 
-import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
+import { type ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
 
 import {
-  IRefreshTokenMongo,
+  type IRefreshTokenMongo,
   RefreshTokenMongo,
 } from '../../entities/RefreshToken'
 import {
-  IFindByRefreshToken,
-  IRefreshTokenRepository,
+  type IFindByRefreshToken,
+  type IRefreshTokenRepository,
 } from '../IRefreshTokenRepository'
 
 export class RefreshTokenRepositoryInMemory implements IRefreshTokenRepository {

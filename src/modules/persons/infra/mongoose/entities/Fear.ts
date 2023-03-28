@@ -1,9 +1,15 @@
 import { v4 as uuidV4 } from 'uuid'
 
 export interface IFear {
-  id?: string
+  id: string
   title: string
   description: string
+}
+
+interface IFearConstructor {
+  id?: string
+  title?: string
+  description?: string
 }
 
 export class Fear {
@@ -11,9 +17,9 @@ export class Fear {
   title: string
   description: string
 
-  constructor(fear: IFear) {
-    this.id = uuidV4()
-    this.title = fear.title
-    this.description = fear.description
+  constructor(fear: IFearConstructor) {
+    this.id = fear.id ?? uuidV4()
+    this.title = fear.title ?? ''
+    this.description = fear.description ?? ''
   }
 }

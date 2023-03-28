@@ -1,30 +1,38 @@
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 
-import { ICreateProjectDTO } from '../dtos/ICreateProjectDTO'
-import { IUpdatePlotDTO } from '../dtos/IUpdatePlotDTO'
+import { type ICreateProjectDTO } from '../dtos/ICreateProjectDTO'
+import { type IPlotProject } from '../infra/mongoose/entities/Plot'
 import {
-  IProjectMongo,
-  ISharedWhitUsers,
+  type IProjectMongo,
+  type ISharedWhitUsers,
 } from '../infra/mongoose/entities/Project'
-import { ITag } from '../infra/mongoose/entities/Tag'
-import { IUpdateName } from '../infra/mongoose/repositories/types/IUpdateName'
+import { type IUpdateName } from '../infra/mongoose/repositories/types/IUpdateName'
 
 export interface IProjectsRepository {
-  create: (dataProjectObj: ICreateProjectDTO) => Promise<IProjectMongo>
+  create: (
+    dataProjectObj: ICreateProjectDTO,
+  ) => Promise<IProjectMongo | null | undefined>
   listPerUser: (userId: string) => Promise<IProjectMongo[]>
-  findById: (projectId: string) => Promise<IProjectMongo>
+  findById: (projectId: string) => Promise<IProjectMongo | null | undefined>
   addUsers: (
     users: ISharedWhitUsers[],
     projectId: string,
-  ) => Promise<IProjectMongo>
-  updateImage: (image: IAvatar, projectId: string) => Promise<IProjectMongo>
+  ) => Promise<IProjectMongo | null | undefined>
+  updateImage: (
+    image: IAvatar,
+    projectId: string,
+  ) => Promise<IProjectMongo | null | undefined>
   delete: (projectId: string) => Promise<void>
   updatePlot: (
     projectId: string,
-    plot: IUpdatePlotDTO,
-  ) => Promise<IProjectMongo>
-  updateTag: (projectId: string, tags: ITag[]) => Promise<IProjectMongo>
+    plot: IPlotProject,
+  ) => Promise<IProjectMongo | null | undefined>
   deletePerUserId: (userId: string) => Promise<void>
   listAll: () => Promise<IProjectMongo[]>
-  updateName: ({ id, name }: IUpdateName) => Promise<IProjectMongo>
+  updateName: ({
+    id,
+    name,
+  }: IUpdateName) => Promise<IProjectMongo | null | undefined>
+  removeTagsInAllProjects: () => Promise<void>
+  getNumberOfProjectsByUserId: (userId: string) => Promise<number>
 }

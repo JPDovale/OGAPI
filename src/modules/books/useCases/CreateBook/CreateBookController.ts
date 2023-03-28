@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -45,7 +45,7 @@ export class CreateBookController {
     } = createBookBodySchema.parse(req.body)
 
     const createBookUseCase = container.resolve(CreateBookUseCase)
-    const newBook = await createBookUseCase.execute({
+    const { book, box } = await createBookUseCase.execute({
       userId: id,
       projectId,
       title,
@@ -58,6 +58,6 @@ export class CreateBookController {
       writtenWords,
     })
 
-    return res.status(200).json(newBook)
+    return res.status(200).json({ book, box })
   }
 }

@@ -1,69 +1,63 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+
+interface IResponse {
+  person: IPersonMongo
+  box: IBox
+}
 
 @injectable()
 export class DeleteObjectiveUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute(
     userId: string,
     personId: string,
     objectiveId: string,
-  ): Promise<IPersonMongo> {
+  ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
-
-    if (person.fromUser !== userId) {
-      throw new AppError({
-        title: 'Permissão de alteração invalida.',
-        message:
-          'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
-        statusCode: 401,
-      })
-    }
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredObjectives = person.objectives.filter(
       (objective) => objective.id !== objectiveId,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.deleteReferenceTag(
-      'persons/objectives',
-      objectiveId,
-      personId,
-      project.tags,
-    )
-
-    await this.projectRepository.updateTag(project.id, tags)
+    const box = await this.boxesControllers.unlinkObject({
+      archiveId: objectiveId,
+      boxName: 'persons/objectives',
+      objectToUnlinkId: personId,
+      projectId: project.id,
+    })
 
     const updatedPerson = await this.personsRepository.updateObjectives(
       personId,
       filteredObjectives,
     )
-    return updatedPerson
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+
+    return { person: updatedPerson, box }
   }
 }

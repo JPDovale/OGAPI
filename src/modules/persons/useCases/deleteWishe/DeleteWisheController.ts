@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -15,12 +15,12 @@ export class DeleteWisheController {
     const { personId, wisheId } = deleteWisheBodySchema.parse(req.body)
 
     const deleteWisheUseCase = container.resolve(DeleteWisheUseCase)
-    const updatedPerson = await deleteWisheUseCase.execute(
+    const { person, box } = await deleteWisheUseCase.execute(
       id,
       personId,
       wisheId,
     )
 
-    return res.status(200).json(updatedPerson)
+    return res.status(200).json({ person, box })
   }
 }

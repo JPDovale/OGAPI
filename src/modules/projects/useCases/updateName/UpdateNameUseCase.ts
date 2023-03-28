@@ -1,9 +1,10 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
 
 interface IRequest {
   userId: string
@@ -33,6 +34,8 @@ export class UpdateNameUseCase {
       name,
       id: projectId,
     })
+
+    if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

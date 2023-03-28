@@ -4,7 +4,8 @@ import { inject, injectable } from 'tsyringe'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserInvalidRecoveryPasswordToken } from '@shared/errors/users/makeErrorUserInvalidRecoveryPasswordToken'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
   password: string
@@ -27,14 +28,7 @@ export class RecoveryPasswordUseCase {
       refreshToken: token,
     })
 
-    if (!userToken) {
-      throw new AppError({
-        title: 'Token inválido ou expirado.',
-        message:
-          'Seu token de recuperação de senha é inválido ou está expirado. Tente pedir outro email de recuperação.',
-        statusCode: 409,
-      })
-    }
+    if (!userToken) throw makeErrorUserInvalidRecoveryPasswordToken()
 
     const endDateOfPasswordRecoveryRequest = new Date(userToken.expiresDate)
 
@@ -43,18 +37,13 @@ export class RecoveryPasswordUseCase {
       endDate: new Date(),
     })
 
-    if (isExpired) {
-      throw new AppError({
-        title: 'Token inválido ou expirado.',
-        message:
-          'Seu token de recuperação de senha é inválido ou está expirado. Tente pedir outro email de recuperação.',
-        statusCode: 409,
-      })
-    }
+    if (isExpired) throw makeErrorUserInvalidRecoveryPasswordToken()
 
     const passwordHash = hashSync(password, 8)
 
     const user = await this.usersRepository.findById(userToken.userId)
+
+    if (!user) throw makeErrorUserNotFound()
 
     await this.usersRepository.updatePassword(user.id, passwordHash)
     await this.refreshTokenRepository.deleteById(userToken.id)

@@ -2,11 +2,12 @@ import path from 'path'
 import { inject, injectable } from 'tsyringe'
 import { v4 as uuidV4 } from 'uuid'
 
+import { env } from '@env/index'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IMailProvider } from '@shared/container/providers/MailProvider/IMailProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 @injectable()
 export class SendForgotPasswordMailUseCase {
@@ -33,13 +34,7 @@ export class SendForgotPasswordMailUseCase {
       'forgotPassword.hbs',
     )
 
-    if (!user) {
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!user) throw makeErrorUserNotFound()
 
     const token = uuidV4()
     const expiresDate = this.dateProvider.addHours(1).toString()
@@ -52,7 +47,7 @@ export class SendForgotPasswordMailUseCase {
 
     const variables = {
       name: user.username,
-      link: `${process.env.FORGOT_MAIL_URL}${token}`,
+      link: `${env.FORGOT_MAIL_URL}${token}`,
     }
 
     await this.mailProvider.sendMail({

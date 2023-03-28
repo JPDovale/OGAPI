@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -28,7 +28,7 @@ export class CreateAppearancesController {
 
     const createAppearanceUseCase = container.resolve(CreateAppearanceUseCase)
 
-    const { person, project } = await createAppearanceUseCase.execute({
+    const { person, box } = await createAppearanceUseCase.execute({
       userId: id,
       projectId,
       personId,
@@ -38,6 +38,6 @@ export class CreateAppearancesController {
       },
     })
 
-    return res.status(201).json({ person, project })
+    return res.status(201).json({ person, box })
   }
 }

@@ -5,12 +5,14 @@ import { IDateProvider } from '@shared/container/providers/DateProvider/IDatePro
 
 import { BookMongo } from '../../entities/schemas/Book'
 import { PlotBook } from '../../entities/schemas/PlotBook'
-import { IBook } from '../../entities/types/IBook'
-import { IBooksRepository } from '../IBooksRepository'
-import { ICreateBook } from '../types/ICreateBook'
-import { IFindManyById } from '../types/IFindManyById'
-import { IUpdateCapitules } from '../types/IUpdateCapitules'
-import { IUpdateFrontCover } from '../types/IUpdateFrontCover'
+import { type IBook } from '../../entities/types/IBook'
+import { type IBooksRepository } from '../IBooksRepository'
+import { type ICreateBook } from '../types/ICreateBook'
+import { type IFindManyById } from '../types/IFindManyById'
+import { type IUpdateBook } from '../types/IUpdateBook'
+import { type IUpdateCapitules } from '../types/IUpdateCapitules'
+import { type IUpdateFrontCover } from '../types/IUpdateFrontCover'
+import { type IUpdateGenres } from '../types/IUpdateGenres'
 
 @injectable()
 export class BooksMongoRepository implements IBooksRepository {
@@ -31,8 +33,9 @@ export class BooksMongoRepository implements IBooksRepository {
       subtitle,
       words,
       writtenWords,
+      capitules,
     },
-  }: ICreateBook): Promise<IBook> {
+  }: ICreateBook): Promise<IBook | null | undefined> {
     const newBook = new BookMongo({
       id: uuidV4(),
       title,
@@ -45,6 +48,7 @@ export class BooksMongoRepository implements IBooksRepository {
       isbn,
       words,
       writtenWords,
+      capitules: capitules ?? [],
       plot: new PlotBook({}),
       createAt: this.dateProvider.getDate(new Date()),
       updateAt: this.dateProvider.getDate(new Date()),
@@ -67,7 +71,7 @@ export class BooksMongoRepository implements IBooksRepository {
     return books
   }
 
-  async findById(id: string): Promise<IBook> {
+  async findById(id: string): Promise<IBook | null | undefined> {
     const book = await BookMongo.findOne({ id })
     return book
   }
@@ -75,7 +79,7 @@ export class BooksMongoRepository implements IBooksRepository {
   async updateFrontCover({
     id,
     frontCover,
-  }: IUpdateFrontCover): Promise<IBook> {
+  }: IUpdateFrontCover): Promise<IBook | null | undefined> {
     await BookMongo.updateOne(
       { id },
       { frontCover, updateAt: this.dateProvider.getDate(new Date()) },
@@ -89,7 +93,7 @@ export class BooksMongoRepository implements IBooksRepository {
     id,
     capitules,
     writtenWords,
-  }: IUpdateCapitules): Promise<IBook> {
+  }: IUpdateCapitules): Promise<IBook | null | undefined> {
     if (writtenWords) {
       await BookMongo.updateOne(
         { id },
@@ -136,5 +140,52 @@ export class BooksMongoRepository implements IBooksRepository {
     const books = await BookMongo.find({ $or: projectsIds })
 
     return books
+  }
+
+  async updateGenres({
+    genres,
+    id,
+  }: IUpdateGenres): Promise<IBook | null | undefined> {
+    await BookMongo.updateOne(
+      { id },
+      { generes: genres, updateAt: this.dateProvider.getDate(new Date()) },
+    )
+
+    const book = await BookMongo.findOne({ id })
+
+    return book
+  }
+
+  async updateBook({
+    id,
+    updatedInfos: { isbn, literaryGenere, subtitle, title, words },
+  }: IUpdateBook): Promise<IBook | null | undefined> {
+    await BookMongo.updateOne(
+      { id },
+      {
+        isbn,
+        literaryGenere,
+        subtitle,
+        title,
+        words,
+        updateAt: this.dateProvider.getDate(new Date()),
+      },
+    )
+
+    const book = await BookMongo.findOne({ id })
+
+    return book
+  }
+
+  async deletePerId(id: string): Promise<void> {
+    await BookMongo.deleteOne({ id })
+  }
+
+  async findNumberOfBooksByProjectId(projectId: string): Promise<number> {
+    const numberOfRegisters = await BookMongo.countDocuments({
+      defaultProject: projectId,
+    })
+
+    return numberOfRegisters
   }
 }

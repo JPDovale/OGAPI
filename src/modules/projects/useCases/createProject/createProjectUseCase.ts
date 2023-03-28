@@ -1,10 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
-import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { AppError } from '@shared/errors/AppError'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { makeErrorProjectNotCreated } from '@shared/errors/projects/makeErrorProjectNotCreated'
+import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
   user: {
@@ -33,13 +35,13 @@ export class CreateProjectUseCase {
     const { name, private: priv, type, password } = project
 
     const infoUser = await this.usersRepository.findById(id)
+    if (!infoUser) throw makeErrorUserNotFound()
 
-    if (!infoUser)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    const numberOfProjectsThisUser =
+      await this.projectsRepository.getNumberOfProjectsByUserId(user.id)
+
+    if (numberOfProjectsThisUser >= 2 && !infoUser.payed && !infoUser.admin)
+      throw makeErrorLimitFreeInEnd()
 
     const newProject = await this.projectsRepository.create({
       name,
@@ -56,6 +58,8 @@ export class CreateProjectUseCase {
       ],
       plot: new PlotProject({}),
     })
+
+    if (!newProject) throw makeErrorProjectNotCreated()
 
     return newProject
   }

@@ -4,55 +4,61 @@ import {
   injectable,
 } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+
+interface IResponse {
+  person: IPersonMongo
+  couple: IPersonMongo
+}
 
 @injectable()
 export class DeleteCoupleUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
     userId: string,
     personId: string,
     coupleId: string,
-  ): Promise<IPersonMongo> {
+  ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
-    // const permissionToEditProject = container.resolve(PermissionToEditProject)
-    // const { project } = await permissionToEditProject.verify(
-    //   userId,
-    //   person.defaultProject,
-    //   'edit',
-    // )
+    const couple = await this.personsRepository.findById(coupleId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person && !couple) throw makeErrorPersonNotFound()
 
-    if (person.fromUser !== userId) {
-      throw new AppError({
-        title: 'Permissão de alteração invalida.',
-        message:
-          'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
-        statusCode: 401,
-      })
-    }
+    await this.verifyPermissions.verify({
+      userId,
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredCouples = person.couples.filter(
       (couple) => couple.id !== coupleId,
     )
+    const filteredCouplesOfCouple = couple.couples.filter(
+      (couple) => couple.id !== personId,
+    )
 
-    const updatePerson = await this.personsRepository.updateCouples(
+    const updatedPerson = await this.personsRepository.updateCouples(
       personId,
       filteredCouples,
     )
-    return updatePerson
+    const updatedCouple = await this.personsRepository.updateCouples(
+      coupleId,
+      filteredCouplesOfCouple,
+    )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+    if (!updatedCouple) throw makeErrorPersonNotUpdate()
+
+    return { person: updatedPerson, couple: updatedCouple }
   }
 }

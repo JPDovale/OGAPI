@@ -3,12 +3,16 @@ import { inject, injectable } from 'tsyringe'
 
 import {
   Avatar,
-  IAvatar,
+  type IAvatar,
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
 
 @injectable()
 export class UpdateImagePersonUseCase {
@@ -19,14 +23,25 @@ export class UpdateImagePersonUseCase {
     private readonly storageProvider: IStorageProvider,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
     userId: string,
     personId: string,
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
+
+    if (!person) throw makeErrorPersonNotFound()
+    if (!file) throw makeErrorFileNotUploaded()
+
+    await this.verifyPermissions.verify({
+      userId,
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     if (person?.image?.fileName) {
       await this.storageProvider.delete(person.image.fileName, 'persons/images')
@@ -57,7 +72,11 @@ export class UpdateImagePersonUseCase {
       avatarToUpdate,
       personId,
     )
+
     fs.rmSync(file.path)
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+
     return updatedPerson
   }
 }

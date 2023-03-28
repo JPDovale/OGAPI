@@ -3,20 +3,26 @@ import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { type IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
-import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { type ICreateBook } from '@modules/books/infra/mongoose/repositories/types/ICreateBook'
+import { type IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
+import { BoxesRepositoryInMemory } from '@modules/boxes/infra/mongoose/repositories/inMemory/BoxesRepositoryInMemory'
+import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { type IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { type ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { RedisCacheProvider } from '@shared/container/providers/CacheProvider/implementations/RedisCacheProvider'
-import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { type IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { NotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/implementations/NotifyUsersProvider'
-import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { type INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
+import { type IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { BoxesControllers } from '@shared/container/services/boxesControllers/implementations/BoxesControllers'
 import { VerifyPermissions } from '@shared/container/services/verifyPermissions/implementations/VerifyPermissions'
-import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { type IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
 
 import { CreateBookUseCase } from './CreateBookUseCase'
@@ -24,12 +30,14 @@ import { CreateBookUseCase } from './CreateBookUseCase'
 let usersRepositoryInMemory: IUsersRepository
 let booksRepositoryInMemory: IBooksRepository
 let projectsRepositoryInMemory: IProjectsRepository
+let boxesRepositoryInMemory: IBoxesRepository
 
 let dateProvider: IDateProvider
 let cacheProvider: ICacheProvider
 let notifyUsersProvider: INotifyUsersProvider
 
 let verifyPermissionsService: IVerifyPermissionsService
+let boxesControllers: IBoxesControllers
 
 let createBookUseCase: CreateBookUseCase
 
@@ -38,6 +46,7 @@ describe('Create book', () => {
     usersRepositoryInMemory = new UserRepositoryInMemory()
     booksRepositoryInMemory = new BooksRepositoryInMemory()
     projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
+    boxesRepositoryInMemory = new BoxesRepositoryInMemory()
 
     dateProvider = new DayJsDateProvider()
     cacheProvider = new RedisCacheProvider(dateProvider)
@@ -50,12 +59,18 @@ describe('Create book', () => {
       projectsRepositoryInMemory,
       usersRepositoryInMemory,
     )
+    boxesControllers = new BoxesControllers(
+      boxesRepositoryInMemory,
+      dateProvider,
+    )
 
     createBookUseCase = new CreateBookUseCase(
       booksRepositoryInMemory,
-      projectsRepositoryInMemory,
       notifyUsersProvider,
       verifyPermissionsService,
+      boxesControllers,
+      boxesRepositoryInMemory,
+      dateProvider,
     )
   })
 
@@ -73,80 +88,220 @@ describe('Create book', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
     await projectsRepositoryInMemory.create(newProjectTest)
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
     await createBookUseCase.execute({
-      authors: [{ email: user.email, id: user.id, username: user.username }],
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
       generes: [{ name: 'teste' }],
       isbn: 'undefine',
       literaryGenere: 'teste',
-      projectId: newProject.id,
+      projectId: newProject!.id,
       subtitle: 'test',
       title: 'teste',
-      userId: user.id,
+      userId: user!.id,
     })
 
-    const books = await booksRepositoryInMemory.listPerUser(user.id)
+    const books = await booksRepositoryInMemory.listPerUser(user!.id)
 
     expect(books.length).toEqual(1)
   })
 
-  it('Should be able to create tag to book in project', async () => {
-    const user = await usersRepositoryInMemory.create({
-      age: '2312',
-      email: 'test@test.com',
-      name: 'test',
-      password: 'test',
-      sex: 'male',
-      username: 'test',
-    })
+  it('Should no be able to create book if limit free expires', async () => {
+    expect(async () => {
+      const user = await usersRepositoryInMemory.create({
+        age: '2312',
+        email: 'test@test.com',
+        name: 'test',
+        password: 'test',
+        sex: 'male',
+        username: 'test',
+      })
 
-    const newProjectTest: ICreateProjectDTO = {
-      name: 'test',
-      private: false,
-      type: 'book',
-      createdPerUser: user.id,
-      users: [
-        {
-          email: user.email,
-          id: user.id,
-          permission: 'edit',
+      const newProjectTest: ICreateProjectDTO = {
+        name: 'test',
+        private: false,
+        type: 'book',
+        createdPerUser: user!.id,
+        users: [
+          {
+            email: user!.email,
+            id: user!.id,
+            permission: 'edit',
+          },
+        ],
+        plot: new PlotProject({}),
+      }
+
+      const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+      const newBooKTestMock: ICreateBook = {
+        projectId: newProject!.id,
+        book: {
+          authors: [],
+          generes: [],
+          createdPerUser: user!.id,
+          literaryGenere: 'test',
+          title: 'teste',
         },
-      ],
-      plot: {},
-    }
+      }
 
-    await projectsRepositoryInMemory.create(newProjectTest)
-    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+      await booksRepositoryInMemory.create(newBooKTestMock)
+      await booksRepositoryInMemory.create(newBooKTestMock)
+      await booksRepositoryInMemory.create(newBooKTestMock)
 
-    await createBookUseCase.execute({
-      authors: [{ email: user.email, id: user.id, username: user.username }],
-      generes: [{ name: 'teste' }],
-      isbn: 'undefine',
-      literaryGenere: 'teste',
-      projectId: newProject.id,
-      subtitle: 'test',
-      title: 'teste',
-      userId: user.id,
+      await createBookUseCase.execute({
+        authors: [
+          { email: user!.email, id: user!.id, username: user!.username },
+        ],
+        generes: [{ name: 'teste' }],
+        isbn: 'undefine',
+        literaryGenere: 'teste',
+        projectId: newProject!.id,
+        subtitle: 'test',
+        title: 'teste',
+        userId: user!.id,
+      })
     })
-
-    const project = await projectsRepositoryInMemory.findById(newProject.id)
-
-    expect(project.tags.length).toEqual(1)
+      .rejects.toBeInstanceOf(AppError)
+      .catch((err) => {
+        throw err
+      })
   })
-  it('Should be able to update tag to book in project if another books already created', async () => {
+
+  it('Should no be able to create more then 3 books in project if user payed', async () => {
+    const user = await usersRepositoryInMemory.create({
+      age: '2312',
+      email: 'test@test.com',
+      name: 'test',
+      password: 'test',
+      sex: 'male',
+      username: 'test',
+      payed: true,
+    })
+
+    const newProjectTest: ICreateProjectDTO = {
+      name: 'test',
+      private: false,
+      type: 'book',
+      createdPerUser: user!.id,
+      users: [
+        {
+          email: user!.email,
+          id: user!.id,
+          permission: 'edit',
+        },
+      ],
+      plot: new PlotProject({}),
+    }
+
+    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+    const newBooKTestMock: ICreateBook = {
+      projectId: newProject!.id,
+      book: {
+        authors: [],
+        generes: [],
+        createdPerUser: user!.id,
+        literaryGenere: 'test',
+        title: 'teste',
+      },
+    }
+
+    await booksRepositoryInMemory.create(newBooKTestMock)
+    await booksRepositoryInMemory.create(newBooKTestMock)
+    await booksRepositoryInMemory.create(newBooKTestMock)
+
+    await createBookUseCase.execute({
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
+      generes: [{ name: 'teste' }],
+      isbn: 'undefine',
+      literaryGenere: 'teste',
+      projectId: newProject!.id,
+      subtitle: 'test',
+      title: 'teste',
+      userId: user!.id,
+    })
+
+    const numberOfBooksInProject =
+      await booksRepositoryInMemory.findNumberOfBooksByProjectId(newProject!.id)
+
+    expect(numberOfBooksInProject).toEqual(4)
+  })
+
+  it('Should no be able to create more then 3 books in project if user is admin', async () => {
+    const user = await usersRepositoryInMemory.create({
+      age: '2312',
+      email: 'test@test.com',
+      name: 'test',
+      password: 'test',
+      sex: 'male',
+      username: 'test',
+      payed: false,
+      admin: true,
+    })
+
+    const newProjectTest: ICreateProjectDTO = {
+      name: 'test',
+      private: false,
+      type: 'book',
+      createdPerUser: user!.id,
+      users: [
+        {
+          email: user!.email,
+          id: user!.id,
+          permission: 'edit',
+        },
+      ],
+      plot: new PlotProject({}),
+    }
+
+    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+    const newBooKTestMock: ICreateBook = {
+      projectId: newProject!.id,
+      book: {
+        authors: [],
+        generes: [],
+        createdPerUser: user!.id,
+        literaryGenere: 'test',
+        title: 'teste',
+      },
+    }
+
+    await booksRepositoryInMemory.create(newBooKTestMock)
+    await booksRepositoryInMemory.create(newBooKTestMock)
+    await booksRepositoryInMemory.create(newBooKTestMock)
+
+    await createBookUseCase.execute({
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
+      generes: [{ name: 'teste' }],
+      isbn: 'undefine',
+      literaryGenere: 'teste',
+      projectId: newProject!.id,
+      subtitle: 'test',
+      title: 'teste',
+      userId: user!.id,
+    })
+
+    const numberOfBooksInProject =
+      await booksRepositoryInMemory.findNumberOfBooksByProjectId(newProject!.id)
+
+    expect(numberOfBooksInProject).toEqual(4)
+  })
+
+  it('Should be able to create box to book in project', async () => {
     const user = await usersRepositoryInMemory.create({
       age: '2312',
       email: 'test@test.com',
@@ -160,46 +315,90 @@ describe('Create book', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
     await projectsRepositoryInMemory.create(newProjectTest)
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
     await createBookUseCase.execute({
-      authors: [{ email: user.email, id: user.id, username: user.username }],
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
       generes: [{ name: 'teste' }],
       isbn: 'undefine',
       literaryGenere: 'teste',
-      projectId: newProject.id,
+      projectId: newProject!.id,
       subtitle: 'test',
       title: 'teste',
-      userId: user.id,
+      userId: user!.id,
+    })
+
+    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user!.id)
+
+    expect(boxesThisUser.length).toEqual(1)
+  })
+
+  it('Should be able to update box to book in project if another books already created', async () => {
+    const user = await usersRepositoryInMemory.create({
+      age: '2312',
+      email: 'test@test.com',
+      name: 'test',
+      password: 'test',
+      sex: 'male',
+      username: 'test',
+    })
+
+    const newProjectTest: ICreateProjectDTO = {
+      name: 'test',
+      private: false,
+      type: 'book',
+      createdPerUser: user!.id,
+      users: [
+        {
+          email: user!.email,
+          id: user!.id,
+          permission: 'edit',
+        },
+      ],
+      plot: new PlotProject({}),
+    }
+
+    await projectsRepositoryInMemory.create(newProjectTest)
+    const newProject = await projectsRepositoryInMemory.create(newProjectTest)
+
+    await createBookUseCase.execute({
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
+      generes: [{ name: 'teste' }],
+      isbn: 'undefine',
+      literaryGenere: 'teste',
+      projectId: newProject!.id,
+      subtitle: 'test',
+      title: 'teste',
+      userId: user!.id,
     })
 
     await createBookUseCase.execute({
-      authors: [{ email: user.email, id: user.id, username: user.username }],
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
       generes: [{ name: 'teste' }],
       isbn: 'undefine',
       literaryGenere: 'teste',
-      projectId: newProject.id,
+      projectId: newProject!.id,
       subtitle: 'test2',
       title: 'teste2',
-      userId: user.id,
+      userId: user!.id,
     })
 
-    const project = await projectsRepositoryInMemory.findById(newProject.id)
+    const boxesThisUser = await boxesRepositoryInMemory.listPerUser(user!.id)
 
-    expect(project.tags.length).toEqual(1)
-    expect(project.tags[0].refs[0].references.length).toEqual(2)
+    expect(boxesThisUser[0].archives[0].links.length).toEqual(2)
+    expect(boxesThisUser[0].archives.length).toEqual(1)
   })
 
   it('Should be able to notify users on project about new book', async () => {
@@ -225,39 +424,41 @@ describe('Create book', () => {
       name: 'test',
       private: false,
       type: 'book',
-      createdPerUser: user.id,
+      createdPerUser: user!.id,
       users: [
         {
-          email: user.email,
-          id: user.id,
+          email: user!.email,
+          id: user!.id,
           permission: 'edit',
         },
         {
-          email: userToNotify.email,
-          id: userToNotify.id,
+          email: userToNotify!.email,
+          id: userToNotify!.id,
           permission: 'edit',
         },
       ],
-      plot: {},
+      plot: new PlotProject({}),
     }
 
     await projectsRepositoryInMemory.create(newProjectTest)
     const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
     await createBookUseCase.execute({
-      authors: [{ email: user.email, id: user.id, username: user.username }],
+      authors: [{ email: user!.email, id: user!.id, username: user!.username }],
       generes: [{ name: 'teste' }],
       isbn: 'undefine',
       literaryGenere: 'teste',
-      projectId: newProject.id,
+      projectId: newProject!.id,
       subtitle: 'test',
       title: 'teste',
-      userId: user.id,
+      userId: user!.id,
     })
 
-    const userNotified = await usersRepositoryInMemory.findById(userToNotify.id)
+    const userNotified = await usersRepositoryInMemory.findById(
+      userToNotify!.id,
+    )
 
-    expect(userNotified.notifications.length).toEqual(1)
+    expect(userNotified!.notifications.length).toEqual(1)
   })
 
   it("not should be able to create book if user doesn't not permission", async () => {
@@ -284,34 +485,36 @@ describe('Create book', () => {
         name: 'test',
         private: false,
         type: 'book',
-        createdPerUser: user.id,
+        createdPerUser: user!.id,
         users: [
           {
-            email: user.email,
-            id: user.id,
+            email: user!.email,
+            id: user!.id,
             permission: 'edit',
           },
           {
-            email: user2.email,
-            id: user2.id,
+            email: user2!.email,
+            id: user2!.id,
             permission: 'view',
           },
         ],
-        plot: {},
+        plot: new PlotProject({}),
       }
 
       await projectsRepositoryInMemory.create(newProjectTest)
       const newProject = await projectsRepositoryInMemory.create(newProjectTest)
 
       await createBookUseCase.execute({
-        authors: [{ email: user.email, id: user.id, username: user.username }],
+        authors: [
+          { email: user!.email, id: user!.id, username: user!.username },
+        ],
         generes: [{ name: 'teste' }],
         isbn: 'undefine',
         literaryGenere: 'teste',
-        projectId: newProject.id,
+        projectId: newProject!.id,
         subtitle: 'test',
         title: 'teste',
-        userId: user2.id,
+        userId: user2!.id,
       })
     })
       .rejects.toBeInstanceOf(AppError)

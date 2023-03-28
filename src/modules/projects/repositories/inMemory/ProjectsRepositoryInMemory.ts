@@ -1,22 +1,23 @@
 import { v4 as uuidV4 } from 'uuid'
 
-import { IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
-import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
+import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
+import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
+import { type IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
 import {
-  IProjectMongo,
-  ISharedWhitUsers,
+  type IProjectMongo,
+  type ISharedWhitUsers,
   ProjectMongo,
 } from '@modules/projects/infra/mongoose/entities/Project'
-import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
-import { IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
+import { type IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
 
-import { IProjectsRepository } from '../IProjectRepository'
+import { type IProjectsRepository } from '../IProjectRepository'
 
 export class ProjectsRepositoryInMemory implements IProjectsRepository {
   projects: IProjectMongo[] = []
 
-  async create(dataProjectObj: ICreateProjectDTO): Promise<IProjectMongo> {
+  async create(
+    dataProjectObj: ICreateProjectDTO,
+  ): Promise<IProjectMongo | null | undefined> {
     const {
       createdPerUser,
       name,
@@ -51,7 +52,7 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     return projectsOfUser
   }
 
-  async findById(id: string): Promise<IProjectMongo> {
+  async findById(id: string): Promise<IProjectMongo | null | undefined> {
     const project = this.projects.find((project) => project.id === id)
 
     return project
@@ -60,7 +61,7 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
   async addUsers(
     users: ISharedWhitUsers[],
     projectId: string,
-  ): Promise<IProjectMongo> {
+  ): Promise<IProjectMongo | null | undefined> {
     const indexOfProjectToUpdate = this.projects.findIndex(
       (project) => project.id === projectId,
     )
@@ -72,7 +73,10 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     return projectUpdated
   }
 
-  updateImage: (image: IAvatar, projectId: string) => Promise<IProjectMongo>
+  updateImage: (
+    image: IAvatar,
+    projectId: string,
+  ) => Promise<IProjectMongo | null | undefined>
 
   async delete(projectId: string): Promise<void> {
     this.projects = this.projects.filter((project) => project.id !== projectId)
@@ -80,8 +84,8 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
 
   async updatePlot(
     projectId: string,
-    plot: IUpdatePlotDTO,
-  ): Promise<IProjectMongo> {
+    plot: IPlotProject,
+  ): Promise<IProjectMongo | null | undefined> {
     const indexOfProjectToUpdate = this.projects.findIndex(
       (project) => project.id === projectId,
     )
@@ -101,18 +105,12 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     this.projects = filteredProjects
   }
 
-  async updateTag(projectId: string, tags: ITag[]): Promise<IProjectMongo> {
-    const indexOfProjectToUpdate = this.projects.findIndex(
-      (project) => project.id === projectId,
-    )
-    this.projects[indexOfProjectToUpdate].tags = tags
-
-    return this.projects[indexOfProjectToUpdate]
-  }
-
   listAll: () => Promise<IProjectMongo[]>
 
-  async updateName({ id, name }: IUpdateName): Promise<IProjectMongo> {
+  async updateName({
+    id,
+    name,
+  }: IUpdateName): Promise<IProjectMongo | null | undefined> {
     const indexOfProjectToUpdate = this.projects.findIndex(
       (project) => project.id === id,
     )
@@ -120,5 +118,15 @@ export class ProjectsRepositoryInMemory implements IProjectsRepository {
     this.projects[indexOfProjectToUpdate].name = name
 
     return this.projects[indexOfProjectToUpdate]
+  }
+
+  removeTagsInAllProjects: () => Promise<void>
+
+  async getNumberOfProjectsByUserId(userId: string): Promise<number> {
+    const numberOfProjects = this.projects.filter(
+      (project) => project.createdPerUser === userId,
+    )
+
+    return numberOfProjects.length
   }
 }

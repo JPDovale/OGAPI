@@ -2,11 +2,13 @@ import { hashSync } from 'bcryptjs'
 import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
-import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
+import { env } from '@env/index'
+import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { ISharedWhitUsers } from '@modules/projects/infra/mongoose/entities/Project'
+import { type ISharedWhitUsers } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserAlreadyExistes } from '@shared/errors/users/makeErrorUserAlreadyExistes'
+import { makeErrorUserNotCreated } from '@shared/errors/users/makeErrorUserNotCreated'
 dotenv.config()
 
 interface IRequest {
@@ -32,13 +34,7 @@ export class CreateUserUseCase {
 
     const userAlreadyExiste = await this.usersRepository.findByEmail(email)
 
-    if (userAlreadyExiste) {
-      throw new AppError({
-        title: 'O usuário já existe.',
-        message:
-          'Localizamos um usuário já cadastrado com esse e-mail. Por favor, tente fazer login.',
-      })
-    }
+    if (userAlreadyExiste) throw makeErrorUserAlreadyExistes()
 
     const passwordHash = hashSync(password, 8)
 
@@ -46,13 +42,15 @@ export class CreateUserUseCase {
       name,
       email,
       password: passwordHash,
-      age: age || 'uncharacterized',
-      sex: sex || 'uncharacterized',
-      username: username || name,
+      age: age ?? 'uncharacterized',
+      sex: sex ?? 'uncharacterized',
+      username: username ?? name,
     })
 
+    if (!newUser) throw makeErrorUserNotCreated()
+
     const projectWelcome = await this.projectsRepository.findById(
-      process.env.ID_PROJECT_WELCOME,
+      env.ID_PROJECT_WELCOME,
     )
 
     if (projectWelcome) {
@@ -64,10 +62,7 @@ export class CreateUserUseCase {
 
       const usersAdded = [...projectWelcome.users, addUser]
 
-      await this.projectsRepository.addUsers(
-        usersAdded,
-        process.env.ID_PROJECT_WELCOME,
-      )
+      await this.projectsRepository.addUsers(usersAdded, env.ID_PROJECT_WELCOME)
     }
 
     return newUser

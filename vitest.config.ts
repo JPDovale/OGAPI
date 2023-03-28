@@ -14,6 +14,7 @@ export default defineConfig({
       '@routes/': '/src/routes/',
       '@config/': '/src/config/',
       '@shared/': '/src/shared/',
+      '@env/': '/src/env/',
     },
   },
 })

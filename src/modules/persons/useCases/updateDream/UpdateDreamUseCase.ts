@@ -1,21 +1,21 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { IDream } from '@modules/persons/infra/mongoose/entities/Dream'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type IDream } from '@modules/persons/infra/mongoose/entities/Dream'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateDreamUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -25,35 +25,27 @@ export class UpdateDreamUseCase {
     dream: IUpdateBaseDTO,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project, permission } = await permissionToEditProject.verify(
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
-    if (permission !== 'edit') {
-      throw new AppError({
-        title: 'Você não tem permissão para atualizar o personagem',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 401,
-      })
-    }
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredDreams = person.dreams.filter((dream) => dream.id !== dreamId)
     const dreamToUpdate = person.dreams.find((dream) => dream.id === dreamId)
 
+    if (!dreamToUpdate)
+      throw makeErrorNotFound({
+        whatsNotFound: 'Sonho',
+      })
+
     const updatedDream: IDream = {
-      ...dreamToUpdate,
-      ...dream,
+      description: dream.description ?? dreamToUpdate.description,
+      title: dream.title ?? dreamToUpdate.title,
+      id: dreamToUpdate.id,
     }
 
     const updatedDreams = [...filteredDreams, updatedDream]
@@ -63,15 +55,7 @@ export class UpdateDreamUseCase {
       updatedDreams,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.updatePersonsTagsObject(
-      'persons/dreams',
-      dreamId,
-      { title: dream.title, description: dream.description },
-      project.tags,
-    )
-
-    await this.projectRepository.updateTag(project.id, tags)
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

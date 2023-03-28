@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -39,7 +39,7 @@ export class ReferenceTraumaController {
     } = referenceTraumaBodySchema.parse(req.body)
 
     const referenceTraumaUseCase = container.resolve(ReferenceTraumaUseCase)
-    const personUpdated = await referenceTraumaUseCase.execute(
+    const { person, box } = await referenceTraumaUseCase.execute(
       id,
       projectId,
       personId,
@@ -47,6 +47,6 @@ export class ReferenceTraumaController {
       { consequences },
     )
 
-    return res.status(200).json(personUpdated)
+    return res.status(200).json({ person, box })
   }
 }

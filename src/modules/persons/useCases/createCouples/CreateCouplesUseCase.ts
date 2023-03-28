@@ -1,12 +1,13 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { ICreateCoupleDTO } from '@modules/persons/dtos/ICreateCoupleDTO'
+import { type ICreateCoupleDTO } from '@modules/persons/dtos/ICreateCoupleDTO'
 import { Couple } from '@modules/persons/infra/mongoose/entities/Couple'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 
 interface IRequest {
   userId: string
@@ -25,8 +26,8 @@ export class CreateCoupleUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute({
@@ -40,20 +41,13 @@ export class CreateCoupleUseCase {
       couple.personId,
     )
 
-    if (!person || !personOfCouple) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person || !personOfCouple) throw makeErrorPersonNotFound()
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    await permissionToEditProject.verify(
+    await this.verifyPermissions.verify({
       userId,
-      projectId || person.defaultProject,
-      'edit',
-    )
+      projectId: projectId ?? person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const coupleExisteToThisPerson = person.couples.find(
       (c) => c.personId === couple.personId,
@@ -62,12 +56,11 @@ export class CreateCoupleUseCase {
       (c) => c.personId === personId,
     )
 
-    if (coupleExisteToThisPerson || personOfCoupleExisteToThisPerson) {
+    if (coupleExisteToThisPerson ?? personOfCoupleExisteToThisPerson) {
       throw new AppError({
         title: 'Já existe uma casal relacionado a esse personagem.',
         message:
           'Já existe uma casal relacionado a esse personagem. Tente com outro personagem.',
-        statusCode: 409,
       })
     }
 
@@ -91,6 +84,8 @@ export class CreateCoupleUseCase {
       updatedCouples,
     )
 
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+
     const updatedCoupleToPersonOfCouple = [
       newCoupleToPersonOfCouple,
       ...personOfCouple.couples,
@@ -99,6 +94,11 @@ export class CreateCoupleUseCase {
       couple.personId,
       updatedCoupleToPersonOfCouple,
     )
+
+    if (!updatedPersonOfCouple) {
+      await this.personsRepository.updateCouples(personId, person.couples)
+      throw makeErrorPersonNotUpdate()
+    }
 
     return { person: updatedPerson, personOfCouple: updatedPersonOfCouple }
   }

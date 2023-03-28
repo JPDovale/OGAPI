@@ -1,17 +1,21 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
-import { ICouple } from '@modules/persons/infra/mongoose/entities/Couple'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateBaseDTO } from '@modules/persons/dtos/IUpdateBaseDTO'
+import { type ICouple } from '@modules/persons/infra/mongoose/entities/Couple'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateCoupleUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -21,28 +25,14 @@ export class UpdateCoupleUseCase {
     couple: IUpdateBaseDTO,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { permission } = await permissionToEditProject.verify(
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
-    if (permission !== 'edit') {
-      throw new AppError({
-        title: 'Você não tem permissão para atualizar o personagem',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 401,
-      })
-    }
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredCouples = person.couples.filter(
       (couple) => couple.id !== coupleId,
@@ -51,9 +41,18 @@ export class UpdateCoupleUseCase {
       (couple) => couple.id === coupleId,
     )
 
+    if (!coupleToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Casal',
+      })
+    }
+
     const updatedCouple: ICouple = {
-      ...coupleToUpdate,
-      ...couple,
+      description: couple.description ?? coupleToUpdate.description,
+      title: couple.title ?? coupleToUpdate.title,
+      final: coupleToUpdate.final,
+      personId: coupleToUpdate.personId,
+      id: coupleToUpdate.id,
     }
 
     const updatedCouples = [...filteredCouples, updatedCouple]
@@ -62,6 +61,8 @@ export class UpdateCoupleUseCase {
       personId,
       updatedCouples,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

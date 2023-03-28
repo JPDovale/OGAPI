@@ -1,11 +1,13 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
 
 interface IRequest {
   bookId: string
@@ -22,18 +24,12 @@ export class DeleteCapituleUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-  ) { }
+  ) {}
 
   async execute({ bookId, capituleId, userId }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -48,19 +44,14 @@ export class DeleteCapituleUseCase {
       (capitule) => capitule.id !== capituleId,
     )
 
-    if (!capituleToDelete) {
-      throw new AppError({
-        title: 'O capitulo não existe',
-        message: 'Parece que esse capitulo não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!capituleToDelete) throw makeErrorCapituleNotFound()
 
     const capituleToDeleteSequence = Number(capituleToDelete.sequence)
-    const wordsToDeleteInBook = Number(capituleToDelete.words || '0')
+    const wordsToDeleteInBook = Number(capituleToDelete.words ?? '0')
     const numberOfWrittenWordsOnBook = Number(book.writtenWords)
-    const newNumberOfWrittenWordsOnBook = `${numberOfWrittenWordsOnBook - wordsToDeleteInBook
-      }`
+    const newNumberOfWrittenWordsOnBook = `${
+      numberOfWrittenWordsOnBook - wordsToDeleteInBook
+    }`
 
     const updatedCapitules = filteredCapitules.map((capitule) => {
       const capituleSequence = Number(capitule.sequence)
@@ -80,6 +71,8 @@ export class DeleteCapituleUseCase {
       id: bookId,
       writtenWords: newNumberOfWrittenWordsOnBook,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     return updatedBook
   }

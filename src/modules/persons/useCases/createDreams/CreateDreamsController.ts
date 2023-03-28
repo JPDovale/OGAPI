@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -27,7 +27,7 @@ export class CreateDreamsController {
     } = createDreamBodySchema.parse(req.body)
 
     const createDreamsUseCase = container.resolve(CreateDreamUseCase)
-    const { person, project } = await createDreamsUseCase.execute({
+    const { person, box } = await createDreamsUseCase.execute({
       userId: id,
       projectId,
       personId,
@@ -37,6 +37,6 @@ export class CreateDreamsController {
       },
     })
 
-    return res.status(201).json({ person, project })
+    return res.status(201).json({ person, box })
   }
 }

@@ -1,20 +1,28 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IFear } from '@modules/persons/infra/mongoose/entities/Fear'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IFear } from '@modules/persons/infra/mongoose/entities/Fear'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { ITag } from '@modules/projects/infra/mongoose/entities/Tag'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+
+interface IResponse {
+  person: IPersonMongo
+  box: IBox
+}
 
 @injectable()
 export class ReferenceFearUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute(
@@ -22,85 +30,39 @@ export class ReferenceFearUseCase {
     projectId: string,
     personId: string,
     refId: string,
-  ): Promise<IPersonMongo> {
+  ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person) throw makeErrorPersonNotFound()
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    await this.verifyPermissions.verify({
       userId,
       projectId,
-      'edit',
-    )
+      verifyPermissionTo: 'edit',
+    })
 
-    let tags: ITag[]
-    tags = project.tags.filter((tag) => tag.type !== 'persons/fears')
-    const tagFears = project.tags.find((tag) => tag.type === 'persons/fears')
-
-    if (!tagFears) {
-      throw new AppError({
-        title: 'Tag inexistente',
-        message: 'Você está tentando referenciar uma tag que não existe...',
-        statusCode: 404,
-      })
-    }
-
-    const exiteRef = tagFears.refs.find((ref) => ref.object.id === refId)
-
-    if (!exiteRef) {
-      throw new AppError({
-        title: 'Referência inexistente',
-        message: 'Essa referencia não existe... Tente cria-lá',
-        statusCode: 404,
-      })
-    }
-
-    const personExisteInRef = exiteRef.references.find((id) => id === personId)
-
-    if (personExisteInRef) {
-      throw new AppError({
-        title: 'Referencia criada anteriormente.',
-        message: 'Esse personagem já foi adicionado a referencia',
-        statusCode: 409,
-      })
-    }
-
-    const addPersonToRef = {
-      ...exiteRef,
-      references: [...exiteRef.references, personId],
-    }
-
-    const filteredRefs = tagFears.refs.filter((ref) => ref.object.id !== refId)
-
-    const updatedTag: ITag = {
-      ...tagFears,
-      refs: [addPersonToRef, ...filteredRefs],
-    }
-
-    tags = [updatedTag, ...tags]
-
-    await this.projectsRepository.updateTag(projectId, tags)
+    const { archive, box } = await this.boxesControllers.linkObject({
+      boxName: 'persons/fears',
+      objectToLinkId: person.id,
+      projectId,
+      archiveId: refId,
+    })
 
     const fearToIndexOnPerson: IFear = {
-      id: exiteRef.object.id || '',
-      title: exiteRef.object.title || '',
-      description: exiteRef.object.description || '',
+      id: archive.archive.id ?? '',
+      title: archive.archive.title ?? '',
+      description: archive.archive.description ?? '',
     }
 
-    const updatedObjetives = [...person.fears, fearToIndexOnPerson]
+    const updatedFears = [...person.fears, fearToIndexOnPerson]
 
     const updatedPerson = await this.personsRepository.updateFears(
       personId,
-      updatedObjetives,
+      updatedFears,
     )
 
-    return updatedPerson
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+
+    return { person: updatedPerson, box }
   }
 }

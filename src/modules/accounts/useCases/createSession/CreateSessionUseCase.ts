@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { compareSync } from 'bcryptjs'
 import { sign } from 'jsonwebtoken'
 import { inject, injectable } from 'tsyringe'
@@ -6,9 +5,9 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/mongoose/repositories/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserInvalidCredentialsToLogin } from '@shared/errors/users/makeErrorUserInvalidCredentialsToLogin'
 
 interface IRequest {
   email: string
@@ -43,23 +42,11 @@ export class CreateSessionUseCase {
 
     const userExiste = await this.userRepository.findByEmail(email)
 
-    if (!userExiste) {
-      throw new AppError({
-        title: 'Email ou senha incorretos.',
-        message:
-          'O email ou a senha que você informou são inválidos. Verifique as informações e tente de novo.',
-      })
-    }
+    if (!userExiste) throw makeErrorUserInvalidCredentialsToLogin()
 
     const passwordCorrect = compareSync(password, userExiste.password)
 
-    if (!passwordCorrect) {
-      throw new AppError({
-        title: 'Email ou senha incorretos.',
-        message:
-          'O email ou a senha que você informou são inválidos. Verifique as informações e tente de novo.',
-      })
-    }
+    if (!passwordCorrect) throw makeErrorUserInvalidCredentialsToLogin()
 
     const token = sign(
       {
@@ -89,7 +76,7 @@ export class CreateSessionUseCase {
     )
 
     const expiresDate = this.dateProvider.getDate(
-      this.dateProvider.addDays(expiresRefreshTokenDays),
+      this.dateProvider.addDays(Number(expiresRefreshTokenDays)),
     )
 
     await this.refreshTokenRepository.create({

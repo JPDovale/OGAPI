@@ -1,12 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
 import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
-import { IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
+import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 
 import { ICacheProvider } from '../../CacheProvider/ICacheProvider'
-import { INotifyAll, INotifyUsersProvider } from '../INotifyUsersProvider'
+import {
+  type INotifyAll,
+  type INotifyUsersProvider,
+} from '../INotifyUsersProvider'
 
 @injectable()
 export class NotifyUsersProvider implements INotifyUsersProvider {
@@ -42,32 +45,6 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
       usersIds,
       newNotification,
     )
-
-    //   await Promise.all(
-    //     project.users.map(async (u) => {
-    //       if (u.id === sendBy.id) return
-    //       const userToNotify = await this.usersRepository.findById(u.id)
-
-    //       if (userToNotify) {
-    //         const newNotification = new Notification({
-    //           title,
-    //           content,
-    //           projectId: project.id,
-    //           sendedPerUser: sendBy.id,
-    //         })
-
-    //         const notificationsUpdated = [
-    //           newNotification,
-    //           ...userToNotify.notifications,
-    //         ]
-
-    //         await this.usersRepository.updateNotifications(
-    //           userToNotify.id,
-    //           notificationsUpdated,
-    //         )
-    //       }
-    //     }),
-    //   )
   }
 
   async notifyAll({ content, sendBy, title }: INotifyAll): Promise<void> {

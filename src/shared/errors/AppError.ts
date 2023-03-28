@@ -11,6 +11,6 @@ export class AppError {
   constructor({ title, message, statusCode }: IError) {
     this.title = title
     this.message = message
-    this.statusCode = statusCode || 400
+    this.statusCode = statusCode ?? 400
   }
 }

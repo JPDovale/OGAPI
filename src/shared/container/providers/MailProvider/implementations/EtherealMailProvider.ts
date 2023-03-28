@@ -1,11 +1,11 @@
-import handlebars from 'handlebars'
 import fs from 'fs'
-import nodemailer, { Transporter } from 'nodemailer'
+import handlebars from 'handlebars'
+import nodemailer, { type Transporter } from 'nodemailer'
 import { injectable } from 'tsyringe'
 
 import { AppError } from '@shared/errors/AppError'
 
-import { IMailProvider, ISendMail } from '../IMailProvider'
+import { type IMailProvider, type ISendMail } from '../IMailProvider'
 
 @injectable()
 export class EtherealMailProvider implements IMailProvider {

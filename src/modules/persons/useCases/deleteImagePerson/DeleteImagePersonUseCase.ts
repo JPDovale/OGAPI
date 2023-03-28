@@ -1,11 +1,13 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorImageNotFound } from '@shared/errors/useFull/makeErrorImageNotFound'
 
 @injectable()
 export class DeleteImagePersonUseCase {
@@ -16,44 +18,37 @@ export class DeleteImagePersonUseCase {
     private readonly storageProvider: IStorageProvider,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(userId: string, personId: string): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    if (!person) throw makeErrorPersonNotFound()
+
+    await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
-    if (!project) {
-      throw new AppError({
-        title: 'Projeto não encontrado.',
-        message: 'Parece que esse projeto não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
-
-    if (!person?.image.fileName) {
-      throw new AppError({
-        title: 'Image não encontrada.',
-        message: 'Não existe uma imagem para esse personagem.',
-        statusCode: 404,
-      })
-    }
+    if (!person.image?.fileName) throw makeErrorImageNotFound()
 
     const updatedPerson = await this.personsRepository.updateImage(
       {
         fileName: '',
         url: '',
-        createdAt: this.dateProvider.getDate(new Date()),
+        createdAt:
+          person.image.createdAt ?? this.dateProvider.getDate(new Date()),
+        updatedAt: this.dateProvider.getDate(new Date()),
       },
       personId,
     )
 
     await this.storageProvider.delete(person.image.fileName, 'persons/images')
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

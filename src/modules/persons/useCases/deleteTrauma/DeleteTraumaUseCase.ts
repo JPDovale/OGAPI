@@ -1,62 +1,60 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+
+interface IResponse {
+  person: IPersonMongo
+  box: IBox
+}
 
 @injectable()
 export class DeleteTraumaUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute(
     userId: string,
     personId: string,
     traumaId: string,
-  ): Promise<void> {
+  ): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
-
-    if (person.fromUser !== userId) {
-      throw new AppError({
-        title: 'Permissão de alteração invalida.',
-        message:
-          'Você não tem permissão para apagar esse personagem, pois ele pertence a outro usuário',
-        statusCode: 401,
-      })
-    }
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredTrauma = person.traumas.filter((p) => p.id !== traumaId)
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.deleteReferenceTag(
-      'persons/traumas',
-      traumaId,
+    const box = await this.boxesControllers.unlinkObject({
+      archiveId: traumaId,
+      boxName: 'persons/traumas',
+      objectToUnlinkId: personId,
+      projectId: project.id,
+    })
+
+    const updatedPerson = await this.personsRepository.updateTraumas(
       personId,
-      project.tags,
+      filteredTrauma,
     )
 
-    await this.projectRepository.updateTag(project.id, tags)
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
-    await this.personsRepository.updateTraumas(personId, filteredTrauma)
+    return { person: updatedPerson, box }
   }
 }

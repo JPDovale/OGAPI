@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -17,12 +17,12 @@ export class DeleteAppearanceController {
     )
 
     const deleteAppearanceUseCase = container.resolve(DeleteAppearanceUseCase)
-    const updatedPerson = await deleteAppearanceUseCase.execute(
+    const { box, person } = await deleteAppearanceUseCase.execute(
       id,
       personId,
       appearanceId,
     )
 
-    return res.status(200).json(updatedPerson)
+    return res.status(200).json({ box, person })
   }
 }

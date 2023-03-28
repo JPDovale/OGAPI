@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -39,7 +39,7 @@ export class ReferenceValueController {
     } = referenceValueBodySchema.parse(req.body)
 
     const referenceValueUseCase = container.resolve(ReferenceValueUseCase)
-    const personUpdated = await referenceValueUseCase.execute(
+    const { person, box } = await referenceValueUseCase.execute(
       id,
       projectId,
       personId,
@@ -47,6 +47,6 @@ export class ReferenceValueController {
       { exceptions },
     )
 
-    return res.status(200).json(personUpdated)
+    return res.status(200).json({ person, box })
   }
 }

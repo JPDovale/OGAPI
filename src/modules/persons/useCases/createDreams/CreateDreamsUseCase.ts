@@ -1,14 +1,15 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { type ICreateGenericObjectDTO } from '@modules/persons/dtos/ICreateGenericObjectDTO'
 import { Dream } from '@modules/persons/infra/mongoose/entities/Dream'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
 
 interface IRequest {
   userId: string
@@ -19,7 +20,7 @@ interface IRequest {
 
 interface IResponse {
   person: IPersonMongo
-  project: IProjectMongo
+  box: IBox
 }
 
 @injectable()
@@ -27,8 +28,10 @@ export class CreateDreamUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectsRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
+    @inject('BoxesControllers')
+    private readonly boxesControllers: IBoxesControllers,
   ) {}
 
   async execute({
@@ -39,52 +42,40 @@ export class CreateDreamUseCase {
   }: IRequest): Promise<IResponse> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Parece que esse personagem não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!person) throw makeErrorPersonNotFound()
 
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project } = await permissionToEditProject.verify(
+    const { project } = await this.verifyPermissions.verify({
       userId,
-      projectId || person.defaultProject,
-      'edit',
-    )
+      projectId: projectId ?? person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const dreamExistesToThiPerson = person.dreams.find(
       (d) => d.title === dream.title,
     )
 
-    if (dreamExistesToThiPerson) {
-      throw new AppError({
-        title: 'Já existe um sonho com esse nome.',
-        message:
-          'Já existe um sonho com esse nome para esse personagem. Tente com outro nome.',
-        statusCode: 409,
+    if (dreamExistesToThiPerson)
+      throw makeErrorAlreadyExistesWithName({
+        whatExistes: 'um sonho',
       })
-    }
-
-    const tagDreams = project.tags.find((tag) => tag.type === 'persons/dreams')
-
-    const dreamAlreadyExistsInTags = tagDreams?.refs.find(
-      (ref) => ref.object.title === dream.title,
-    )
-
-    if (dreamAlreadyExistsInTags) {
-      throw new AppError({
-        title: 'Sonho já existe nas tags.',
-        message:
-          'Você já criou um sonho com esse nome para outro personagem... Caso o sonho seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome para o sonho.',
-        statusCode: 409,
-      })
-    }
 
     const newDream = new Dream({
       description: dream.description,
       title: dream.title,
+    })
+
+    const box = await this.boxesControllers.controllerInternalBoxes({
+      archive: newDream,
+      error: {
+        title: 'Sonho já existe nos arquivos internos do projeto.',
+        message:
+          'Você já criou um sonho com esse nome para outro personagem... Caso o sonho seja o mesmo, tente atribui-lo ao personagem, ou então escolha outro nome.',
+      },
+      name: 'persons/dreams',
+      projectId,
+      projectName: project.name,
+      userId,
+      linkId: person.id,
     })
 
     const updatedDreams = [newDream, ...person.dreams]
@@ -93,20 +84,8 @@ export class CreateDreamUseCase {
       updatedDreams,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.createOrUpdate(
-      project.tags,
-      'persons/dreams',
-      [newDream],
-      [personId],
-      project.name,
-    )
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
-    const projectUpdate = await this.projectsRepository.updateTag(
-      projectId || person.defaultProject,
-      tags,
-    )
-
-    return { person: updatedPerson, project: projectUpdate }
+    return { person: updatedPerson, box }
   }
 }

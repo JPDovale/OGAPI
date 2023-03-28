@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -39,7 +39,7 @@ export class CreateValuesController {
     } = createValueBodySchema.parse(req.body)
 
     const createValuesUseCase = container.resolve(CreateValueUseCase)
-    const updatedPerson = await createValuesUseCase.execute({
+    const { person, box } = await createValuesUseCase.execute({
       userId: id,
       projectId,
       personId,
@@ -50,6 +50,6 @@ export class CreateValuesController {
       },
     })
 
-    return res.status(201).json(updatedPerson)
+    return res.status(201).json({ person, box })
   }
 }

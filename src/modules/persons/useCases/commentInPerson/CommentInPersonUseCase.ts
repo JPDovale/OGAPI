@@ -1,13 +1,15 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
+import { type ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import {
   Comment,
-  IComment,
+  type IComment,
 } from '@modules/projects/infra/mongoose/entities/Comment'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 
 interface IRequest {
   userId: string
@@ -20,6 +22,8 @@ export class CommentInPersonUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute({
@@ -31,12 +35,13 @@ export class CommentInPersonUseCase {
 
     const person = await this.personsRepository.findById(personId)
 
-    const permissionToComment = container.resolve(PermissionToEditProject)
-    const { user } = await permissionToComment.verify(
+    if (!person) throw makeErrorPersonNotFound()
+
+    const { user } = await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'comment',
-    )
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'comment',
+    })
 
     const newComment = new Comment({
       content,
@@ -51,6 +56,9 @@ export class CommentInPersonUseCase {
       personId,
       comments,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+
     return updatedPerson
   }
 }

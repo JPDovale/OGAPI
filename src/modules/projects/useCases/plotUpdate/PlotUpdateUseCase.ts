@@ -1,10 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
-import { IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IUpdatePlotDTO } from '@modules/projects/dtos/IUpdatePlotDTO'
+import { type IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
+import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
 
 @injectable()
 export class PlotUpdateUseCase {
@@ -28,12 +30,14 @@ export class PlotUpdateUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    const updatedPlot: IUpdatePlotDTO = { ...project.plot, ...plot }
+    const updatedPlot: IPlotProject = { ...project.plot, ...plot }
 
     const updatedProject = await this.projectsRepository.updatePlot(
       projectId,
       updatedPlot,
     )
+
+    if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

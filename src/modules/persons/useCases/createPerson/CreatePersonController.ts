@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -23,7 +23,7 @@ export class CreatePersonController {
       createPersonBodySchema.parse(req.body)
 
     const createPersonUseCase = container.resolve(CreatePersonUseCase)
-    const { person, project } = await createPersonUseCase.execute({
+    const { person, box } = await createPersonUseCase.execute({
       userId: id,
       projectId,
       newPerson: {
@@ -34,6 +34,6 @@ export class CreatePersonController {
       },
     })
 
-    return res.status(201).json({ person, project })
+    return res.status(201).json({ person, box })
   }
 }

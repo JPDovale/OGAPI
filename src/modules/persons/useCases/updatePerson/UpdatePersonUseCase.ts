@@ -1,15 +1,19 @@
 import { inject, injectable } from 'tsyringe'
 
-import { ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 
 @injectable()
 export class UpdatePersonUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -19,27 +23,20 @@ export class UpdatePersonUseCase {
   ): Promise<IPersonMongo> {
     const personExite = await this.personsRepository.findById(personId)
 
-    if (!personExite) {
-      throw new AppError({
-        title: 'Personagem não encontrado.',
-        message:
-          'Parece que esse personagem não existe na nossa base de dados...',
-        statusCode: 404,
-      })
-    }
+    if (!personExite) throw makeErrorPersonNotFound()
 
-    if (personExite.fromUser !== userId) {
-      throw new AppError({
-        title: 'Acesso negado!',
-        message: 'Você não tem permissão para alterar o projeto.',
-        statusCode: 401,
-      })
-    }
+    await this.verifyPermissions.verify({
+      userId,
+      projectId: personExite.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const updatedPerson = await this.personsRepository.updatePerson(
       personId,
       person,
     )
+
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

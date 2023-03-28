@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -18,13 +18,13 @@ export class ReferenceDreamController {
     )
 
     const referenceDreamUseCase = container.resolve(ReferenceDreamUseCase)
-    const personUpdated = await referenceDreamUseCase.execute(
+    const { person, box } = await referenceDreamUseCase.execute(
       id,
       projectId,
       personId,
       refId,
     )
 
-    return res.status(200).json(personUpdated)
+    return res.status(200).json({ person, box })
   }
 }

@@ -1,6 +1,6 @@
-import { ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
+import { type ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
 
-import { IRefreshTokenMongo } from '../entities/RefreshToken'
+import { type IRefreshTokenMongo } from '../entities/RefreshToken'
 
 export interface IFindByRefreshToken {
   refreshToken: string
@@ -11,12 +11,12 @@ export interface IRefreshTokenRepository {
     expiresDate,
     refreshToken,
     userId,
-  }: ICreateUserTokenDTO) => Promise<IRefreshTokenMongo>
+  }: ICreateUserTokenDTO) => Promise<IRefreshTokenMongo | null | undefined>
 
   findByUserIdAndRefreshToken: (
     userId: string,
     refreshToken: string,
-  ) => Promise<IRefreshTokenMongo>
+  ) => Promise<IRefreshTokenMongo | null | undefined>
 
   deleteById: (refreshTokenId: string) => Promise<void>
 
@@ -26,5 +26,5 @@ export interface IRefreshTokenRepository {
 
   findByRefreshToken: ({
     refreshToken,
-  }: IFindByRefreshToken) => Promise<IRefreshTokenMongo>
+  }: IFindByRefreshToken) => Promise<IRefreshTokenMongo | null | undefined>
 }

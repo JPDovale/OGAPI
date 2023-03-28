@@ -1,11 +1,17 @@
 import cors from 'cors'
-import dotenv from 'dotenv'
-import express, { NextFunction, Request, Response } from 'express'
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from 'express'
 import morgan from 'morgan'
 import { ZodError } from 'zod'
 
+import { env } from '@env/index'
 import * as Sentry from '@sentry/node'
+// eslint-disable-next-line import-helpers/order-imports
 import * as Tracing from '@sentry/tracing'
+
 import 'express-async-errors'
 import 'reflect-metadata'
 
@@ -17,20 +23,19 @@ import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
 import { RateLimiter } from './middlewares/limiter'
 
-dotenv.config()
+import { MulterError } from 'multer'
 
 const app = express()
-const appName = process.env.APP_NAME
-const appPort = process.env.APP_PORT
+const appName = env.APP_NAME
+const appPort = env.APP_PORT
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
-const isDev = JSON.parse(process.env.IS_DEV || 'false')
 
-if (!isDev) {
+if (env.NODE_ENV !== 'dev') {
   app.use(rateLimit.rete)
 
   Sentry.init({
-    dsn: process.env.DNS_SENTRY,
+    dsn: env.DNS_SENTRY,
     // environment: params.INSTANCE_NAME,
     integrations: [
       new Sentry.Integrations.Http({ tracing: true }),
@@ -50,13 +55,13 @@ app.use(
 )
 app.use(express.json())
 
-if (!isDev) {
+if (env.NODE_ENV !== 'dev') {
   app.use(morgan('combined'))
 }
 
 getConnectionMongoDb()
   .then(() => {
-    if (isDev) console.log('Database connected')
+    if (env.NODE_ENV === 'dev') console.log('Database connected')
   })
   .catch((err) => {
     throw err
@@ -64,7 +69,7 @@ getConnectionMongoDb()
 
 app.use(router)
 
-if (!isDev) {
+if (env.NODE_ENV !== 'dev') {
   app.use(Sentry.Handlers.errorHandler())
 }
 
@@ -77,25 +82,33 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 
   if (err instanceof ZodError) {
-    if (isDev) console.log(err)
+    if (env.NODE_ENV === 'dev') console.log(err)
 
-    return res.status(401).json({
+    return res.status(400).json({
       errorTitle: 'Informações inválidas',
+      errorMessage: 'Verifique as informações fornecidas e tente novamente',
+    })
+  }
+
+  if (err instanceof MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      errorTitle: 'Imagem maior que 2 mb',
       errorMessage:
-        'As informações fornecidas não são aceitas pela aplicação. Rastreamos o erro no seu dispositivo e resolveremos em breve',
+        'O limite de tamanho de imagens aceito é 2 mb nos planos free.',
     })
   }
 
   if (err instanceof Error) {
-    if (isDev) console.log(err)
+    if (env.NODE_ENV === 'dev') console.log(err)
 
     res.status(500).json({
       errorTitle: 'Internal error',
-      errorMessage: 'Try again later.',
+      errorMessage: 'Internal error',
     })
   }
 })
 
 app.listen(appPort, () => {
-  if (isDev) console.log(`${appName} running on port ${appPort}`)
+  if (env.NODE_ENV === 'dev')
+    console.log(`${appName} running on port ${appPort}`)
 })

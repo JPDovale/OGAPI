@@ -6,7 +6,7 @@ import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBo
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
 import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 @injectable()
 export class DeleteUserUseCase {
@@ -28,12 +28,7 @@ export class DeleteUserUseCase {
   async execute(id: string): Promise<void> {
     const user = await this.usersRepository.findById(id)
 
-    if (!user)
-      throw new AppError({
-        title: 'Usuário não encontrado.',
-        message: 'Parece que esse usuário não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    if (!user) throw makeErrorUserNotFound()
 
     await this.usersRepository.delete(id)
     await this.projectsRepository.deletePerUserId(id)

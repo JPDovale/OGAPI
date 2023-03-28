@@ -1,12 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
-import { IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { type IScene } from '@modules/books/infra/mongoose/entities/types/IScene'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { makeErrorSceneNotFound } from '@shared/errors/books/makeErrorSceneNotFound'
 
 interface IRequest {
   bookId: string
@@ -24,7 +27,7 @@ export class DeleteSceneUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
     @inject('DateProvider')
     private readonly dateProvider: IDateProvider,
-  ) { }
+  ) {}
 
   async execute({
     userId,
@@ -34,13 +37,7 @@ export class DeleteSceneUseCase {
   }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -55,13 +52,8 @@ export class DeleteSceneUseCase {
       (capitule) => capitule.id === capituleId,
     )
 
-    if (!capituleToUpdate || indexOfCapituleToUpdate < 0) {
-      throw new AppError({
-        title: 'O capítulo não existe',
-        message: 'Parece que esse capítulo não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!capituleToUpdate || indexOfCapituleToUpdate < 0)
+      throw makeErrorCapituleNotFound()
 
     const sceneToDelete = capituleToUpdate.scenes.find(
       (scene) => scene.id === sceneId,
@@ -70,17 +62,11 @@ export class DeleteSceneUseCase {
       (scene) => scene.id !== sceneId,
     )
 
-    if (!sceneToDelete) {
-      throw new AppError({
-        title: 'A cena não existe',
-        message: 'Parece que essa cena não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!sceneToDelete) throw makeErrorSceneNotFound()
 
     const sceneToDeleteSequence = Number(sceneToDelete.sequence)
-    const wordsToDeleteInCapitule = Number(sceneToDelete.writtenWords || '0')
-    const wordsInCapitule = Number(capituleToUpdate.words || '0')
+    const wordsToDeleteInCapitule = Number(sceneToDelete.writtenWords ?? '0')
+    const wordsInCapitule = Number(capituleToUpdate.words ?? '0')
     const capituleComplete = !filteredScenes.find((scene) => !scene.complete)
 
     const updatedScenes = filteredScenes.map((scene) => {
@@ -121,6 +107,8 @@ export class DeleteSceneUseCase {
       capitules,
       writtenWords: `${wordsInBook}`,
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     return updatedBook
   }

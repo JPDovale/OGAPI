@@ -1,16 +1,16 @@
 import { container } from 'tsyringe'
 
-import { ICacheProvider } from './CacheProvider/ICacheProvider'
+import { type ICacheProvider } from './CacheProvider/ICacheProvider'
 import { RedisCacheProvider } from './CacheProvider/implementations/RedisCacheProvider'
-import { IDateProvider } from './DateProvider/IDateProvider'
+import { type IDateProvider } from './DateProvider/IDateProvider'
 import { DayJsDateProvider } from './DateProvider/implementations/DayJsDateProvider'
-import { IMailProvider } from './MailProvider/IMailProvider'
+import { type IMailProvider } from './MailProvider/IMailProvider'
 import { EtherealMailProvider } from './MailProvider/implementations/EtherealMailProvider'
 import { MailGunProvider } from './MailProvider/implementations/MailGunProvider'
 import { NotifyUsersProvider } from './NotifyUsersProvider/implementations/NotifyUsersProvider'
-import { INotifyUsersProvider } from './NotifyUsersProvider/INotifyUsersProvider'
+import { type INotifyUsersProvider } from './NotifyUsersProvider/INotifyUsersProvider'
 import { FirebaseStorageProvider } from './StorageProvider/implementations/FirebaseStorageProvider'
-import { IStorageProvider } from './StorageProvider/IStorageProvider'
+import { type IStorageProvider } from './StorageProvider/IStorageProvider'
 
 container.registerSingleton<IDateProvider>('DateProvider', DayJsDateProvider)
 

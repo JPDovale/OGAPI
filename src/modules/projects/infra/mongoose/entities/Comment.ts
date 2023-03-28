@@ -6,6 +6,17 @@ import { DayJsDateProvider } from '@shared/container/providers/DateProvider/impl
 const dateProvider = container.resolve(DayJsDateProvider)
 
 export interface IComment {
+  id: string
+  userId: string
+  username: string
+  to: string
+  content: string
+  responses: IResponse[]
+  createAt: string
+  updateAt: string
+}
+
+interface ICommentConstructor {
   id?: string
   userId: string
   username: string
@@ -17,6 +28,15 @@ export interface IComment {
 }
 
 export interface IResponse {
+  id: string
+  userId: string
+  username: string
+  content: string
+  createAt: string
+  updateAt: string
+}
+
+interface IResponseConstructor {
   id?: string
   userId: string
   username: string
@@ -33,13 +53,13 @@ export class Response {
   createAt: string
   updateAt: string
 
-  constructor(response: IResponse) {
-    this.id = uuidV4()
+  constructor(response: IResponseConstructor) {
+    this.id = response.id ?? uuidV4()
     this.userId = response.userId
     this.username = response.username
     this.content = response.content
-    this.createAt = response.createAt || dateProvider.getDate(new Date())
-    this.updateAt = response.updateAt || dateProvider.getDate(new Date())
+    this.createAt = response.createAt ?? dateProvider.getDate(new Date())
+    this.updateAt = response.updateAt ?? dateProvider.getDate(new Date())
   }
 }
 
@@ -49,18 +69,18 @@ export class Comment {
   username: string
   to: string
   content: string
-  responses?: IResponse[]
+  responses: IResponse[]
   createAt: string
   updateAt: string
 
-  constructor(comment: IComment) {
-    this.id = uuidV4()
+  constructor(comment: ICommentConstructor) {
+    this.id = comment.id ?? uuidV4()
     this.userId = comment.userId
     this.username = comment.username
     this.to = comment.to
     this.content = comment.content
-    this.responses = comment.responses || []
-    this.createAt = comment.createAt || dateProvider.getDate(new Date())
-    this.updateAt = comment.updateAt || dateProvider.getDate(new Date())
+    this.responses = comment.responses ?? []
+    this.createAt = comment.createAt ?? dateProvider.getDate(new Date())
+    this.updateAt = comment.updateAt ?? dateProvider.getDate(new Date())
   }
 }

@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe'
 import { redisClient } from '@config/redis'
 
 import { IDateProvider } from '../../DateProvider/IDateProvider'
-import { ICacheProvider } from '../ICacheProvider'
+import { type ICacheProvider } from '../ICacheProvider'
 
 @injectable()
 export class RedisCacheProvider implements ICacheProvider {

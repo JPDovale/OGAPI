@@ -1,12 +1,14 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
-import { AppError } from '@shared/errors/AppError'
+import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { makeErrorImageNotFound } from '@shared/errors/useFull/makeErrorImageNotFound'
 
 interface IRequest {
   userId: string
@@ -31,13 +33,7 @@ export class RemoveFrontCoverUseCase {
   async execute({ bookId, userId }: IRequest): Promise<IBook> {
     const book = await this.booksRepository.findById(bookId)
 
-    if (!book) {
-      throw new AppError({
-        title: 'O livro não existe',
-        message: 'Parece que esse livro não existe na nossa base de dados',
-        statusCode: 404,
-      })
-    }
+    if (!book) throw makeErrorBookNotFound()
 
     const { user, project } = await this.verifyPermissions.verify({
       projectId: book.defaultProject,
@@ -45,13 +41,7 @@ export class RemoveFrontCoverUseCase {
       verifyPermissionTo: 'edit',
     })
 
-    if (!book?.frontCover.fileName) {
-      throw new AppError({
-        title: 'Image não encontrada.',
-        message: 'Não existe uma imagem para esse livro.',
-        statusCode: 404,
-      })
-    }
+    if (!book?.frontCover?.fileName) throw makeErrorImageNotFound()
 
     const updatedBook = await this.booksRepository.updateFrontCover({
       id: book.id,
@@ -62,6 +52,8 @@ export class RemoveFrontCoverUseCase {
         createdAt: book.frontCover.createdAt,
       },
     })
+
+    if (!updatedBook) throw makeErrorBookNotUpdate()
 
     await this.notifyUsersProvider.notify(
       user,

@@ -1,21 +1,21 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IUpdateObjectiveDTO } from '@modules/persons/dtos/IUpdateObjectiveDTO'
-import { IObjective } from '@modules/persons/infra/mongoose/entities/Objective'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type IUpdateObjectiveDTO } from '@modules/persons/dtos/IUpdateObjectiveDTO'
+import { type IObjective } from '@modules/persons/infra/mongoose/entities/Objective'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateObjectiveUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -25,28 +25,14 @@ export class UpdateObjectiveUseCase {
     objective: IUpdateObjectiveDTO,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project, permission } = await permissionToEditProject.verify(
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
-    if (permission !== 'edit') {
-      throw new AppError({
-        title: 'Você não tem permissão para atualizar o personagem',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 401,
-      })
-    }
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredObjectives = person.objectives.filter(
       (objective) => objective.id !== objectiveId,
@@ -55,9 +41,19 @@ export class UpdateObjectiveUseCase {
       (objective) => objective.id === objectiveId,
     )
 
+    if (!objectiveToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Objetivo',
+      })
+    }
+
     const updatedObjetive: IObjective = {
-      ...objectiveToUpdate,
-      ...objective,
+      avoiders: objective.avoiders ?? objectiveToUpdate.avoiders,
+      supporting: objective.supporting ?? objectiveToUpdate.supporting,
+      title: objective.title ?? objectiveToUpdate.title,
+      description: objective.description ?? objectiveToUpdate.description,
+      objectified: objective.objectified ?? objectiveToUpdate.objectified,
+      id: objectiveToUpdate.id,
     }
 
     const updatedObjetives = [...filteredObjectives, updatedObjetive]
@@ -67,15 +63,7 @@ export class UpdateObjectiveUseCase {
       updatedObjetives,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.updatePersonsTagsObject(
-      'persons/objectives',
-      objectiveId,
-      { title: objective.title, description: objective.description },
-      project.tags,
-    )
-
-    await this.projectRepository.updateTag(project.id, tags)
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }

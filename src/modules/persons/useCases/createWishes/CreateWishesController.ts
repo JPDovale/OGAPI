@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
@@ -28,7 +28,7 @@ export class CreateWishesController {
 
     const createWishesUseCase = container.resolve(CreateWisheUseCase)
 
-    const { person, project } = await createWishesUseCase.execute({
+    const { person, box } = await createWishesUseCase.execute({
       userId: id,
       projectId,
       personId,
@@ -38,6 +38,6 @@ export class CreateWishesController {
       },
     })
 
-    return res.status(201).json({ person, project })
+    return res.status(201).json({ person, box })
   }
 }

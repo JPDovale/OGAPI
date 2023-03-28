@@ -1,21 +1,21 @@
-import { container, inject, injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 
-import { IUpdateTraumaDTO } from '@modules/persons/dtos/IUpdateTraumaDTO'
-import { IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { ITrauma } from '@modules/persons/infra/mongoose/entities/Trauma'
+import { type IUpdateTraumaDTO } from '@modules/persons/dtos/IUpdateTraumaDTO'
+import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
+import { type ITrauma } from '@modules/persons/infra/mongoose/entities/Trauma'
 import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { TagsToProject } from '@modules/projects/services/tags/TagsToProject'
-import { PermissionToEditProject } from '@modules/projects/services/verify/PermissionToEditProject'
-import { AppError } from '@shared/errors/AppError'
+import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
 
 @injectable()
 export class UpdateTraumaUseCase {
   constructor(
     @inject('PersonsRepository')
     private readonly personsRepository: IPersonsRepository,
-    @inject('ProjectsRepository')
-    private readonly projectRepository: IProjectsRepository,
+    @inject('VerifyPermissions')
+    private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
   async execute(
@@ -25,28 +25,14 @@ export class UpdateTraumaUseCase {
     trauma: IUpdateTraumaDTO,
   ): Promise<IPersonMongo> {
     const person = await this.personsRepository.findById(personId)
-    const permissionToEditProject = container.resolve(PermissionToEditProject)
-    const { project, permission } = await permissionToEditProject.verify(
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    await this.verifyPermissions.verify({
       userId,
-      person.defaultProject,
-      'edit',
-    )
-
-    if (!person) {
-      throw new AppError({
-        title: 'O personagem não existe',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 404,
-      })
-    }
-
-    if (permission !== 'edit') {
-      throw new AppError({
-        title: 'Você não tem permissão para atualizar o personagem',
-        message: 'Você está tentando atualizar um personagem que não existe.',
-        statusCode: 401,
-      })
-    }
+      projectId: person.defaultProject,
+      verifyPermissionTo: 'edit',
+    })
 
     const filteredTrauma = person.traumas.filter(
       (trauma) => trauma.id !== traumaId,
@@ -55,9 +41,17 @@ export class UpdateTraumaUseCase {
       (trauma) => trauma.id === traumaId,
     )
 
+    if (!traumaToUpdate) {
+      throw makeErrorNotFound({
+        whatsNotFound: 'Trauma',
+      })
+    }
+
     const updatedTrauma: ITrauma = {
-      ...traumaToUpdate,
-      ...trauma,
+      consequences: trauma.consequences ?? traumaToUpdate.consequences,
+      title: trauma.title ?? traumaToUpdate.title,
+      description: trauma.description ?? traumaToUpdate.description,
+      id: traumaToUpdate.id,
     }
 
     const updateTrauma = [...filteredTrauma, updatedTrauma]
@@ -67,15 +61,7 @@ export class UpdateTraumaUseCase {
       updateTrauma,
     )
 
-    const tagsToProject = container.resolve(TagsToProject)
-    const tags = await tagsToProject.updatePersonsTagsObject(
-      'persons/traumas',
-      traumaId,
-      trauma,
-      project.tags,
-    )
-
-    await this.projectRepository.updateTag(project.id, tags)
+    if (!updatedPerson) throw makeErrorPersonNotUpdate()
 
     return updatedPerson
   }
