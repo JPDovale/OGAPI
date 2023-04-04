@@ -8,8 +8,8 @@ RUN npm install
 
 COPY . .
 
-RUN npm build:tsup
+RUN npm run build:tsup
 
 EXPOSE 3030
 
-CMD ["npm", "run", "aplication"]
+CMD ["npm", "run", "application"]

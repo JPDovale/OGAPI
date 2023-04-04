@@ -2,14 +2,10 @@ version: "2.2"
 
 services:
   og-api:
-    build: ./
+    build: .
     container_name: OgnareAPIRest
     restart: always
     ports:
       - 3030:3030
     volumes:
       - .:/user/api
-
-volumes:
-  pgdata:
-    driver: local
