@@ -17,6 +17,9 @@ jobs:
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SOURCE: "./"
+          ARGS: "-rlgoDzvc -i --delete"
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          EXCLUDE: "/dist/, /node_modules/"
+          EXCLUDE: "/dist/, /node_modules/, **.env"
+          TARGET: "/home/ognare.api.com/"
