@@ -3,11 +3,11 @@ EXPOSE 3030
 
 WORKDIR /usr/app
 
-COPY package*.json .
+COPY package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY ./ ./
 
 RUN npm run build:tsup
 
