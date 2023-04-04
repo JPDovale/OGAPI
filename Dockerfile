@@ -5,9 +5,10 @@ WORKDIR /user/api
 COPY package.json ./
 
 RUN npm install
-RUN npm build:tsup
 
 COPY . .
+
+RUN npm build:tsup
 
 EXPOSE 3030
 
