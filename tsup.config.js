@@ -14,5 +14,5 @@ export default defineConfig({
   ],
   format: 'cjs',
   plugins: [multiEntry()],
-  outDir: 'build',
+  outDir: './build',
 });
