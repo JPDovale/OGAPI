@@ -1,8 +1,9 @@
 FROM node:latest
+EXPOSE 3030
 
-WORKDIR /usr/api
+WORKDIR /usr/app
 
-COPY package.json ./
+COPY package*.json .
 
 RUN npm install
 
@@ -10,6 +11,5 @@ COPY . .
 
 RUN npm run build:tsup
 
-EXPOSE 3030
 
 CMD ["npm", "run", "application"]
