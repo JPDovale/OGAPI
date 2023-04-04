@@ -30,5 +30,4 @@ jobs:
           ARGS: "-rlgoDzvc -i --delete"
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          EXCLUDE: "/dist/, /node_modules/, **.env"
           TARGET: "/home/ognare.api.com/"
