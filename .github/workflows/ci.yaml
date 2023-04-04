@@ -13,6 +13,15 @@ jobs:
       - name: Checkout of repositories
         uses: actions/checkout@v3
 
+      - name: setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - run: npm ci
+
+      - run: npm run build:tsup
+
       - name: Deploy of application
         uses: easingthemes/ssh-deploy@main
         env:
