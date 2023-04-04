@@ -5,6 +5,8 @@ services:
     build: .
     command: npm run application
     restart: always
+    environment:
+      - ID_PROJECT_WELCOME=1242545b-56c9-41c0-9f98-addc9b5c5c65
     env_file:
       - .env
     ports:
