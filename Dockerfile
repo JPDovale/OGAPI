@@ -8,7 +8,7 @@ COPY tsup.config.js ./
 
 RUN npm install
 
-COPY ./src ./
+COPY ./src ./src
 
 RUN npm run build:tsup
 
