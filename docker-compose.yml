@@ -4,8 +4,10 @@ services:
   og-api:
     build: .
     container_name: OgnareAPIRest
+    command: npm run application
     restart: always
     ports:
       - 3030:3030
     volumes:
       - ./:/usr/app
+      - ./build:/usr/app/build

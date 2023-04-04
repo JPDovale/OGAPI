@@ -12,4 +12,4 @@ COPY ./ ./
 RUN npm run build:tsup
 
 
-CMD ["npm", "run", "application"]
+# CMD ["npm", "run", "application"]
