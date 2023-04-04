@@ -11,14 +11,12 @@ jobs:
 
     steps:
       - name: Checkout of repositories
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Deploy of application
         uses: easingthemes/ssh-deploy@v2.0.0
-        with:
-          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
-          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-          remote-user: ${{ secrets.REMOTE_USER }}
-          remote-host: ${{ secrets.REMOTE_HOST }}
-          local-folder: ./
-          remote-folder: /home/ognare.api.com
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          EXCLUDE: "/dist/, /node_modules/"
