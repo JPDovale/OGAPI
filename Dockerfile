@@ -1,16 +1,15 @@
-FROM node:latest
-EXPOSE 3030
+FROM node:alpine
 
 WORKDIR /usr/app
 
 COPY package*.json ./
-COPY tsup.config.js ./
 
 RUN npm install
 
 COPY ./ ./
 
+
 RUN npm run build:tsup
 
-
-# CMD ["npm", "run", "application"]
+EXPOSE 3030
+CMD ["npm", "run", "application"]
