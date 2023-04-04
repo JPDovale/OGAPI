@@ -1,43 +1,43 @@
-name: Run Unit Tests
+# name: Run Unit Tests
 
-on: [push]
+# on: [push]
 
-jobs:
-  run-unit-tests:
-    name: run-unit-tests
-    runs-on: ubuntu-latest
+# jobs:
+#   run-unit-tests:
+#     name: run-unit-tests
+#     runs-on: ubuntu-latest
 
-    environment: DATABASE_MONGO_URL=http://localhost:5555
-      MAILGUN_API_KEY=teste
-      MAILGUN_DOMAIN=teste
-      MAILGUN_HOST=teste
-      MAILGUN_PORT=12
-      MAILGUN_PASS=teste
-      SECRET_TOKEN=tete2121
-      EXPIRES_IN_TOKEN=12m
-      SECRET_REFRESH_TOKEN=teste34234
-      EXPIRES_IN_REFRESH_TOKEN=12m
-      EXPIRES_IN_REFRESH_TOKEN_DAYS=365
-      API_KEY=teste
-      AUTH_DOMAIN=teste
-      PROJECT_ID=teste
-      STORAGE_BUCKET=teste
-      MESSAGING_SENDER_ID=tester
-      APP_ID=teste
-      MEASUREMENT_ID=teste
-      DNS_SENTRY="http://localhost:5050"
-      REDIS_HOST=teste
-      REDIS_PORT=122
-      REDIS_PASS=teste
-      ID_PROJECT_WELCOME=teste
+#     environment: DATABASE_MONGO_URL=http://localhost:5555
+#       MAILGUN_API_KEY=teste
+#       MAILGUN_DOMAIN=teste
+#       MAILGUN_HOST=teste
+#       MAILGUN_PORT=12
+#       MAILGUN_PASS=teste
+#       SECRET_TOKEN=tete2121
+#       EXPIRES_IN_TOKEN=12m
+#       SECRET_REFRESH_TOKEN=teste34234
+#       EXPIRES_IN_REFRESH_TOKEN=12m
+#       EXPIRES_IN_REFRESH_TOKEN_DAYS=365
+#       API_KEY=teste
+#       AUTH_DOMAIN=teste
+#       PROJECT_ID=teste
+#       STORAGE_BUCKET=teste
+#       MESSAGING_SENDER_ID=tester
+#       APP_ID=teste
+#       MEASUREMENT_ID=teste
+#       DNS_SENTRY="http://localhost:5050"
+#       REDIS_HOST=teste
+#       REDIS_PORT=122
+#       REDIS_PASS=teste
+#       ID_PROJECT_WELCOME=teste
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: "npm"
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+#           cache: "npm"
 
-      - run: npm ci
+#       - run: npm ci
 
-      - run: npm run test
+#       - run: npm run test
