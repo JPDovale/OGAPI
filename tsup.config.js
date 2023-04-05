@@ -11,8 +11,12 @@ export default defineConfig({
     'src/modules/projects/**/*.ts',
     'src/shared/**/*.ts',
     'src/env/**/*.ts',
+    'src/**/*.hbs'
   ],
   format: 'cjs',
-  plugins: [multiEntry()],
+  loader: { '.hbs': 'copy' },
+  plugins: [
+    multiEntry(),
+  ],
   outDir: './build',
 });
