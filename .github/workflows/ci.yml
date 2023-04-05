@@ -30,4 +30,4 @@ jobs:
           ARGS: "-rlgoDzvc -i --delete"
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          TARGET: "/home/api.ognare.com/app"
+          TARGET: "/home/ognare.com/api"
