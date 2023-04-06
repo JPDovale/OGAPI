@@ -1,13 +1,13 @@
-FROM node:latest
+FROM node:alpine
 
-WORKDIR /user/api
+WORKDIR /usr/app
 
-COPY package.json ./
+COPY package*.json ./
+COPY .env ./
 
 RUN npm install
 
-COPY . .
+COPY ./ ./
 
 EXPOSE 3030
-
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "application"]

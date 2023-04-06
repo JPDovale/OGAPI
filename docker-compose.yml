@@ -1,17 +1,16 @@
-version: "2.10.2"
+version: "2.2"
 
 services:
   og-api:
-    build: ./
-    container_name: OgnareAPIRest
+    build: .
+    command: npm run application
     restart: always
+    environment:
+      - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}
+    env_file:
+      - .env
     ports:
       - 3030:3030
     volumes:
-      - .:/user/api
-    depends_on:
-      - database
-
-volumes:
-  pgdata: 
-    driver: local
+      - .:/usr/app
+      - /usr/app/node_modules

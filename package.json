@@ -7,8 +7,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "publish": "npm i && npm run build",
-    "application": "node shared/infra/http/index.js",
+    "publish": "npm i && npm run build:tsup",
+    "application": "node build/shared/infra/http/index.js",
     "build:tsup": "tsup",
     "dev": "ts-node-dev -r tsconfig-paths/register --poll --inspect --transpile-only --ignore-watch node_modules --respawn src/shared/infra/http/index.ts",
     "dev:compile": "node build/shared/infra/http/index.js",
@@ -50,6 +50,7 @@
     "eslint-plugin-n": "15.6.1",
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-promise": "6.1.1",
+    "handlebars-loader": "1.7.3",
     "prettier": "2.8.4",
     "rollup-plugin-multi-entry": "2.1.0",
     "supertest": "6.3.3",
