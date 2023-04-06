@@ -67,7 +67,7 @@ getConnectionMongoDb()
     throw err
   })
 
-app.use(router)
+app.use('/api', router)
 
 if (env.NODE_ENV !== 'dev') {
   app.use(Sentry.Handlers.errorHandler())

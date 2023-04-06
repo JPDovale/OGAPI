@@ -25,14 +25,26 @@ export class SendForgotPasswordMailUseCase {
   async execute(email: string): Promise<void> {
     const user = await this.usersRepository.findByEmail(email)
 
-    const templatePath = path.resolve(
-      __dirname,
-      '..',
-      '..',
-      'views',
-      'emails',
-      'forgotPassword.hbs',
-    )
+    const templatePath = env.IS_DEV
+      ? path.resolve(
+          __dirname,
+          '..',
+          '..',
+          'views',
+          'emails',
+          'forgotPassword.hbs',
+        )
+      : path.resolve(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          'modules',
+          'accounts',
+          'views',
+          'emails',
+          'forgotPassword.hbs',
+        )
 
     if (!user) throw makeErrorUserNotFound()
 
