@@ -3,13 +3,13 @@ import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { type IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { type IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { BooksRepositoryInMemory } from '@modules/books/infra/mongoose/repositories/inMemory/booksRepositoryInMemory'
+import { type IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { PlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
+import { type IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
 import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { type IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
 import { type ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { RedisCacheProvider } from '@shared/container/providers/CacheProvider/implementations/RedisCacheProvider'
 import { type IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
@@ -121,8 +121,8 @@ describe('Create book', () => {
     })
 
     const updatedBook = await createSceneUseCase.execute({
-      capituleId: newBook!.capitules[0].id,
-      bookId: newBook!.id,
+      capituleId: newBook.capitules[0].id,
+      bookId: newBook.id,
       persons: [],
       structure: {
         act1: 'teste',
@@ -211,8 +211,8 @@ describe('Create book', () => {
     })
 
     await createSceneUseCase.execute({
-      capituleId: newBook!.capitules[0].id,
-      bookId: newBook!.id,
+      capituleId: newBook.capitules[0].id,
+      bookId: newBook.id,
       persons: [],
       structure: {
         act1: 'teste',
@@ -306,8 +306,8 @@ describe('Create book', () => {
       })
 
       await createSceneUseCase.execute({
-        capituleId: newBook!.capitules[0].id,
-        bookId: newBook!.id,
+        capituleId: newBook.capitules[0].id,
+        bookId: newBook.id,
         persons: [],
         structure: {
           act1: 'teste',

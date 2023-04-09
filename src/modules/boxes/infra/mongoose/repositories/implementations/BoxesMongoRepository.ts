@@ -19,6 +19,14 @@ export class BoxesMongoRepository implements IBoxesRepository {
     private readonly dateProvider: IDateProvider,
   ) {}
 
+  async listInternals(): Promise<IBox[]> {
+    const boxes = await BoxMongo.find({
+      internal: true,
+    })
+
+    return boxes
+  }
+
   async create({
     name,
     description,

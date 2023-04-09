@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
 import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'

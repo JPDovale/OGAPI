@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'

@@ -1,18 +1,16 @@
-import { type IAvatar } from '../infra/mongoose/entities/Avatar'
-import { type INotification } from '../infra/mongoose/entities/Notification'
+import { type INotification } from '../infra/repositories/entities/INotification'
 
 export interface IUserInfosResponse {
   id: string
   username: string
   email: string
-  avatar?: IAvatar
+  avatar_filename: string | null
+  avatar_url: string | null
   age: string
   sex: string
-  createAt: string
-  updateAt: string
+  created_at: Date
   notifications: INotification[]
-  isInitialized: boolean
-  isSocialLogin: boolean
+  is_social_login: boolean
   name: string
-  code?: string
+  new_notifications: number
 }

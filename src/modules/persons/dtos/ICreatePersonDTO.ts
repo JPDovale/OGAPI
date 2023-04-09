@@ -1,6 +1,3 @@
-export interface ICreatePersonDTO {
-  name: string
-  lastName: string
-  history: string
-  age: string
-}
+import { type Prisma } from '@prisma/client'
+
+export type ICreatePersonDTO = Prisma.PersonUncheckedCreateInput

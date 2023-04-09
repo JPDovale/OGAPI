@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { type ICommentPlotProjectDTO } from '@modules/projects/dtos/ICommentPlotProjectDTO'
 import {
   Comment,

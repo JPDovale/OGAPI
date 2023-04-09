@@ -1,7 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
 import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { Archive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
@@ -10,6 +9,7 @@ import { makeErrorBoxNotUpdate } from '@shared/errors/boxes/makeErrorBoxNotUpdat
 import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 
 interface IRequest {
   userId: string

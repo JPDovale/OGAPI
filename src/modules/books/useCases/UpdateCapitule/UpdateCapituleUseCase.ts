@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
 import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'

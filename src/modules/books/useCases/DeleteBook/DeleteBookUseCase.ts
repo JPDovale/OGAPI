@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'

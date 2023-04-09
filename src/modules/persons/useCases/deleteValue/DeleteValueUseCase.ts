@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import { AppError } from '@shared/errors/AppError'

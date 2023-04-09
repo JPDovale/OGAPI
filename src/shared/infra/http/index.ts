@@ -5,25 +5,27 @@ import express, {
   type Response,
 } from 'express'
 import morgan from 'morgan'
-import { ZodError } from 'zod'
 
-import { env } from '@env/index'
-import * as Sentry from '@sentry/node'
 // eslint-disable-next-line import-helpers/order-imports
-import * as Tracing from '@sentry/tracing'
 
 import 'express-async-errors'
 import 'reflect-metadata'
 
 import '@shared/container'
 
+import { MulterError } from 'multer'
+import swaggerUi from 'swagger-ui-express'
+import { ZodError } from 'zod'
+
+import { env } from '@env/index'
+import * as Sentry from '@sentry/node'
+import * as Tracing from '@sentry/tracing'
 import { AppError } from '@shared/errors/AppError'
 import { router } from '@shared/infra/http/routes'
 import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
+import docs from '../docs/swagger.json'
 import { RateLimiter } from './middlewares/limiter'
-
-import { MulterError } from 'multer'
 
 const app = express()
 const appName = env.APP_NAME
@@ -57,6 +59,8 @@ app.use(express.json())
 
 if (env.NODE_ENV !== 'dev') {
   app.use(morgan('combined'))
+} else {
+  app.use(morgan('dev'))
 }
 
 getConnectionMongoDb()
@@ -66,6 +70,14 @@ getConnectionMongoDb()
   .catch((err) => {
     throw err
   })
+
+app.use(
+  '/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(docs, {
+    customSiteTitle: 'Ognare API',
+  }),
+)
 
 app.use('/api', router)
 

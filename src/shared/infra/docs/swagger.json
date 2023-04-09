@@ -1,0 +1,147 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OGNARE API INTEGRATION",
+    "description": "Documentation of integration with api Ognare",
+    "version": "1.0.0",
+    "contact": {
+      "email": "ognare.app@gmail.com"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer token": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authorization have properties like user id, and this possible get user whiteout any parameters"
+      },
+      "Bearer token admin": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authorization created for admins"
+      }
+    }
+  },
+  "paths": {
+    "/api/migrate": {
+      "post": {
+        "tags": [
+          "Dev"
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users",
+          "Get",
+          "Final user"
+        ],
+        "summary": "Get information's profile of user",
+        "description": "This route get information's of user aready registered in application",
+        "security": [
+          {
+            "Bearer token": []
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "User don't existes in register of application"
+          },
+          "200": {
+            "description": "User return",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "avatar_filename": {
+                      "type": "string | null"
+                    },
+                    "avatar_url": {
+                      "type": "string | null"
+                    },
+                    "age": {
+                      "type": "string"
+                    },
+                    "sex": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "date"
+                    },
+                    "notifications": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "date"
+                          }
+                        }
+                      }
+                    },
+                    "is_social_login": {
+                      "type": "boolean"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "new_notifications": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users",
+          "Post",
+          "Final user"
+        ],
+        "summary": "Create new user",
+        "description": "In this route is possible to register an new user in application."
+      }
+    },
+    "/api/users/all": {
+      "get": {
+        "tags": [
+          "Users",
+          "Get",
+          "Admin"
+        ],
+        "summary": "Get all users registered in application",
+        "description": "This route is protect per JWT to only accessibility for admins, and list all users in application",
+        "security": [
+          {
+            "Bearer token admin": []
+          }
+        ]
+      }
+    }
+  }
+}

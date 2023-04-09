@@ -1,66 +1,78 @@
 import { inject, injectable } from 'tsyringe'
 
-import { Notification } from '@modules/accounts/infra/mongoose/entities/Notification'
-import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { INotificationsRepository } from '@modules/accounts/infra/repositories/contracts/INotificationRepository'
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import InjectableDependencies from '@shared/container/types'
 
-import { ICacheProvider } from '../../CacheProvider/ICacheProvider'
 import {
+  type INotifyUsersInOneProject,
   type INotifyAll,
   type INotifyUsersProvider,
+  type INotifyOneUser,
 } from '../INotifyUsersProvider'
 
 @injectable()
 export class NotifyUsersProvider implements INotifyUsersProvider {
   constructor(
-    @inject('UsersRepository')
+    @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
-    @inject('CacheProvider')
-    private readonly cacheProvider: ICacheProvider,
+
+    @inject(InjectableDependencies.Repositories.NotificationsRepository)
+    private readonly notificationsRepository: INotificationsRepository,
   ) {}
 
-  async notify(
-    sendBy: IUserMongo,
-    project: IProjectMongo,
-    title: string,
-    content: string,
-  ): Promise<void> {
-    const usersInProjectIds = await Promise.all(
-      project.users.map(async (user) => {
-        await this.cacheProvider.delete(`user-${user.id}`)
-        return user.id
-      }),
-    )
-    const usersIds = usersInProjectIds.filter((userId) => userId !== sendBy.id)
+  async notifyUsersInOneProject({
+    content,
+    project,
+    title,
+  }: INotifyUsersInOneProject): Promise<void> {
+    const usersWithPermissionToComment =
+      project.users_with_access_comment?.users ?? []
+    const usersWithPermissionToEdit =
+      project.users_with_access_edit?.users ?? []
+    const usersWithPermissionToView =
+      project.users_with_access_view?.users ?? []
 
-    const newNotification = new Notification({
+    const usersToNotify = [
+      ...usersWithPermissionToComment,
+      ...usersWithPermissionToEdit,
+      ...usersWithPermissionToView,
+    ]
+
+    await this.notificationsRepository.create({
       title,
       content,
-      projectId: project.id,
-      sendedPerUser: sendBy.id,
+      usersNotified: {
+        connect: usersToNotify,
+      },
     })
-
-    await this.usersRepository.updateNotificationManyById(
-      usersIds,
-      newNotification,
-    )
   }
 
-  async notifyAll({ content, sendBy, title }: INotifyAll): Promise<void> {
-    const allUsers = await this.usersRepository.list()
+  async notifyAll({ content, title }: INotifyAll): Promise<void> {
+    const usersToNotify = await this.usersRepository.listAllIds()
 
-    const usersIds = allUsers.map((user) => user.id)
-    const newNotification = new Notification({
+    await this.notificationsRepository.create({
       title,
       content,
-      projectId: '',
-      sendedPerUser: sendBy.id,
+      usersNotified: {
+        connect: usersToNotify,
+      },
     })
+  }
 
-    await this.usersRepository.updateNotificationManyById(
-      usersIds,
-      newNotification,
-    )
+  async notifyOneUser({
+    content,
+    title,
+    userToNotifyId,
+  }: INotifyOneUser): Promise<void> {
+    await this.notificationsRepository.create({
+      title,
+      content,
+      usersNotified: {
+        connect: {
+          id: userToNotifyId,
+        },
+      },
+    })
   }
 }

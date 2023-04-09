@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { type IImageArchive } from '@modules/boxes/infra/mongoose/entities/schemas/Archive'
 import { type IArchive } from '@modules/boxes/infra/mongoose/entities/types/IArchive'
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'

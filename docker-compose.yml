@@ -1,16 +1,42 @@
 version: "2.2"
 
 services:
-  og-api:
-    build: .
-    command: npm run application
-    restart: always
-    environment:
-      - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}
-    env_file:
-      - .env
+
+  og-database:
+    image: bitnami/postgresql
     ports:
-      - 3030:3030
-    volumes:
-      - .:/usr/app
-      - /usr/app/node_modules
+      - 5432:5432
+
+    environment:
+      - POSTGRESQL_USERNAME=ognare
+      - POSTGRESQL_PASSWORD=Karanthir-Akira1342!@
+      - POSTGRESQL_DATABESE=ogDatabase
+
+  og-database-admin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=ognare@ognare.com
+      - PGADMIN_DEFAULT_PASSWORD=Karanthir-Akira1342!@
+    ports:
+      - 5050:80
+    depends_on:
+      - og-database
+    links:
+      - "og-database"
+  # og-api:
+  #   build: .
+  #   command: npm run application
+  #   restart: always
+  #   environment:
+  #     - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - 3030:3030
+  #   volumes:
+  #     - .:/usr/app
+  #     - /usr/app/node_modules
+  #   depends_on:
+  #     - og-database
+  #   links:
+  #     - "og-database"

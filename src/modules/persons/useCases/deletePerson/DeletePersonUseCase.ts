@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { IBoxesControllers } from '@shared/container/services/boxesControllers/IBoxesControllers'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'

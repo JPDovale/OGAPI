@@ -1,0 +1,18 @@
+{
+  "entryPoints": [
+    "./src/shared/infra/http/index.ts"
+  ],
+  "out": "./docs",
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "./node_modules",
+    "./build"
+  ],
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "name": "Ognare API Documentation",
+  "theme": "default",
+  "tsconfig": "./tsconfig.json"
+}

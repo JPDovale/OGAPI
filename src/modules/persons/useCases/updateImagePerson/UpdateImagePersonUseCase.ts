@@ -6,7 +6,7 @@ import {
   type IAvatar,
 } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'

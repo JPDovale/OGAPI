@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'

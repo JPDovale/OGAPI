@@ -2,7 +2,7 @@ export interface IUpdatePlotDTO {
   onePhrase?: string
   premise?: string
   storyteller?: string
-  literaryGenere?: string
+  literaryGenre?: string
   subgenre?: string
   ambient?: string
   countTime?: string

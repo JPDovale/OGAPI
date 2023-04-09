@@ -1,0 +1,628 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  name              String
+  username          String
+  email             String    @unique
+  password          String
+  avatar_url        String?   @db.VarChar(500)
+  avatar_filename   String?
+  sex               String    @default("not-recepted")
+  age               String    @default("not-recepted")
+  admin             Boolean   @default(false)
+  last_payment_date DateTime?
+  is_social_login   Boolean   @default(false)
+  new_notifications Int       @default(0)
+  created_at        DateTime  @default(now())
+
+  refreshTokens RefreshToken[]
+
+  notifications Notification[]
+
+  projects            Project[]
+  projectUsersView    ProjectUsersView[]
+  projectUsersEdit    ProjectUsersEdit[]
+  projectUsersComment ProjectUsersComment[]
+
+  persons Person[]
+
+  books         Book[]
+  authorOfBooks Author[]
+
+  boxes Box[]
+
+  commentsCreated            Comment[]
+  responsesInCommentsCreated ResponseComment[]
+
+  @@map("users")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  title      String
+  content    String
+  created_at DateTime @default(now())
+
+  usersNotified User[]
+
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id            String   @id @default(uuid())
+  refresh_token String   @db.VarChar(1000)
+  access_code   String?
+  expires_date  String
+  application   String   @default("OG-web")
+  created_at    DateTime @default(now())
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+
+  @@map("refresh_tokens")
+}
+
+model ProjectUsersView {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String  @unique
+
+  users User[]
+
+  @@map("project_users_view")
+}
+
+model ProjectUsersEdit {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String  @unique
+
+  users User[]
+
+  @@map("project_users_edit")
+}
+
+model ProjectUsersComment {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String  @unique
+
+  users User[]
+
+  @@map("project_users_comment")
+}
+
+model Project {
+  id              String   @id @default(uuid())
+  name            String
+  private         Boolean  @default(false)
+  password        String?
+  type            String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  image_url       String?  @db.VarChar(500)
+  image_filename  String?
+  one_phrase      String?  @db.VarChar(300)
+  premise         String?  @db.Text
+  storyteller     String?
+  literary_genre  String?
+  subgenre        String?
+  ambient         String?  @db.Text
+  count_time      String?  @db.VarChar(1000)
+  historical_fact String?  @db.Text
+  details         String?  @db.Text
+  summary         String?  @db.MediumText
+  url_text        String?  @db.VarChar(600)
+  structure_act_1 String?  @db.MediumText
+  structure_act_2 String?  @db.MediumText
+  structure_act_3 String?  @db.MediumText
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  users_with_access_view    ProjectUsersView?
+  users_with_access_edit    ProjectUsersEdit?
+  users_with_access_comment ProjectUsersComment?
+
+  persons Person[]
+
+  books Book[]
+
+  link_ideias Archive[]
+
+  comments Comment[]
+
+  @@map("projects")
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  content    String   @db.MediumText
+  to_unknown String?
+  likes      Int      @default(0)
+  unlikes    Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  responses ResponseComment[]
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  project    Project? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String?
+
+  // persons
+  objetive       Objective?   @relation(fields: [objective_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  objective_id   String?
+  personality    Personality? @relation(fields: [personality_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  personality_id String?
+  appearance     Appearance?  @relation(fields: [appearance_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  appearance_id  String?
+  dream          Dream?       @relation(fields: [dream_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  dream_id       String?
+  fear           Fear?        @relation(fields: [fear_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fear_id        String?
+  power          Power?       @relation(fields: [power_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  power_id       String?
+  couple         Couple?      @relation(fields: [couple_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  couple_id      String?
+  value          Value?       @relation(fields: [value_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  value_id       String?
+  wishe          Wishe?       @relation(fields: [wishe_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  wishe_id       String?
+  trauma         Trauma?      @relation(fields: [trauma_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  trauma_id      String?
+
+  // books
+  book        Book?     @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  book_id     String?
+  capitule    Capitule? @relation(fields: [capitule_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  capitule_id String?
+  scene       Scene?    @relation(fields: [scene_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  scene_id    String?
+
+  @@map("comments")
+}
+
+model ResponseComment {
+  id         String   @id @default(uuid())
+  content    String   @db.MediumText
+  likes      Int      @default(0)
+  unlikes    Int      @default(0)
+  created_at DateTime @default(now())
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  comment    Comment @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  comment_id String
+
+  @@map("responses_commnet")
+}
+
+model Person {
+  id             String   @id @default(uuid())
+  name           String
+  last_name      String
+  age            Int
+  history        String   @db.MediumText
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  image_filename String?
+  image_url      String?  @db.VarChar(500)
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String
+
+  objectives          Objective[]
+  objectivesAvoiders  ObjectiveAvoiders[]
+  objectiveSupporters ObjectiveSupporters[]
+  personalities       Personality[]
+  appearances         Appearance[]
+  dreams              Dream[]
+  fears               Fear[]
+  powers              Power[]
+  couples             Couple[]
+  coupleWithPersons   CoupleWithPerson[]
+  values              Value[]
+  wishes              Wishe[]
+  traumas             Trauma[]
+
+  scenes Scene[]
+
+  link_ideias Archive[]
+
+  @@map("parsons")
+}
+
+model Objective {
+  id             String   @id @default(uuid())
+  title          String   @db.VarChar(500)
+  description    String   @db.Text
+  it_be_realized Boolean
+  created_at     DateTime @default(now())
+
+  persons Person[]
+
+  avoiders      ObjectiveAvoiders   @relation(fields: [avoiders_id], references: [id])
+  avoiders_id   Int                 @unique
+  supporters    ObjectiveSupporters @relation(fields: [supporters_id], references: [id])
+  supporters_id Int                 @unique
+
+  comments Comment[]
+
+  @@map("objectives")
+}
+
+model ObjectiveAvoiders {
+  id Int @id @default(autoincrement())
+
+  objective Objective?
+
+  persons Person[]
+
+  @@map("objective_avoiders")
+}
+
+model ObjectiveSupporters {
+  id Int @id @default(autoincrement())
+
+  objective Objective?
+
+  persons Person[]
+
+  @@map("objective_supporters")
+}
+
+model Personality {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons Person[]
+
+  consequences Consequence[]
+
+  comments Comment[]
+
+  @@map("personalities")
+}
+
+model Consequence {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  personality    Personality? @relation(fields: [personality_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  personality_id String?
+  trauma         Trauma?      @relation(fields: [trauma_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  trauma_id      String?
+
+  @@map("consequences")
+}
+
+model Appearance {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons Person[]
+
+  comments Comment[]
+
+  @@map("appearences")
+}
+
+model Dream {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons Person[]
+
+  comments Comment[]
+
+  @@map("dreams")
+}
+
+model Fear {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons Person[]
+
+  comments Comment[]
+
+  @@map("fears")
+}
+
+model Power {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons Person[]
+
+  comments Comment[]
+
+  @@map("powers")
+}
+
+model Couple {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  until_end   Boolean
+  created_at  DateTime @default(now())
+
+  person    Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person_id String
+
+  coupleWithPerson      CoupleWithPerson @relation(fields: [couple_with_person_id], references: [id])
+  couple_with_person_id Int              @unique
+
+  comments Comment[]
+
+  @@map("couples")
+}
+
+model CoupleWithPerson {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+
+  couple Couple?
+
+  person    Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person_id String
+
+  @@map("couples_withs_persons")
+}
+
+model Value {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons    Person[]
+  exceptions Exception[]
+
+  comments Comment[]
+
+  @@map("values")
+}
+
+model Exception {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  value    Value?  @relation(fields: [value_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  value_id String?
+
+  @@map("exceptions")
+}
+
+model Wishe {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons Person[]
+
+  comments Comment[]
+
+  @@map("wishes")
+}
+
+model Trauma {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  created_at  DateTime @default(now())
+
+  persons      Person[]
+  consequences Consequence[]
+
+  comments Comment[]
+
+  @@map("traumas")
+}
+
+model Book {
+  id                   String   @id @default(uuid())
+  title                String
+  subtitle             String?
+  literary_genre       String
+  isbn                 String?
+  front_cover_filename String?
+  front_cover_user     String?  @db.VarChar(500)
+  words                Int      @default(0)
+  written_words        Int      @default(0)
+  one_phrase           String?  @db.VarChar(300)
+  premise              String?  @db.Text
+  storyteller          String?
+  ambient              String?  @db.Text
+  count_time           String?  @db.VarChar(1000)
+  historical_fact      String?  @db.Text
+  details              String?  @db.Text
+  summary              String?  @db.MediumText
+  url_text             String?  @db.VarChar(600)
+  structure_act_1      String?  @db.MediumText
+  structure_act_2      String?  @db.MediumText
+  structure_act_3      String?  @db.MediumText
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  genres    Genre[]
+  authors   Author[]
+  capitules Capitule[]
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String
+
+  link_ideias Archive[]
+
+  comments Comment[]
+
+  @@map("books")
+}
+
+model Genre {
+  id         Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+
+  books Book[]
+
+  @@map("genres")
+}
+
+model Author {
+  id Int @id @default(autoincrement())
+
+  book    Book?   @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  book_id String?
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  @@map("authors")
+}
+
+model Capitule {
+  id              String   @id @default(uuid())
+  name            String
+  sequence        Int
+  objective       String   @db.VarChar(600)
+  complete        Boolean  @default(false)
+  words           Int      @default(0)
+  structure_act_1 String?  @db.MediumText
+  structure_act_2 String?  @db.MediumText
+  structure_act_3 String?  @db.MediumText
+  created_at      DateTime @default(now())
+
+  book    Book   @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  book_id String
+
+  scenes Scene[]
+
+  comments Comment[]
+
+  @@map("capitules")
+}
+
+model Scene {
+  id              String  @id @default(uuid())
+  sequence        Int
+  complete        Boolean @default(false)
+  objective       String  @db.VarChar(600)
+  written_words   Int     @default(0)
+  structure_act_1 String  @db.MediumText
+  structure_act_2 String  @db.MediumText
+  structure_act_3 String  @db.MediumText
+
+  persons Person[]
+
+  capitule    Capitule @relation(fields: [capitule_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  capitule_id String
+
+  comments Comment[]
+
+  @@map("scenes")
+}
+
+model Box {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  created_at  DateTime @default(now())
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  archives Archive[]
+  tags     Tag[]
+
+  @@map("boxes")
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  box    Box?    @relation(fields: [box_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  box_id String?
+
+  @@map("tags")
+}
+
+model Archive {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.MediumText
+  created_at  DateTime @default(now())
+
+  box    Box?    @relation(fields: [box_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  box_id String?
+
+  project    Project? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String?
+
+  person    Person? @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person_id String?
+
+  book    Book?   @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  book_id String?
+
+  galery Image[]
+
+  @@map("archives")
+}
+
+model Image {
+  id             Int    @id @default(autoincrement())
+  image_filename String
+  image_url      String @db.VarChar(500)
+
+  archive    Archive? @relation(fields: [archive_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  archive_id Int?
+
+  @@map("images")
+}

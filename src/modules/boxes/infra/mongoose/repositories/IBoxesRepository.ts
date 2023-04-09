@@ -36,4 +36,5 @@ export interface IBoxesRepository {
     tags,
   }: IUpdateBoxDTO) => Promise<IBox | null | undefined>
   deletePerId: (boxId: string) => Promise<void>
+  listInternals: () => Promise<IBox[]>
 }

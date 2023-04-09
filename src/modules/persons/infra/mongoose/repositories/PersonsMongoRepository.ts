@@ -1,23 +1,25 @@
 import { inject, injectable } from 'tsyringe'
-import { v4 as uuidV4 } from 'uuid'
 
 import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
-import { type IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { type IComment } from '@modules/projects/infra/mongoose/entities/Comment'
+import { type IComment } from '@modules/projects/infra/repositories/entities/IComment'
+import {
+  type Prisma,
+  type Dream,
+  type Fear,
+  type Wishe,
+  type Appearance,
+  type Power,
+} from '@prisma/client'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 
-import { type IAppearance } from '../entities/Appearance'
-import { type ICouple } from '../entities/Couple'
-import { type IDream } from '../entities/Dream'
-import { type IFear } from '../entities/Fear'
-import { type Objective } from '../entities/Objective'
-import { type IPersonMongo, PersonMongo } from '../entities/Person'
-import { type IPersonality } from '../entities/Personality'
-import { type IPower } from '../entities/Power'
-import { type ITrauma } from '../entities/Trauma'
-import { type IValue } from '../entities/Value'
-import { type IWishe } from '../entities/Wishe'
+import { type IPersonsRepository } from '../../repositories/contracts/IPersonsRepository'
+import { type ICouple } from '../../repositories/entities/ICouple'
+import { type IObjective } from '../../repositories/entities/IObjective'
+import { type IPerson } from '../../repositories/entities/IPerson'
+import { type IPersonality } from '../../repositories/entities/IPersonality'
+import { type ITrauma } from '../../repositories/entities/ITrauma'
+import { type IValue } from '../../repositories/entities/IValue'
+import { PersonMongo } from '../entities/Person'
 
 @injectable()
 export class PersonsMongoRepository implements IPersonsRepository {
@@ -26,257 +28,138 @@ export class PersonsMongoRepository implements IPersonsRepository {
   ) {}
 
   async create(
-    userId: string,
-    projectId: string,
-    person: ICreatePersonDTO,
-  ): Promise<IPersonMongo | null | undefined> {
-    const { age, history, lastName, name } = person
-
-    const newPerson = new PersonMongo({
-      id: uuidV4(),
-      name,
-      lastName,
-      age,
-      history,
-      defaultProject: projectId,
-      fromUser: userId,
-      createAt: this.dateProvider.getDate(new Date()),
-      updateAt: this.dateProvider.getDate(new Date()),
-    })
-
-    await newPerson.save()
-
-    return newPerson
+    data: Prisma.PersonUncheckedCreateInput,
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async findById(id: string): Promise<IPersonMongo | null | undefined> {
-    const person = await PersonMongo.findOne({ id })
-    return person
+  async findById(personId: string): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateObjectives(
-    id: string,
-    objectives: Objective[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { objectives, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    objectives: IObjective[],
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async getAllPerUser(userId: string): Promise<IPersonMongo[]> {
-    const allPersonsThisUser = await PersonMongo.find({ fromUser: userId })
-    return allPersonsThisUser
+  async getAllPerUser(userId: string): Promise<IPerson[]> {
+    throw new Error('Method not implemented.')
   }
 
   async updatePerson(
-    id: string,
-    person: ICreatePersonDTO,
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      {
-        name: person.name,
-        lastName: person.lastName,
-        age: person.age,
-        history: person.history,
-        id,
-        updateAt: this.dateProvider.getDate(new Date()),
-      },
-    )
-
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    person: Prisma.PersonUncheckedCreateInput,
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async deleteById(id: string): Promise<void> {
-    await PersonMongo.findOneAndDelete({ id })
+  async deleteById(personId: string): Promise<void> {
+    throw new Error('Method not implemented.')
   }
 
   async updatePersonality(
-    id: string,
+    personId: string,
     personality: IPersonality[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { personality, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateValues(
-    id: string,
+    personId: string,
     values: IValue[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { values, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateDreams(
-    id: string,
-    dreams: IDream[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { dreams, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    dreams: Dream[],
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async updateFears(
-    id: string,
-    fears: IFear[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { fears, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  async updateFears(personId: string, dreams: Fear[]): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateWishes(
-    id: string,
-    wishes: IWishe[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { wishes, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    dreams: Wishe[],
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async updateImage(
-    image: IAvatar,
-    id: string,
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { image, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  async updateImage(image: IAvatar, personId: string): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateCommentsPerson(
-    id: string,
+    personId: string,
     comments: IComment[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { comments, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async getPersonsPerProject(projectId: string): Promise<IPersonMongo[]> {
-    const personsThisProject = await PersonMongo.find({
-      defaultProject: projectId,
-    })
-    return personsThisProject
+  async getPersonsPerProject(projectId: string): Promise<IPerson[]> {
+    throw new Error('Method not implemented.')
   }
 
   async updateAppearance(
-    id: string,
-    appearance: IAppearance[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { appearance, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    appearance: Appearance[],
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateTraumas(
-    id: string,
+    personId: string,
     traumas: ITrauma[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { traumas, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updatePowers(
-    id: string,
-    powers: IPower[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { powers, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    powers: Power[],
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async updateCouples(
-    id: string,
-    couples: ICouple[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { couples, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+    personId: string,
+    powers: ICouple[],
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
   async deletePerUserId(userId: string): Promise<void> {
-    await PersonMongo.deleteMany({ fromUser: userId })
+    throw new Error('Method not implemented.')
   }
 
   async deletePerProjectId(projectId: string): Promise<void> {
-    await PersonMongo.deleteMany({ defaultProject: projectId })
+    throw new Error('Method not implemented.')
   }
 
-  async findManyById(ids: string[]): Promise<IPersonMongo[]> {
-    const personsIds = ids.map((id) => {
-      return {
-        id,
-      }
-    })
-
-    const persons = await PersonMongo.find({ $or: personsIds })
-
-    return persons
+  async findManyById(ids: string[]): Promise<IPerson[]> {
+    throw new Error('Method not implemented.')
   }
 
-  async listPerUser(userId: string): Promise<IPersonMongo[]> {
-    const persons = await PersonMongo.find({ fromUser: userId })
-
-    return persons
+  async listPerUser(userId: string): Promise<IPerson[]> {
+    throw new Error('Method not implemented.')
   }
 
-  async findByProjectIds(projectIds: string[]): Promise<IPersonMongo[]> {
-    const projectsIds = projectIds.map((id) => {
-      return {
-        defaultProject: id,
-      }
-    })
-
-    const persons = await PersonMongo.find({ $or: projectsIds })
-
-    return persons
+  async findByProjectIds(projectIds: string[]): Promise<IPerson[]> {
+    throw new Error('Method not implemented.')
   }
 
   async getNumberOfPersonsByProjectId(projectId: string): Promise<number> {
-    const numberOfRegisters = await PersonMongo.countDocuments({
-      defaultProject: projectId,
-    })
+    throw new Error('Method not implemented.')
+  }
 
-    return numberOfRegisters
+  async listAll(): Promise<IPerson[]> {
+    const persons = await PersonMongo.find()
+    return persons
   }
 }

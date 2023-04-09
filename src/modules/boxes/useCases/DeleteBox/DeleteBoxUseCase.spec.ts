@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { type IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { type IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { BoxesRepositoryInMemory } from '@modules/boxes/infra/mongoose/repositories/inMemory/BoxesRepositoryInMemory'
 import { FirebaseStorageProvider } from '@shared/container/providers/StorageProvider/implementations/FirebaseStorageProvider'

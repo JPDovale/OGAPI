@@ -1,12 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
 import { type ICreateBoxDTO } from '@modules/boxes/dtos/ICrateBoxDTO'
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { makeErrorBoxNotCreated } from '@shared/errors/boxes/makeErrorBoxNotCreated'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 
 interface IRequest {
   userId: string

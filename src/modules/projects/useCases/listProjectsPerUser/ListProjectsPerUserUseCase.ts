@@ -1,15 +1,15 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
 import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
-import { IBooksRepository } from '@modules/books/infra/mongoose/repositories/IBooksRepository'
+import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
 import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
 import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
-import { IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
+import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
+import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IResponse {
