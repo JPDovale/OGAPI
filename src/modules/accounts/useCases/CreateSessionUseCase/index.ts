@@ -44,11 +44,9 @@ export class CreateSessionUseCase {
     } = session
 
     const userExiste = await this.userRepository.findByEmail(email)
-
     if (!userExiste) throw makeErrorUserInvalidCredentialsToLogin()
 
     const passwordCorrect = compareSync(password, userExiste.password)
-
     if (!passwordCorrect) throw makeErrorUserInvalidCredentialsToLogin()
 
     const token = sign(
@@ -80,6 +78,8 @@ export class CreateSessionUseCase {
     const expiresDate = this.dateProvider.addDays(
       Number(expiresRefreshTokenDays),
     )
+
+    await this.refreshTokenRepository.deletePerUserId(userExiste.id)
 
     await this.refreshTokenRepository.create({
       expires_date: expiresDate.toString(),

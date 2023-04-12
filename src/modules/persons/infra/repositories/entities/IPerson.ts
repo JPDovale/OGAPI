@@ -2,6 +2,7 @@ import { type Person } from '@prisma/client'
 
 import { type IAppearance } from './IAppearance'
 import { type ICouple } from './ICouple'
+import { type ICoupleWithPerson } from './ICoupleWithPerson'
 import { type IDream } from './IDream'
 import { type IFear } from './IFear'
 import { type IObjective } from './IObjective'
@@ -19,6 +20,7 @@ export interface IPerson extends Person {
   fears?: IFear[]
   powers?: IPower[]
   couples?: ICouple[]
+  coupleWithPersons?: ICoupleWithPerson[]
   values?: IValue[]
   wishes?: IWishe[]
   traumas?: ITrauma[]

@@ -11,6 +11,7 @@ export const userRoutesDelete = Router()
 const deleteUserController = new DeleteUserController()
 const deleteAvatarController = new DeleteAvatarController()
 
+// PATH: api/users
 userRoutesDelete.use(ensureAuthenticated)
 userRoutesDelete.delete('/', deleteUserController.handle)
 userRoutesDelete.delete('/avatar', deleteAvatarController.handle)

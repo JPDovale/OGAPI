@@ -7,6 +7,7 @@ import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/co
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IMailProvider } from '@shared/container/providers/MailProvider/IMailProvider'
+import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
@@ -16,13 +17,16 @@ interface IRequest {
 @injectable()
 export class SendForgotPasswordMailUseCase {
   constructor(
-    @inject('UsersRepository')
+    @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
-    @inject('RefreshTokenRepository')
+
+    @inject(InjectableDependencies.Repositories.RefreshTokenRepository)
     private readonly refreshTokenRepository: IRefreshTokenRepository,
-    @inject('DateProvider')
+
+    @inject(InjectableDependencies.Providers.DateProvider)
     private readonly dateProvider: IDateProvider,
-    @inject('MailGunProvider')
+
+    @inject(InjectableDependencies.Providers.MailGunProvider)
     private readonly mailProvider: IMailProvider,
   ) {}
 

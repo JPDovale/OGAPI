@@ -6,6 +6,7 @@ import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import InjectableDependencies from '@shared/container/types'
 import { makeErrorRefreshTokenInvalid } from '@shared/errors/refreshToken/makeErrorRefreshTokenInvalid'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
@@ -28,11 +29,13 @@ interface IResponse {
 @injectable()
 export class RefreshTokenUseCase {
   constructor(
-    @inject('RefreshTokenRepository')
+    @inject(InjectableDependencies.Repositories.RefreshTokenRepository)
     private readonly refreshTokenRepository: IRefreshTokenRepository,
-    @inject('DateProvider')
+
+    @inject(InjectableDependencies.Providers.DateProvider)
     private readonly dateProvider: IDateProvider,
-    @inject('UsersRepository')
+
+    @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly userRepository: IUsersRepository,
   ) {}
 

@@ -3,12 +3,13 @@ import 'reflect-metadata'
 import { hashSync } from 'bcryptjs'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
+import { type IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/repositories/inMemory/UserRepositoryInMemory'
 import { AppError } from '@shared/errors/AppError'
 
-import { PasswordUpdateUseCase } from './PasswordUpdateUseCase'
+import { PasswordUpdateUseCase } from '.'
 
-let userRepositoryImMemory: UserRepositoryInMemory
+let userRepositoryImMemory: IUsersRepository
 
 let passwordUpdateUseCase: PasswordUpdateUseCase
 
@@ -29,6 +30,8 @@ describe('Update Password', () => {
       username: 'j',
     })
 
+    if (!newUser) throw new Error()
+
     await passwordUpdateUseCase.execute({
       id: newUser.id,
       oldPassword: 'password',
@@ -36,6 +39,7 @@ describe('Update Password', () => {
     })
 
     const updatedUser = await userRepositoryImMemory.findById(newUser.id)
+    if (!updatedUser) throw new Error()
 
     expect(newUser.password).not.toEqual(updatedUser.password)
   })
@@ -50,6 +54,8 @@ describe('Update Password', () => {
         sex: 'uncharacterized',
         username: 'j',
       })
+
+      if (!newUser) throw new Error()
 
       await passwordUpdateUseCase.execute({
         id: newUser.id,

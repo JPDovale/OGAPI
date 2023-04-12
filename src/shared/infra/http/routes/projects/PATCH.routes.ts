@@ -18,6 +18,7 @@ const updateNameController = new UpdateNameController()
 
 const uploads = new Uploads('projects', 'image')
 
+// PATH: api/projects
 projectsRoutesPatch.patch('/:projectId/share', shareProjectController.handle)
 projectsRoutesPatch.patch(
   '/:projectId/unshare',

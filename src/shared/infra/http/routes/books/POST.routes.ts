@@ -1,9 +1,9 @@
 import { Router } from 'express'
 
-import { AddGenreController } from '@modules/books/useCases/AddGenre/AddGenreController'
-import { CreateBookController } from '@modules/books/useCases/CreateBook/CreateBookController'
-import { CreateCapituleController } from '@modules/books/useCases/CreateCapitule/CreateCapituleController'
-import { CreateSceneController } from '@modules/books/useCases/CreateScene/CreateSceneController'
+import { AddGenreController } from '@modules/books/controllers/AddGenreController'
+import { CreateBookController } from '@modules/books/controllers/CreateBookController'
+import { CreateCapituleController } from '@modules/books/controllers/CreateCapituleController'
+import { CreateSceneController } from '@modules/books/controllers/CreateSceneController'
 
 export const booksRoutesPost = Router()
 
@@ -12,7 +12,11 @@ const createCapituleController = new CreateCapituleController()
 const createSceneController = new CreateSceneController()
 const addGenreController = new AddGenreController()
 
-booksRoutesPost.post('/', createBookController.handle)
-booksRoutesPost.post('/capitules', createCapituleController.handle)
-booksRoutesPost.post('/capitules/scenes', createSceneController.handle)
-booksRoutesPost.post('/genres', addGenreController.handle)
+// PATH: api/books
+booksRoutesPost.post('/:projectId', createBookController.handle)
+booksRoutesPost.post('/:bookId/capitules', createCapituleController.handle)
+booksRoutesPost.post(
+  '/:bookId/capitules/:capituleId/scenes',
+  createSceneController.handle,
+)
+booksRoutesPost.post('/:bookId/genres', addGenreController.handle)

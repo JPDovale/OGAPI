@@ -29,6 +29,12 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
         responses: true,
       },
     },
+    _count: {
+      select: {
+        persons: true,
+        books: true,
+      },
+    },
   }
 
   async create(
@@ -49,7 +55,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
       include: this.defaultInclude,
     })
 
-    return project
+    return await project
   }
 
   async addUsers({

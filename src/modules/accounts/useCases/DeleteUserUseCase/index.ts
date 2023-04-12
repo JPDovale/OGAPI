@@ -1,8 +1,6 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
-import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
@@ -19,12 +17,6 @@ export class DeleteUserUseCase {
 
     @inject(InjectableDependencies.Providers.StorageProvider)
     private readonly storageProvider: IStorageProvider,
-
-    @inject(InjectableDependencies.Repositories.PersonsRepository)
-    private readonly personsRepository: IPersonsRepository,
-
-    @inject(InjectableDependencies.Repositories.BooksRepository)
-    private readonly booksRepository: IBooksRepository,
   ) {}
 
   async execute({ userId }: IRequest): Promise<void> {

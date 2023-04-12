@@ -1,12 +1,24 @@
 import { Router } from 'express'
 
-import { CreateArchiveController } from '@modules/boxes/useCases/CrateArchive/CreateArchiveController'
-import { CreateBoxController } from '@modules/boxes/useCases/CreateBox/CreateBoxController'
+import { CreateArchiveController } from '@modules/boxes/controllers/CreateArchiveController'
+import { CreateBoxController } from '@modules/boxes/controllers/CreateBoxController'
+import { SaveImageController } from '@modules/boxes/controllers/SaveImageController'
 
-export const boxesRoutesPots = Router()
+import { Uploads } from '../../middlewares/upload'
+
+export const boxesRoutesPost = Router()
 
 const createBoxController = new CreateBoxController()
 const createArchiveController = new CreateArchiveController()
+const saveImageController = new SaveImageController()
 
-boxesRoutesPots.post('/', createBoxController.handle)
-boxesRoutesPots.post('/archives', createArchiveController.handle)
+const uploads = new Uploads('boxes', 'image')
+
+// PATH: api/boxes
+boxesRoutesPost.post('/', createBoxController.handle)
+boxesRoutesPost.post('/:boxId/archives', createArchiveController.handle)
+boxesRoutesPost.post(
+  '/:boxId/archives/:archiveId/images',
+  uploads.upload.single('file'),
+  saveImageController.handle,
+)

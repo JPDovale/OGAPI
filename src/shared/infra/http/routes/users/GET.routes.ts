@@ -11,6 +11,7 @@ export const userRoutesGet = Router()
 const getInfosController = new GetInfosController()
 const listUsersController = new ListUsersController()
 
+// PATH: api/users
 userRoutesGet.use(ensureAuthenticated)
 userRoutesGet.get('/', getInfosController.handle)
 

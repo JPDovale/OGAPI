@@ -4,7 +4,7 @@ import { MigrateController } from '@modules/accounts/useCases/Migrate/MigrateCon
 
 import { booksRoutes } from './books'
 import { boxesRoutes } from './boxes'
-import { personsRoutes } from './persons.routes'
+import { personsRoutes } from './persons'
 import { projectsRoutes } from './projects'
 import { sessionsRoutes } from './sessions'
 import { userRoutes } from './users'

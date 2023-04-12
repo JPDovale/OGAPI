@@ -1,6 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { redisClient } from '@config/redis'
+import InjectableDependencies from '@shared/container/types'
 
 import { IDateProvider } from '../../DateProvider/IDateProvider'
 import { type ICacheProvider } from '../ICacheProvider'
@@ -8,7 +9,7 @@ import { type ICacheProvider } from '../ICacheProvider'
 @injectable()
 export class RedisCacheProvider implements ICacheProvider {
   constructor(
-    @inject('DateProvider')
+    @inject(InjectableDependencies.Providers.DateProvider)
     private readonly dateProvider: IDateProvider,
   ) {}
 
@@ -21,7 +22,7 @@ export class RedisCacheProvider implements ICacheProvider {
 
   async getInfo(key: string): Promise<any> {
     const value = await redisClient.get(key)
-    const objectValue = JSON.parse(value)
+    const objectValue = JSON.parse(value ?? '')
 
     const validateOfCacheExpire = this.dateProvider.isBefore({
       startDate: objectValue?.cacheEndDate,

@@ -1,3 +1,5 @@
 import { type Wishe } from '@prisma/client'
 
-export type IWishe = Wishe
+export interface IWishe extends Wishe {
+  persons?: Array<{ id: string }>
+}

@@ -7,5 +7,6 @@ export interface IUser extends User {
   _count?: {
     projects?: number
     notifications?: number
+    boxes?: number
   }
 }

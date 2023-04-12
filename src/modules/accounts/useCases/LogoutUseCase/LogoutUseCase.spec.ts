@@ -1,42 +1,23 @@
 import 'reflect-metadata'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
-import { ProjectsRepositoryInMemory } from '@modules/projects/repositories/inMemory/ProjectsRepositoryInMemory'
-import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
+import { type IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/repositories/inMemory/UserRepositoryInMemory'
 
-import { CreateSessionUseCase } from '../createSession/CreateSessionUseCase'
-import { CreateUserUseCase } from '../createUser/CreateUserUseCase'
-import { LogoutUseCase } from './LogoutUseCase'
+import { LogoutUseCase } from '.'
 
-let refreshTokenRepositoryInMemory: RefreshTokenRepositoryInMemory
-let userRepositoryInMemory: UserRepositoryInMemory
-let projectsRepositoryInMemory: ProjectsRepositoryInMemory
+let refreshTokenRepositoryInMemory: IRefreshTokenRepository
+let userRepositoryInMemory: IUsersRepository
 
-let dateProvider: DayJsDateProvider
-
-let createUserUseCase: CreateUserUseCase
-let createSessionUseCase: CreateSessionUseCase
 let logoutUseCase: LogoutUseCase
 
 describe('Logout', () => {
   beforeEach(() => {
     refreshTokenRepositoryInMemory = new RefreshTokenRepositoryInMemory()
     userRepositoryInMemory = new UserRepositoryInMemory()
-    projectsRepositoryInMemory = new ProjectsRepositoryInMemory()
 
-    dateProvider = new DayJsDateProvider()
-
-    createUserUseCase = new CreateUserUseCase(
-      userRepositoryInMemory,
-      projectsRepositoryInMemory,
-    )
-    createSessionUseCase = new CreateSessionUseCase(
-      userRepositoryInMemory,
-      refreshTokenRepositoryInMemory,
-      dateProvider,
-    )
     logoutUseCase = new LogoutUseCase(
       refreshTokenRepositoryInMemory,
       userRepositoryInMemory,
@@ -44,19 +25,22 @@ describe('Logout', () => {
   })
 
   it('Should be able logout', async () => {
-    const newUserTest = await createUserUseCase.execute({
-      email: 'test@example',
-      password: 'test',
-      name: 'test',
+    const newUserTest = await userRepositoryInMemory.create({
+      email: 'test@example.com',
+      name: 'teste',
+      password: 'teste123',
+      username: 'teste',
     })
 
-    await createSessionUseCase.execute({
-      email: 'test@example',
-      password: 'test',
+    if (!newUserTest) throw new Error()
+
+    await refreshTokenRepositoryInMemory.create({
+      expires_date: new Date(),
+      refresh_token: 'teste',
+      user_id: newUserTest.id,
     })
 
-    await logoutUseCase.execute(newUserTest.id)
-
+    await logoutUseCase.execute({ userId: newUserTest.id })
     const refreshTokens = await refreshTokenRepositoryInMemory.findByUserId(
       newUserTest.id,
     )

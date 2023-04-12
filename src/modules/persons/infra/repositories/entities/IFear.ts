@@ -1,3 +1,5 @@
 import { type Fear } from '@prisma/client'
 
-export type IFear = Fear
+export interface IFear extends Fear {
+  persons?: Array<{ id: string }>
+}

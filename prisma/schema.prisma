@@ -18,8 +18,8 @@ model User {
   password          String
   avatar_url        String?   @db.VarChar(500)
   avatar_filename   String?
-  sex               String    @default("not-recepted")
-  age               String    @default("not-recepted")
+  sex               String    @default("not-receipted")
+  age               String    @default("not-receipted")
   admin             Boolean   @default(false)
   last_payment_date DateTime?
   is_social_login   Boolean   @default(false)
@@ -63,7 +63,7 @@ model RefreshToken {
   id            String   @id @default(uuid())
   refresh_token String   @db.VarChar(1000)
   access_code   String?
-  expires_date  String
+  expires_date  DateTime
   application   String   @default("OG-web")
   created_at    DateTime @default(now())
 
@@ -268,10 +268,10 @@ model Objective {
 
   persons Person[]
 
-  avoiders      ObjectiveAvoiders   @relation(fields: [avoiders_id], references: [id])
-  avoiders_id   Int                 @unique
-  supporters    ObjectiveSupporters @relation(fields: [supporters_id], references: [id])
-  supporters_id Int                 @unique
+  avoiders      ObjectiveAvoiders?   @relation(fields: [avoiders_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  avoiders_id   Int?                 @unique
+  supporters    ObjectiveSupporters? @relation(fields: [supporters_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  supporters_id Int?                 @unique
 
   comments Comment[]
 
@@ -389,7 +389,7 @@ model Couple {
   person    Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   person_id String
 
-  coupleWithPerson      CoupleWithPerson @relation(fields: [couple_with_person_id], references: [id])
+  coupleWithPerson      CoupleWithPerson @relation(fields: [couple_with_person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   couple_with_person_id Int              @unique
 
   comments Comment[]
@@ -469,7 +469,7 @@ model Book {
   literary_genre       String
   isbn                 String?
   front_cover_filename String?
-  front_cover_user     String?  @db.VarChar(500)
+  front_cover_url      String?  @db.VarChar(500)
   words                Int      @default(0)
   written_words        Int      @default(0)
   one_phrase           String?  @db.VarChar(300)
@@ -505,7 +505,7 @@ model Book {
 }
 
 model Genre {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(uuid())
   name       String
   created_at DateTime @default(now())
 
@@ -594,7 +594,7 @@ model Tag {
 }
 
 model Archive {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   title       String
   description String   @db.MediumText
   created_at  DateTime @default(now())
@@ -611,18 +611,18 @@ model Archive {
   book    Book?   @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   book_id String?
 
-  galery Image[]
+  gallery Image[]
 
   @@map("archives")
 }
 
 model Image {
-  id             Int    @id @default(autoincrement())
+  id             String @id @default(uuid())
   image_filename String
   image_url      String @db.VarChar(500)
 
   archive    Archive? @relation(fields: [archive_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  archive_id Int?
+  archive_id String?
 
   @@map("images")
 }

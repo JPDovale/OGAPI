@@ -2,6 +2,7 @@ import { compareSync, hashSync } from 'bcryptjs'
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 import { makeErrorUserWrongPassword } from '@shared/errors/users/makeErrorUserWrongPassword'
 
@@ -14,7 +15,7 @@ interface IRequest {
 @injectable()
 export class PasswordUpdateUseCase {
   constructor(
-    @inject('UsersRepository')
+    @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
   ) {}
 

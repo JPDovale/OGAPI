@@ -1,39 +1,21 @@
-import { type IBook } from '../entities/types/IBook'
-import { type ICreateBook } from './types/ICreateBook'
-import { type IFindManyById } from './types/IFindManyById'
-import { type IUpdateBook } from './types/IUpdateBook'
-import { type IUpdateCapitules } from './types/IUpdateCapitules'
-import { type IUpdateFrontCover } from './types/IUpdateFrontCover'
-import { type IUpdateGenres } from './types/IUpdateGenres'
+import { type ICreateBookDTO } from '@modules/books/dtos/ICreateBookDTO'
+import { type ICreateGenreDTO } from '@modules/books/dtos/ICreateGenreDTO'
+import { type IUpdateBookDTO } from '@modules/books/dtos/IUpdateBookDTO'
+import { type IUpdateFrontCoverDTO } from '@modules/books/dtos/IUpdateFrontCoverDTO'
 
-export interface IBooksRepository {
-  create: ({
-    projectId,
-    book,
-  }: ICreateBook) => Promise<IBook | null | undefined>
-  findManyById: ({ ids }: IFindManyById) => Promise<IBook[]>
-  findById: (id: string) => Promise<IBook | null | undefined>
-  updateFrontCover: ({
-    id,
-    frontCover,
-  }: IUpdateFrontCover) => Promise<IBook | null | undefined>
-  updateCapitules: ({
-    id,
-    capitules,
-    writtenWords,
-  }: IUpdateCapitules) => Promise<IBook | null | undefined>
-  deletePerUserId: (id: string) => Promise<void>
-  listPerUser: (userId: string) => Promise<IBook[]>
-  deletePerProjectId: (projectId: string) => Promise<void>
-  findByProjectIds: (projectIds: string[]) => Promise<IBook[]>
-  updateGenres: ({
-    genres,
-    id,
-  }: IUpdateGenres) => Promise<IBook | null | undefined>
-  updateBook: ({
-    id,
-    updatedInfos,
-  }: IUpdateBook) => Promise<IBook | null | undefined>
-  deletePerId: (id: string) => Promise<void>
-  findNumberOfBooksByProjectId: (projectId: string) => Promise<number>
+import { type IBook } from '../entities/IBook'
+import { type ICapitule } from '../entities/ICapitule'
+import { type IGenre } from '../entities/IGenre'
+
+export abstract class IBooksRepository {
+  abstract create(data: ICreateBookDTO): Promise<IBook | null>
+  abstract createGenre(data: ICreateGenreDTO): Promise<IGenre | null>
+  abstract delete(id: string): Promise<void>
+  abstract update(data: IUpdateBookDTO): Promise<IBook | null>
+  abstract updateFrontCover(data: IUpdateFrontCoverDTO): Promise<void>
+  abstract removeGenreOfBook(genreId: string, bookId: string): Promise<void>
+  abstract listCapitules(bookId: string): Promise<ICapitule[]>
+  abstract findById(id: string): Promise<IBook | null>
+
+  abstract listAll(): Promise<IBook[]>
 }

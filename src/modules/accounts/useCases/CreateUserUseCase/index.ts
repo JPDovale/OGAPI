@@ -38,7 +38,6 @@ export class CreateUserUseCase {
     const { age, email, name, password, sex, username } = request
 
     const userAlreadyExiste = await this.usersRepository.findByEmail(email)
-
     if (userAlreadyExiste) throw makeErrorUserAlreadyExistes()
 
     const passwordHash = hashSync(password, 8)

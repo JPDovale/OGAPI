@@ -8,5 +8,6 @@ export const sessionsRoutesPost = Router()
 const createSessionController = new CreateSessionController()
 const refreshTokenController = new RefreshTokenController()
 
-sessionsRoutesPost.post('/create', createSessionController.handle)
+// PATH: api/sessions
+sessionsRoutesPost.post('/', createSessionController.handle)
 sessionsRoutesPost.post('/refresh', refreshTokenController.handle)

@@ -3,5 +3,5 @@ import { type ObjectiveSupporters } from '@prisma/client'
 import { type IPerson } from './IPerson'
 
 export interface IObjectiveSupporters extends ObjectiveSupporters {
-  persons?: IPerson[]
+  persons?: Array<{ id: string }>
 }

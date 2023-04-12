@@ -1,226 +1,93 @@
 import { randomUUID } from 'node:crypto'
 
+import { type ICreateManyUsersDTO } from '@modules/accounts/dtos/ICreateManyUsersDTO'
 import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
+import { type IUpdateUserDTO } from '@modules/accounts/dtos/IUpdateUserDTO'
 
 import { type IUsersRepository } from '../contracts/IUsersRepository'
-import { type IUser } from './../entities/IUser'
+import { type IUser } from '../entities/IUser'
+import { type IUpdateAvatar } from '../types/IUpdateAvatar'
 
 export class UserRepositoryInMemory implements IUsersRepository {
   users: IUser[] = []
 
-  async findByEmail(email: string): Promise<IUser | null | undefined> {
+  async findByEmail(email: string): Promise<IUser | null> {
     const user = this.users.find((user) => user.email === email)
-    return user
+
+    return user ?? null
   }
 
   async list(): Promise<IUser[]> {
-    const users = this.users
-
-    return users
+    return this.users
   }
 
-  async findById(userId: string): Promise<IUser | null | undefined> {
-    const user = this.users.find((user) => user.id === userId)
+  async create(dataUserObj: ICreateUserDTO): Promise<IUser | null> {
+    const user: IUser = {
+      admin: dataUserObj.admin ?? false,
+      age: dataUserObj.age ?? 'not-receipted',
+      avatar_filename: dataUserObj.avatar_filename ?? null,
+      avatar_url: dataUserObj.avatar_url ?? null,
+      email: dataUserObj.email,
+      id: randomUUID(),
+      created_at: new Date(),
+      is_social_login: dataUserObj.is_social_login ?? false,
+      last_payment_date: dataUserObj.last_payment_date
+        ? new Date(dataUserObj.last_payment_date)
+        : null,
+      name: dataUserObj.name,
+      new_notifications: 0,
+      password: dataUserObj.password,
+      sex: dataUserObj.sex ?? 'not-receipted',
+      username: dataUserObj.username,
+    }
+
+    this.users.push(user)
+
     return user
   }
 
-  async create(dataUserObj: ICreateUserDTO): Promise<IUser | null | undefined> {
-    const {
-      name,
-      email,
-      age,
-      password,
-      sex,
-      username,
-      avatar_filename,
-      avatar_url,
-      code,
-      isSocialLogin,
-      lastPaymentDate,
-      admin,
-    } = dataUserObj
+  async createMany(dataManyUsers: ICreateManyUsersDTO): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
 
-    const newUser: IUser = {
-      id: randomUUID(),
-      name,
-      email,
-      age,
-      password,
-      sex,
-      username,
-      avatar_filename: avatar_filename ?? null,
-      avatar_url: avatar_url ?? null,
-      code: code ?? null,
-      is_social_login: isSocialLogin ?? false,
-      last_payment_date: lastPaymentDate ?? null,
-      admin: admin ?? false,
-      created_at: new Date(),
-    }
+  async findById(userId: string): Promise<IUser | null> {
+    const user = this.users.find((user) => user.id === userId)
 
-    this.users.push(newUser)
-    return newUser
+    return user ?? null
   }
 
   async delete(id: string): Promise<void> {
-    const filteredUsers = this.users.filter((user) => user.id !== id)
-    this.users = filteredUsers
+    this.users = this.users.filter((user) => user.id !== id)
   }
 
-  async updateAvatar(
-    userId: string,
-    
-  ): Promise<IUser | null | undefined> {
-    const filteredUsers = this.users.filter((user) => user.id !== userId)
-    const user = this.users.find((user) => user.id === userId)
-    if (!user) return undefined
-
-    const userToUpdate = user.toObject()
-
-    const updatedUser: IUser = { ...userToUpdate, avatar }
-
-    this.users = [...filteredUsers, updatedUser]
-
-    return updatedUser
+  async updateAvatar(avatarProps: IUpdateAvatar): Promise<IUser | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async updateUser(
-    id: string,
-    username: string,
-    name: string,
-    email: string,
-    age: string,
-    sex: string,
-  ): Promise<IUser | null | undefined> {
-    const filteredUsers = this.users.filter((user) => user.id !== id)
-    const user = this.users.find((user) => user.id === id)
-
-    if (!user) return undefined
-
-    const userToUpdate = user.toObject()
-
-    const updatedUser: IUser = {
-      ...userToUpdate,
-      username,
-      email,
-      age,
-      sex,
-      name,
-    }
-
-    this.users = [...filteredUsers, updatedUser]
-
-    return updatedUser
+  async updateUser(userToUpdate: IUpdateUserDTO): Promise<IUser | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async findByUsername(username: string): Promise<IUser | null | undefined> {
-    const user = this.users.find((user) => user.username === username)
-    return user
-  }
+  async updatePassword(userId: string, password: string): Promise<void> {
+    const indexOfUserToUpdate = this.users.findIndex(
+      (user) => user.id === userId,
+    )
 
-  async findByCode(code: string): Promise<IUser | null | undefined> {
-    const user = this.users.find((user) => user.code === code)
-    return user
-  }
-
-  async getUser(
-    id: string,
-    updatedInfos: ICreateUserDTO,
-  ): Promise<IUser | null | undefined> {
-    const {
-      age,
-      email,
-      name,
+    this.users[indexOfUserToUpdate] = {
+      ...this.users[indexOfUserToUpdate],
       password,
-      sex,
-      username,
-      avatar,
-      code,
-      isInitialized,
-    } = updatedInfos
-
-    const filteredUsers = this.users.filter((user) => user.id !== id)
-    const user = this.users.find((user) => user.id === id)
-
-    if (!user) return undefined
-
-    const userToUpdate = user.toObject()
-
-    const updatedUser: IUser = {
-      ...userToUpdate,
-      username: username ?? userToUpdate.username,
-      email: email ?? userToUpdate.email,
-      age: age ?? userToUpdate.age,
-      sex: sex ?? userToUpdate.sex,
-      name: name ?? userToUpdate.name,
-      avatar: avatar ?? userToUpdate.avatar,
-      password: password ?? userToUpdate.password,
-      code,
-      isInitialized: isInitialized ?? userToUpdate.isInitialized,
     }
-
-    this.users = [...filteredUsers, updatedUser]
-    return updatedUser
-  }
-
-  async updateNotifications(
-    id: string,
-    notifications: INotification[],
-  ): Promise<void> {
-    const filteredUsers = this.users.filter((user) => user.id !== id)
-    const user = this.users.find((user) => user.id === id)
-
-    if (!user) return undefined
-
-    const userToUpdate = user.toObject()
-
-    const updatedUser: IUser = { ...userToUpdate, notifications }
-    this.users = [...filteredUsers, updatedUser]
-  }
-
-  async updatePassword(id: string, password: string): Promise<void> {
-    const filteredUsers = this.users.filter((user) => user.id !== id)
-    const user = this.users.find((user) => user.id === id)
-
-    if (!user) return undefined
-
-    const userToUpdate = user.toObject()
-
-    const updatedUser: IUser = { ...userToUpdate, password }
-
-    this.users = [...filteredUsers, updatedUser]
   }
 
   async findManyById(ids: string[]): Promise<IUser[]> {
-    const users = this.users.filter((user) => {
-      const userIn = ids.find((id) => user.id === id)
-
-      return !!userIn
-    })
-
-    return users
+    throw new Error('Method not implemented.')
   }
 
-  async updateNotificationManyById(
-    ids: string[],
-    notification: INotification,
-  ): Promise<void> {
-    const updatedUsers = this.users.map((user) => {
-      const userIn = ids.find((id) => user.id === id)
+  async visualizeNotifications(userId: string): Promise<IUser | null> {
+    throw new Error('Method not implemented.')
+  }
 
-      if (userIn) {
-        const userToNotify = user.toObject()
-
-        const updatedUser: IUser = {
-          ...userToNotify,
-          notifications: [{ ...notification }, ...userToNotify.notifications],
-        }
-
-        return updatedUser
-      }
-
-      return user
-    })
-
-    this.users = updatedUsers
+  async listAllIds(): Promise<Array<{ id: string }>> {
+    throw new Error('Method not implemented.')
   }
 }

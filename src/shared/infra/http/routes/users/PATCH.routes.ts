@@ -19,6 +19,7 @@ const visualizeNotificationsController = new VisualizeNotificationsController()
 
 const uploads = new Uploads('avatar', 'image')
 
+// PATH: api/users
 userRoutesPatch.use(ensureAuthenticated)
 userRoutesPatch.patch('/logout', logoutController.handle)
 userRoutesPatch.patch(

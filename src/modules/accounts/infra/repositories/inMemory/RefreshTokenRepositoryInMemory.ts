@@ -1,67 +1,57 @@
-import { v4 as uuidV4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 
 import { type ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
 
 import {
-  type IRefreshTokenMongo,
-  RefreshTokenMongo,
-} from '../../entities/RefreshToken'
-import {
   type IFindByRefreshToken,
   type IRefreshTokenRepository,
-} from '../IRefreshTokenRepository'
+} from '../contracts/IRefreshTokenRepository'
+import { type IRefreshToken } from '../entities/IRefreshToken'
 
 export class RefreshTokenRepositoryInMemory implements IRefreshTokenRepository {
-  userTokens: IRefreshTokenMongo[] = []
+  tokens: IRefreshToken[] = []
 
-  async create({
-    expiresDate,
-    refreshToken,
-    userId,
-  }: ICreateUserTokenDTO): Promise<IRefreshTokenMongo> {
-    const userToken = new RefreshTokenMongo({
-      id: uuidV4(),
-      userId,
-      expiresDate,
-      refreshToken,
-    })
+  async create(
+    refreshToken: ICreateUserTokenDTO,
+  ): Promise<IRefreshToken | null> {
+    const token: IRefreshToken = {
+      access_code: refreshToken.access_code ?? null,
+      id: randomUUID(),
+      application: refreshToken.application ?? 'OG-web',
+      created_at: new Date(),
+      expires_date: new Date(refreshToken.expires_date),
+      refresh_token: refreshToken.refresh_token,
+      user_id: refreshToken.user_id,
+    }
 
-    this.userTokens.push(userToken)
-    return userToken
+    this.tokens.push(token)
+
+    return token
   }
 
   async findByUserIdAndRefreshToken(
     userId: string,
     refreshToken: string,
-  ): Promise<IRefreshTokenMongo> {
-    const userToken = this.userTokens.filter(
-      (user) => user.userId === userId && user.refreshToken === refreshToken,
-    )[0]
-    return userToken
+  ): Promise<IRefreshToken | null> {
+    throw new Error('Method not implemented.')
   }
 
   async deleteById(refreshTokenId: string): Promise<void> {
-    const filteredTokens = this.userTokens.filter(
-      (token) => token.id !== refreshTokenId,
-    )
-
-    this.userTokens = filteredTokens
+    throw new Error('Method not implemented.')
   }
 
   async deletePerUserId(userId: string): Promise<void> {
-    const filteredTokens = this.userTokens.filter(
-      (token) => token.userId !== userId,
-    )
-
-    this.userTokens = filteredTokens
+    this.tokens = this.tokens.filter((token) => token.user_id !== userId)
   }
 
-  async findByUserId(id: string): Promise<IRefreshTokenMongo[]> {
-    const refreshTokens = this.userTokens.filter((token) => token.userId === id)
-    return refreshTokens
+  async findByUserId(userId: string): Promise<IRefreshToken[]> {
+    const tokens = this.tokens.filter((token) => token.user_id === userId)
+    return tokens
   }
 
-  findByRefreshToken: ({
-    refreshToken,
-  }: IFindByRefreshToken) => Promise<IRefreshTokenMongo>
+  async findByRefreshToken(
+    query: IFindByRefreshToken,
+  ): Promise<IRefreshToken | null> {
+    throw new Error('Method not implemented.')
+  }
 }

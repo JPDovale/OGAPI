@@ -10,6 +10,7 @@ const createProjectController = new CreateProjectController()
 const commentInPlotProjectController = new CommentInPlotProjectController()
 const responseCommentPlotProject = new ResponseCommentPlotProjectController()
 
+// PATH: api/projects
 projectsRoutesPost.post('/', createProjectController.handle)
 projectsRoutesPost.post(
   '/:projectId/plot/comments',

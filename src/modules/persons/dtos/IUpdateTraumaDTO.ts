@@ -1,8 +1,6 @@
+import { type Prisma } from '@prisma/client'
+
 export interface IUpdateTraumaDTO {
-  title?: string
-  description?: string
-  consequences?: Array<{
-    title: string
-    description: string
-  }>
+  traumaId: string
+  data: Prisma.TraumaUpdateInput
 }

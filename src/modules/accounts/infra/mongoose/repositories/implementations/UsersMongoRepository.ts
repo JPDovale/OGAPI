@@ -8,6 +8,10 @@ import { type Prisma } from '@prisma/client'
 import { UserMongo } from '../../entities/User'
 
 export class UsersMongoRepository implements IUsersRepository {
+  async listAllIds(): Promise<Array<{ id: string }>> {
+    throw new Error('Method not implemented.')
+  }
+
   async createMany(dataManyUsers: ICreateManyUsersDTO): Promise<void> {
     throw new Error('Method not implemented.')
   }
@@ -19,7 +23,7 @@ export class UsersMongoRepository implements IUsersRepository {
   async list(): Promise<IUser[]> {
     const users = await UserMongo.find()
 
-    return users
+    return users as unknown as IUser[]
   }
 
   async create(dataUserObj: Prisma.UserCreateInput): Promise<IUser | null> {

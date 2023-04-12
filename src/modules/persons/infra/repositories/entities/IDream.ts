@@ -1,3 +1,5 @@
 import { type Dream } from '@prisma/client'
 
-export type IDream = Dream
+export interface IDream extends Dream {
+  persons?: Array<{ id: string }>
+}

@@ -1,5 +1,6 @@
+import { type Prisma } from '@prisma/client'
+
 export interface IUpdateValueDTO {
-  title?: string
-  description?: string
-  exceptions?: Array<{ title: string; description: string }>
+  valueId: string
+  data: Prisma.ValueUpdateInput
 }

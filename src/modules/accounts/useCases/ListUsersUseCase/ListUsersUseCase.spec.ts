@@ -1,11 +1,10 @@
 import 'reflect-metadata'
-
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { type IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/repositories/inMemory/UserRepositoryInMemory'
 
-import { ListUsersUseCase } from './ListUsersUseCase'
+import { ListUsersUseCase } from '.'
 
 let usersRepository: IUsersRepository
 let listUsersUseCase: ListUsersUseCase
@@ -35,8 +34,8 @@ describe('list users', () => {
       username: 'test',
     })
 
-    const allUsers = await listUsersUseCase.execute()
+    const { users } = await listUsersUseCase.execute()
 
-    expect(allUsers.length).toEqual(2)
+    expect(users.length).toEqual(2)
   })
 })

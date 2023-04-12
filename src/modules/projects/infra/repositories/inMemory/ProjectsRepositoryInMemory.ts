@@ -1,132 +1,71 @@
-import { v4 as uuidV4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 
-import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
 import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
-import { type IPlotProject } from '@modules/projects/infra/mongoose/entities/Plot'
-import {
-  type IProjectMongo,
-  type ISharedWhitUsers,
-  ProjectMongo,
-} from '@modules/projects/infra/mongoose/entities/Project'
-import { type IUpdateName } from '@modules/projects/infra/mongoose/repositories/types/IUpdateName'
+import { type IUpdateProjectDTO } from '@modules/projects/dtos/IUpdateProjectDTO'
 
-import { type IProjectsRepository } from '../IProjectRepository'
+import { type IProjectsRepository } from '../contracts/IProjectsRepository'
+import { type IProject } from '../entities/IProject'
+import { type IAddUsersInProject } from '../types/IAddUsersInProject'
+import { type IUpdateImage } from '../types/IUpdateImage'
 
 export class ProjectsRepositoryInMemory implements IProjectsRepository {
-  projects: IProjectMongo[] = []
+  projects: IProject[] = []
 
-  async create(
-    dataProjectObj: ICreateProjectDTO,
-  ): Promise<IProjectMongo | null | undefined> {
-    const {
-      createdPerUser,
-      name,
-      private: priv,
-      type,
-      password,
-      users,
-      plot,
-    } = dataProjectObj
+  async create(data: ICreateProjectDTO): Promise<IProject | null> {
+    const project: IProject = {
+      ambient: data.ambient ?? null,
+      count_time: data.count_time ?? null,
+      created_at: new Date(),
+      details: data.details ?? null,
+      historical_fact: data.historical_fact ?? null,
+      id: randomUUID(),
+      image_filename: data.image_filename ?? null,
+      image_url: data.image_url ?? null,
+      literary_genre: data.literary_genre ?? null,
+      name: data.name,
+      one_phrase: data.one_phrase ?? null,
+      password: data.password ?? null,
+      premise: data.premise ?? null,
+      private: data.private ?? false,
+      storyteller: data.storyteller ?? null,
+      structure_act_1: data.structure_act_1 ?? null,
+      structure_act_2: data.structure_act_2 ?? null,
+      structure_act_3: data.structure_act_3 ?? null,
+      subgenre: data.subgenre ?? null,
+      summary: data.summary ?? null,
+      type: data.type ?? 'book',
+      updated_at: new Date(),
+      url_text: data.url_text ?? null,
+      user_id: data.user_id,
+    }
 
-    const newProject = new ProjectMongo({
-      id: uuidV4(),
-      createdPerUser,
-      name,
-      private: priv,
-      type,
-      password,
-      users,
-      plot,
-    })
-
-    this.projects.push(newProject)
-
-    return newProject
-  }
-
-  async listPerUser(userId: string): Promise<IProjectMongo[]> {
-    const projectsOfUser = this.projects.filter(
-      (project) => project.createdPerUser === userId,
-    )
-
-    return projectsOfUser
-  }
-
-  async findById(id: string): Promise<IProjectMongo | null | undefined> {
-    const project = this.projects.find((project) => project.id === id)
+    this.projects.push(project)
 
     return project
   }
 
-  async addUsers(
-    users: ISharedWhitUsers[],
-    projectId: string,
-  ): Promise<IProjectMongo | null | undefined> {
-    const indexOfProjectToUpdate = this.projects.findIndex(
-      (project) => project.id === projectId,
-    )
-    this.projects[indexOfProjectToUpdate].users = users
-
-    const projectUpdated = this.projects.find(
-      (project) => project.id === projectId,
-    )
-    return projectUpdated
+  async findById(projectId: string): Promise<IProject | null> {
+    const project = this.projects.find((project) => project.id === projectId)
+    return project ?? null
   }
 
-  updateImage: (
-    image: IAvatar,
-    projectId: string,
-  ) => Promise<IProjectMongo | null | undefined>
+  async addUsers(data: IAddUsersInProject): Promise<IProject | null> {
+    throw new Error('Method not implemented.')
+  }
+
+  async updateImage(data: IUpdateImage): Promise<IProject | null> {
+    throw new Error('Method not implemented.')
+  }
 
   async delete(projectId: string): Promise<void> {
-    this.projects = this.projects.filter((project) => project.id !== projectId)
+    throw new Error('Method not implemented.')
   }
 
-  async updatePlot(
-    projectId: string,
-    plot: IPlotProject,
-  ): Promise<IProjectMongo | null | undefined> {
-    const indexOfProjectToUpdate = this.projects.findIndex(
-      (project) => project.id === projectId,
-    )
-    this.projects[indexOfProjectToUpdate].plot = plot
-
-    const projectUpdated = this.projects.find(
-      (project) => project.id === projectId,
-    )
-    return projectUpdated
+  async update(data: IUpdateProjectDTO): Promise<IProject | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async deletePerUserId(userId: string): Promise<void> {
-    const filteredProjects = this.projects.filter(
-      (project) => project.createdPerUser !== userId,
-    )
-
-    this.projects = filteredProjects
-  }
-
-  listAll: () => Promise<IProjectMongo[]>
-
-  async updateName({
-    id,
-    name,
-  }: IUpdateName): Promise<IProjectMongo | null | undefined> {
-    const indexOfProjectToUpdate = this.projects.findIndex(
-      (project) => project.id === id,
-    )
-
-    this.projects[indexOfProjectToUpdate].name = name
-
-    return this.projects[indexOfProjectToUpdate]
-  }
-
-  removeTagsInAllProjects: () => Promise<void>
-
-  async getNumberOfProjectsByUserId(userId: string): Promise<number> {
-    const numberOfProjects = this.projects.filter(
-      (project) => project.createdPerUser === userId,
-    )
-
-    return numberOfProjects.length
+  async listAll(): Promise<IProject[]> {
+    throw new Error('Method not implemented.')
   }
 }

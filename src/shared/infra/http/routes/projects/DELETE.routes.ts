@@ -8,5 +8,6 @@ export const projectsRoutesDelete = Router()
 const deleteProjectController = new DeleteProjectController()
 const deleteImageController = new DeleteImageController()
 
+// PATH: api/projects
 projectsRoutesDelete.delete('/:projectId/image', deleteImageController.handle)
 projectsRoutesDelete.delete('/:projectId', deleteProjectController.handle)

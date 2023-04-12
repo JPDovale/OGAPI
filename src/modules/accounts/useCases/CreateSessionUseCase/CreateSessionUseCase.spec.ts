@@ -3,17 +3,18 @@ import { hashSync } from 'bcryptjs'
 import { describe, beforeEach, it, expect } from 'vitest'
 
 import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
-import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/RefreshTokenRepositoryInMemory'
-import { UserRepositoryInMemory } from '@modules/accounts/infra/mongoose/repositories/inMemory/UserRepositoryInMemory'
 import { type IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
+import { type IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { RefreshTokenRepositoryInMemory } from '@modules/accounts/infra/repositories/inMemory/RefreshTokenRepositoryInMemory'
+import { UserRepositoryInMemory } from '@modules/accounts/infra/repositories/inMemory/UserRepositoryInMemory'
 import { type IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { DayJsDateProvider } from '@shared/container/providers/DateProvider/implementations/DayJsDateProvider'
 import { AppError } from '@shared/errors/AppError'
 
-import { CreateSessionUseCase } from './CreateSessionUseCase'
+import { CreateSessionUseCase } from '.'
 
 let createSessionUseCase: CreateSessionUseCase
-let userRepositoryInMemory: UserRepositoryInMemory
+let userRepositoryInMemory: IUsersRepository
 let refreshTokenRepository: IRefreshTokenRepository
 let dateProvider: IDateProvider
 
@@ -41,7 +42,6 @@ describe('Create session for user', () => {
     }
 
     await userRepositoryInMemory.create(newUserTest)
-
     const session = await createSessionUseCase.execute({
       email: 'test@test.com',
       password: 'test123',
@@ -51,6 +51,7 @@ describe('Create session for user', () => {
     expect(session).toHaveProperty('token')
     expect(session).toHaveProperty('user')
     expect(session.user).not.toHaveProperty('admin')
+    expect(session.user).not.toHaveProperty('password')
   })
 
   it('Should not be able to create session an none existent user', () => {
@@ -72,7 +73,7 @@ describe('Create session for user', () => {
         name: 'Unitary test to create user',
         email: 'test@user.com',
         age: '18',
-        password: 'test123',
+        password: hashSync('test123', 8),
         sex: 'test',
         username: 'Test to create user',
       }
@@ -90,34 +91,33 @@ describe('Create session for user', () => {
       })
   })
 
-  it('Should not be able to create session on more than one device', () => {
-    expect(async () => {
-      const newUserTest: ICreateUserDTO = {
-        name: 'Unitary test to create user',
-        email: 'test@user.com',
-        age: '18',
-        password: 'test123',
-        sex: 'test',
-        username: 'Test to create user',
-      }
+  it('Should not be able to create session on more than one device', async () => {
+    const newUserTest: ICreateUserDTO = {
+      name: 'Unitary test to create user',
+      email: 'test@user.com',
+      age: '18',
+      password: hashSync('test123', 8),
+      sex: 'test',
+      username: 'Test to create user',
+    }
 
-      const userCreated = await userRepositoryInMemory.create(newUserTest)
+    const userCreated = await userRepositoryInMemory.create(newUserTest)
+    if (!userCreated) throw new Error()
 
-      await createSessionUseCase.execute({
-        email: newUserTest.email,
-        password: newUserTest.password,
-      })
-
-      await createSessionUseCase.execute({
-        email: newUserTest.email,
-        password: newUserTest.password,
-      })
-
-      const refreshTokens = await refreshTokenRepository.findByUserId(
-        userCreated.id,
-      )
-
-      expect(refreshTokens.length).toEqual(1)
+    await createSessionUseCase.execute({
+      email: 'test@user.com',
+      password: 'test123',
     })
+
+    await createSessionUseCase.execute({
+      email: 'test@user.com',
+      password: 'test123',
+    })
+
+    const refreshTokens = await refreshTokenRepository.findByUserId(
+      userCreated.id,
+    )
+
+    expect(refreshTokens.length).toEqual(1)
   })
 })

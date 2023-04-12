@@ -61,7 +61,7 @@ export class PlotUpdateController {
         .max(100000)
         // .regex(/^[^<>{}\\]+$/)
         .optional(),
-      persons: z.array(z.string().min(6).max(100)).optional(),
+      persons: z.array(z.string().uuid()).optional(),
       urlOfText: z.string().max(400).optional(),
       structure: z
         .object({

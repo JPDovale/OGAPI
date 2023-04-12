@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 // import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
 
@@ -16,7 +17,7 @@ interface IResponse {
 @injectable()
 export class VisualizeNotificationsUseCase {
   constructor(
-    @inject('UsersRepository')
+    @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
   ) {}
 

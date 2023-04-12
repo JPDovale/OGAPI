@@ -65,6 +65,7 @@ export class UsersPrismaRepository implements IUsersRepository {
           select: {
             projects: true,
             notifications: true,
+            boxes: true,
           },
         },
       },

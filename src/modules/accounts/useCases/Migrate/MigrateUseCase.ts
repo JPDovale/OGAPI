@@ -1,12 +1,14 @@
-import { randomUUID } from 'node:crypto'
 import { inject, injectable } from 'tsyringe'
 
 import { type ICreateManyUsersDTO } from '@modules/accounts/dtos/ICreateManyUsersDTO'
 import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { type IBook } from '@modules/books/infra/mongoose/entities/types/IBook'
+import { type ICapitule } from '@modules/books/infra/mongoose/entities/types/ICapitule'
+import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { type IArchive } from '@modules/boxes/infra/mongoose/entities/types/IArchive'
-import { IBoxesRepository } from '@modules/boxes/infra/mongoose/repositories/IBoxesRepository'
-import { type ICouple } from '@modules/persons/infra/mongoose/entities/Couple'
+import { type IBox } from '@modules/boxes/infra/mongoose/entities/types/IBox'
+import { IBoxesRepository } from '@modules/boxes/infra/repositories/contracts/IBoxesRepository'
 import { type IObjective } from '@modules/persons/infra/mongoose/entities/Objective'
 import { type IPersonMongo } from '@modules/persons/infra/mongoose/entities/Person'
 import {
@@ -16,8 +18,6 @@ import {
 import { type ITrauma } from '@modules/persons/infra/mongoose/entities/Trauma'
 import { type IValue } from '@modules/persons/infra/mongoose/entities/Value'
 import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
-import { type ICreateResponseCommentDTO } from '@modules/projects/dtos/ICreateResponseCommentDTO'
-import { type IComment } from '@modules/projects/infra/mongoose/entities/Comment'
 import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
 import { ICommentsRepository } from '@modules/projects/infra/repositories/contracts/ICommentsRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
@@ -63,11 +63,20 @@ export class MigrateUseCase {
     @inject(InjectableDependencies.Repositories.PersonsRepository)
     private readonly personsRepository: IPersonsRepository,
 
+    @inject(InjectableDependencies.Repositories.BoxMongoRepository)
+    private readonly boxesMongoRepository: IBoxesRepository,
+
     @inject(InjectableDependencies.Repositories.BoxesRepository)
     private readonly boxesRepository: IBoxesRepository,
 
     @inject(InjectableDependencies.Repositories.CommentsRepository)
     private readonly commentsRepository: ICommentsRepository,
+
+    @inject(InjectableDependencies.Repositories.BookMongoRepository)
+    private readonly bookMongoRepository: IBooksRepository,
+
+    @inject(InjectableDependencies.Repositories.BooksRepository)
+    private readonly booksRepository: IBooksRepository,
   ) {}
 
   async execute(): Promise<void> {
@@ -77,8 +86,15 @@ export class MigrateUseCase {
 
     const persons = await this.personsMongoRepository.listAll()
 
-    const boxes = await this.boxesRepository.listInternals()
-    const boxesFiltered = boxes.filter(
+    const books = await this.bookMongoRepository.listAll()
+
+    const boxesInternal =
+      (await this.boxesMongoRepository.listInternals()) as unknown as IBox[]
+
+    const boxesNotInternal =
+      (await this.boxesMongoRepository.listAllNotInternal()) as unknown as IBox[]
+
+    const boxesFiltered = boxesInternal.filter(
       (b) => b.name !== 'persons' && b.name !== 'books',
     )
 
@@ -674,6 +690,177 @@ export class MigrateUseCase {
             id: wct.archive.id,
             persons: {
               connect: connectLinks,
+            },
+          },
+        })
+      }),
+    ).catch((err) => {
+      throw err
+    })
+
+    const capitulesToCreate: Array<{ bookId: string; capitule: ICapitule }> = []
+
+    books.map(async (b) => {
+      const bm = b as unknown as IBook
+
+      return bm.capitules.map((c) =>
+        capitulesToCreate.push({ bookId: bm.id, capitule: c }),
+      )
+    })
+
+    await Promise.all(
+      books.map(async (b) => {
+        const bm = b as unknown as IBook
+
+        const authorsToCreate = bm.authors.map((a) => {
+          return {
+            user_id: a.id,
+          }
+        })
+
+        const genresToCreate = bm.generes.map((g) => {
+          return {
+            name: g.name,
+          }
+        })
+
+        let idCreator = ''
+
+        projects.map((p) => {
+          const pm = p as unknown as IProjectMongo
+
+          if (pm.id === bm.defaultProject) {
+            return (idCreator = pm.createdPerUser)
+          }
+
+          return ''
+        })
+
+        await prisma.book.create({
+          data: {
+            title: bm.title,
+            literary_genre: bm.literaryGenere,
+            user: {
+              connect: {
+                id: idCreator,
+              },
+            },
+            id: bm.id,
+            front_cover_filename: bm.frontCover?.fileName,
+            front_cover_url: bm.frontCover?.url,
+            project: {
+              connect: {
+                id: bm.defaultProject,
+              },
+            },
+            authors: {
+              createMany: {
+                data: authorsToCreate,
+              },
+            },
+            words: Number(bm.words),
+            written_words: Number(bm.writtenWords),
+            genres: {
+              create: genresToCreate,
+            },
+            isbn: bm.isbn,
+            subtitle: bm.subtitle,
+          },
+        })
+      }),
+    ).catch((err) => {
+      throw err
+    })
+
+    await Promise.all(
+      capitulesToCreate.map(async (c) => {
+        const scenesToCreate = c.capitule.scenes.map((s) => {
+          return {
+            objective: s.objective,
+            sequence: Number(s.sequence),
+            structure_act_1: s.structure.act1,
+            structure_act_2: s.structure.act2,
+            structure_act_3: s.structure.act3,
+            complete: s.complete,
+            id: s.id,
+            written_words: Number(s.writtenWords),
+          }
+        })
+
+        await prisma.capitule.create({
+          data: {
+            name: c.capitule.name,
+            objective: c.capitule.objective,
+            sequence: Number(c.capitule.sequence),
+            book: {
+              connect: {
+                id: c.bookId,
+              },
+            },
+            complete: c.capitule.complete,
+            id: c.capitule.id,
+            words: Number(c.capitule.words),
+            structure_act_1: c.capitule.structure.act1,
+            structure_act_2: c.capitule.structure.act2,
+            structure_act_3: c.capitule.structure.act3,
+            scenes: {
+              createMany: {
+                data: scenesToCreate,
+              },
+            },
+          },
+        })
+      }),
+    ).catch((err) => {
+      throw err
+    })
+
+    const archivesToCreate: Array<{ boxId: string; archive: IArchive }> = []
+
+    boxesNotInternal.map((b) =>
+      b.archives.map((a) => archivesToCreate.push({ boxId: b.id, archive: a })),
+    )
+
+    await Promise.all(
+      boxesNotInternal.map(async (b) => {
+        await prisma.box.create({
+          data: {
+            name: b.name,
+            user_id: b.userId,
+            description: b.description,
+            id: b.id,
+            tags: {
+              createMany: {
+                data: b.tags.map((t) => {
+                  return {
+                    name: t.name,
+                  }
+                }),
+              },
+            },
+          },
+        })
+      }),
+    ).catch((err) => {
+      throw err
+    })
+
+    await Promise.all(
+      archivesToCreate.map(async (a) => {
+        await prisma.archive.create({
+          data: {
+            title: a.archive.archive.title,
+            description: a.archive.archive.description,
+            box_id: a.boxId,
+            gallery: {
+              createMany: {
+                data: a.archive.images.map((i) => {
+                  return {
+                    image_url: i.url,
+                    image_filename: i.fileName,
+                  }
+                }),
+              },
             },
           },
         })
