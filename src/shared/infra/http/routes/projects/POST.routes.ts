@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { CommentInPlotProjectController } from '@modules/projects/controllers/CommentInPlotProjectController'
-import { CreateProjectController } from '@modules/projects/controllers/CreateProjectUseCase'
+import { CreateProjectController } from '@modules/projects/controllers/CreateProjectController'
 import { ResponseCommentPlotProjectController } from '@modules/projects/controllers/ResponseCommentPlotProjectController'
 
 export const projectsRoutesPost = Router()

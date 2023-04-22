@@ -32,7 +32,7 @@ export class PlotUpdateUseCase {
   ) {}
 
   async execute({ plot, projectId, userId }: IRequest): Promise<IResponse> {
-    const { project, user } = await this.verifyPermissions.verify({
+    const { user } = await this.verifyPermissions.verify({
       userId,
       projectId,
       verifyPermissionTo: 'edit',
@@ -61,9 +61,9 @@ export class PlotUpdateUseCase {
     if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
-      project,
+      project: updatedProject,
       title: `${user.username} alterou o plot do projeto.`,
-      content: `${user.username} acabou de alterar o plot do projeto ${project.name}`,
+      content: `${user.username} acabou de alterar o plot do projeto ${updatedProject.name}`,
     })
 
     return { project: updatedProject }

@@ -1,6 +1,7 @@
 import { type ICreateManyUsersDTO } from '@modules/accounts/dtos/ICreateManyUsersDTO'
 import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { type IUpdateUserDTO } from '@modules/accounts/dtos/IUpdateUserDTO'
+import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
 import { type User } from '@prisma/client'
 import { prisma } from '@shared/infra/database/createConnection'
 
@@ -13,6 +14,24 @@ export class UsersPrismaRepository implements IUsersRepository {
     await prisma.user.createMany({
       data: dataManyUsers,
     })
+  }
+
+  async getPreviewUser(userId: string): Promise<IUserPreview | null> {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        email: true,
+        id: true,
+        avatar_url: true,
+        notifications: true,
+        new_notifications: true,
+        username: true,
+      },
+    })
+
+    return user
   }
 
   async listAllIds(): Promise<Array<{ id: string }>> {

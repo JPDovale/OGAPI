@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express, {
   type NextFunction,
@@ -5,7 +6,6 @@ import express, {
   type Response,
 } from 'express'
 import morgan from 'morgan'
-
 // eslint-disable-next-line import-helpers/order-imports
 
 import 'express-async-errors'
@@ -33,6 +33,16 @@ const appPort = env.APP_PORT
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
 
+app.use(
+  cors({
+    allowedHeaders: ['Content-Type'],
+    origin: 'http://localhost:3000',
+    credentials: true,
+  }),
+)
+
+app.use(express.json())
+
 if (env.NODE_ENV !== 'dev') {
   app.use(rateLimit.rete)
 
@@ -49,13 +59,6 @@ if (env.NODE_ENV !== 'dev') {
   app.use(Sentry.Handlers.requestHandler())
   app.use(Sentry.Handlers.tracingHandler())
 }
-app.use(
-  cors({
-    allowedHeaders: '*',
-    origin: '*',
-  }),
-)
-app.use(express.json())
 
 if (env.NODE_ENV !== 'dev') {
   app.use(morgan('combined'))
@@ -79,6 +82,7 @@ app.use(
   }),
 )
 
+app.use(cookieParser())
 app.use('/api', router)
 
 if (env.NODE_ENV !== 'dev') {

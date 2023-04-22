@@ -15,17 +15,15 @@ export async function ensureAuthenticated(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const authHeader = req.headers.authorization
+  const token = req.cookies['@og-token']
 
-  if (!authHeader) {
+  if (!token) {
     throw new AppError({
       title: 'Invalid token!',
       message: 'Invalid token',
-      statusCode: 404,
+      statusCode: 401,
     })
   }
-
-  const [, token] = authHeader.split(' ')
 
   try {
     const {
@@ -42,10 +40,12 @@ export async function ensureAuthenticated(
 
     next()
   } catch {
+    
+
     throw new AppError({
       title: 'Invalid token!',
       message: 'Invalid token',
-      statusCode: 404,
+      statusCode: 401,
     })
   }
 }

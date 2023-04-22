@@ -21,6 +21,24 @@ export class BoxesPrismaRepository implements IBoxesRepository {
     return box
   }
 
+  async listPerUser(userId: string): Promise<IBox[]> {
+    const boxes = prisma.box.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        archives: {
+          include: {
+            gallery: true,
+          },
+        },
+        tags: true,
+      },
+    })
+
+    return await boxes
+  }
+
   async delete(boxId: string): Promise<void> {
     await prisma.box.delete({
       where: {

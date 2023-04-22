@@ -39,12 +39,37 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
       ...usersWithPermissionToView,
     ]
 
+    const usersToConnectIn = usersToNotify.map((user) => {
+      return {
+        id: user.id,
+      }
+    })
+
+    usersToConnectIn.push({
+      id: project.user!.id,
+    })
+
     await this.notificationsRepository.create({
       title,
       content,
       usersNotified: {
-        connect: usersToNotify,
+        connect: usersToConnectIn,
       },
+    })
+
+    Promise.all(
+      usersToConnectIn.map(async (user) => {
+        await this.usersRepository.updateUser({
+          userId: user.id,
+          data: {
+            new_notifications: {
+              increment: 1,
+            },
+          },
+        })
+      }),
+    ).catch((err) => {
+      throw err
     })
   }
 
@@ -57,6 +82,21 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
       usersNotified: {
         connect: usersToNotify,
       },
+    })
+
+    Promise.all(
+      usersToNotify.map(async (user) => {
+        await this.usersRepository.updateUser({
+          userId: user.id,
+          data: {
+            new_notifications: {
+              increment: 1,
+            },
+          },
+        })
+      }),
+    ).catch((err) => {
+      throw err
     })
   }
 
@@ -71,6 +111,15 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
       usersNotified: {
         connect: {
           id: userToNotifyId,
+        },
+      },
+    })
+
+    await this.usersRepository.updateUser({
+      userId: userToNotifyId,
+      data: {
+        new_notifications: {
+          increment: 1,
         },
       },
     })

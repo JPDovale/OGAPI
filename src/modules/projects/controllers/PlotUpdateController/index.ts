@@ -11,75 +11,22 @@ export class PlotUpdateController {
     })
 
     const plotUpdateBodySchema = z.object({
-      onePhrase: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      premise: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      storyteller: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      literaryGenre: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      subgenre: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      ambient: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      countTime: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      historicalFact: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      details: z
-        .string()
-        .max(10000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      summary: z
-        .string()
-        .max(100000)
-        // .regex(/^[^<>{}\\]+$/)
-        .optional(),
-      persons: z.array(z.string().uuid()).optional(),
-      urlOfText: z.string().max(400).optional(),
+      onePhrase: z.string().max(10000).optional().nullable(),
+      premise: z.string().max(10000).optional().nullable(),
+      storyteller: z.string().max(10000).optional().nullable(),
+      literaryGenre: z.string().max(10000).optional().nullable(),
+      subgenre: z.string().max(10000).optional().nullable(),
+      ambient: z.string().max(10000).optional().nullable(),
+      countTime: z.string().max(10000).optional().nullable(),
+      historicalFact: z.string().max(10000).optional().nullable(),
+      details: z.string().max(10000).optional().nullable(),
+      summary: z.string().max(100000).optional().nullable(),
+      urlOfText: z.string().max(400).optional().nullable(),
       structure: z
         .object({
-          act1: z
-            .string()
-            .max(10000)
-            // .regex(/^[^<>{}\\]+$/)
-            .optional(),
-          act2: z
-            .string()
-            .max(10000)
-            // .regex(/^[^<>{}\\]+$/)
-            .optional(),
-          act3: z
-            .string()
-            .max(10000)
-            // .regex(/^[^<>{}\\]+$/)
-            .optional(),
+          act1: z.string().max(10000).optional().nullable(),
+          act2: z.string().max(10000).optional().nullable(),
+          act3: z.string().max(10000).optional().nullable(),
         })
         .optional(),
     })

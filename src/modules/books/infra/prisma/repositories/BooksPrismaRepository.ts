@@ -10,12 +10,33 @@ import { type IGenre } from '../../repositories/entities/IGenre'
 
 const defaultInclude: Prisma.BookInclude = {
   genres: true,
-  authors: true,
+  authors: {
+    select: {
+      id: true,
+      user: {
+        select: {
+          id: true,
+          avatar_url: true,
+          username: true,
+          email: true,
+        },
+      },
+    },
+  },
   capitules: {
-    include: {
-      scenes: {
-        include: {
-          persons: true,
+    select: {
+      id: true,
+      name: true,
+      complete: true,
+      sequence: true,
+      words: true,
+      objective: true,
+      structure_act_1: true,
+      structure_act_2: true,
+      structure_act_3: true,
+      _count: {
+        select: {
+          scenes: true,
         },
       },
     },

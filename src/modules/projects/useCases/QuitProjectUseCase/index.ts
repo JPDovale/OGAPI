@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
@@ -32,6 +33,9 @@ export class QuitProjectUseCase {
 
     @inject(InjectableDependencies.Providers.NotifyUsersProvider)
     private readonly notifyUsersProvider: INotifyUsersProvider,
+
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ userId, projectId }: IRequest): Promise<void> {
@@ -92,9 +96,11 @@ export class QuitProjectUseCase {
     if (!updatedProject) throw makeErrorProjectQuitNotExecuted()
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
-      project,
+      project: updatedProject,
       title: `${user.username} saiu do projeto.`,
       content: `${user.username} acabou de sair do projeto ${project.name}`,
     })
+
+    await this.cacheProvider.cleanCacheOfOneProject(project)
   }
 }

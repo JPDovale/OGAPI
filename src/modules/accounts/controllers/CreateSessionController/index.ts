@@ -19,6 +19,20 @@ export class CreateSessionController {
       password,
     })
 
-    return res.status(200).json({ refreshToken, token, user })
+    res.cookie('@og-refresh-token', refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      path: '/',
+      secure: false,
+    })
+
+    res.cookie('@og-token', token, {
+      maxAge: 1000 * 60 * 10, // 10 min
+      httpOnly: true,
+      path: '/',
+      secure: false,
+    })
+
+    return res.status(200).json({ user })
   }
 }

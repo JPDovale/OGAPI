@@ -13,17 +13,15 @@ export async function verifyIsAdmin(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const authHeader = req.headers.authorization
+  const token = req.cookies['@og-token']
 
-  if (!authHeader) {
+  if (!token) {
     throw new AppError({
       title: 'Token missing!',
       message: 'Token missing!',
       statusCode: 401,
     })
   }
-
-  const [, token] = authHeader.split(' ')
 
   try {
     const { admin } = verify(token, session.secretToken) as IPayload

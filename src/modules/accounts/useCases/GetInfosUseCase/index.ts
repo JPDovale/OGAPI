@@ -1,7 +1,9 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
@@ -10,7 +12,7 @@ interface IRequest {
 }
 
 interface IResponse {
-  user: IUserInfosResponse
+  user: IUserPreview
 }
 
 @injectable()
@@ -18,28 +20,33 @@ export class GetInfosUseCase {
   constructor(
     @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly userRepository: IUsersRepository,
+
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ userId }: IRequest): Promise<IResponse> {
-    const user = await this.userRepository.findById(userId)
+    let userPreview: IUserPreview
 
-    if (!user) throw makeErrorUserNotFound()
+    const userAndProjectPreview = await this.cacheProvider.getInfo<IResponse>(
+      KeysRedis.userPreview + userId,
+    )
 
-    const response: IUserInfosResponse = {
-      age: user.age,
-      avatar_filename: user.avatar_filename,
-      avatar_url: user.avatar_url,
-      created_at: user.created_at,
-      is_social_login: user.is_social_login,
-      email: user.email,
-      sex: user.sex,
-      username: user.username,
-      id: user.id,
-      notifications: user.notifications ?? [],
-      name: user.name,
-      new_notifications: user.new_notifications,
+    if (!userAndProjectPreview) {
+      const user = await this.userRepository.getPreviewUser(userId)
+      if (!user) throw makeErrorUserNotFound()
+
+      userPreview = user
+
+      await this.cacheProvider.setInfo<IResponse>(
+        KeysRedis.userPreview + userId,
+        { user: userPreview },
+        60 * 60 * 6, // 6 hours
+      )
+    } else {
+      userPreview = userAndProjectPreview.user
     }
 
-    return { user: response }
+    return { user: userPreview }
   }
 }

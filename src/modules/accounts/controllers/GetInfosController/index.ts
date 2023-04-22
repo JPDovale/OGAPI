@@ -8,8 +8,10 @@ export class GetInfosController {
     const { id } = req.user
 
     const getInfosUseCase = container.resolve(GetInfosUseCase)
-    const { user } = await getInfosUseCase.execute({ userId: id })
+    const { user, previewProjects } = await getInfosUseCase.execute({
+      userId: id,
+    })
 
-    return res.status(200).json({ user })
+    return res.status(200).json({ user, previewProjects })
   }
 }

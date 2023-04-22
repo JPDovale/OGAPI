@@ -5,9 +5,13 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { type IUserEssentialInfos } from '@modules/accounts/infra/repositories/entities/IUserEssentialInfos'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorRefreshTokenInvalid } from '@shared/errors/refreshToken/makeErrorRefreshTokenInvalid'
+import { makeErrorSessionExpires } from '@shared/errors/users/makeErrorSessionExpires'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IPayload {
@@ -37,34 +41,70 @@ export class RefreshTokenUseCase {
 
     @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly userRepository: IUsersRepository,
+
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ token }: IRequest): Promise<IResponse> {
-    const {
-      email,
-      sub: userId,
-      admin,
-      name,
-    } = verify(token, session.secretRefreshToken) as IPayload
+    const { sub: userId } = verify(
+      token,
+      session.secretRefreshToken,
+    ) as IPayload
+
+    let userEssentialInfos: IUserEssentialInfos | null
+
+    userEssentialInfos = await this.cacheProvider.getInfo<IUserEssentialInfos>(
+      KeysRedis.userEssentialInfos + userId,
+    )
+
+    if (!userEssentialInfos) {
+      const userExiste = await this.userRepository.findById(userId)
+      if (!userExiste) throw makeErrorUserNotFound()
+
+      await this.cacheProvider.setInfo<IUserEssentialInfos>(
+        KeysRedis.userEssentialInfos + userId,
+        {
+          admin: userExiste.admin,
+          email: userExiste.email,
+          id: userExiste.id,
+          name: userExiste.name,
+        },
+        KeysRedis.userEssentialInfosExpires, // 3days
+      )
+
+      userEssentialInfos = {
+        admin: userExiste.admin,
+        email: userExiste.email,
+        id: userExiste.id,
+        name: userExiste.name,
+      }
+    }
 
     const userToken =
       await this.refreshTokenRepository.findByUserIdAndRefreshToken(
         userId,
         token,
       )
-
     if (!userToken) throw makeErrorRefreshTokenInvalid()
 
-    await this.refreshTokenRepository.deleteById(userToken.id)
-    const userExiste = await this.userRepository.findById(userId)
+    const tokenIsValid = this.dateProvider.isBefore({
+      startDate: new Date(),
+      endDate: userToken.expires_date,
+    })
 
-    if (!userExiste) throw makeErrorUserNotFound()
+    if (!tokenIsValid) {
+      await this.refreshTokenRepository.deleteById(userToken.id)
+      throw makeErrorSessionExpires()
+    }
+
+    await this.refreshTokenRepository.deleteById(userToken.id)
 
     const refreshToken = sign(
       {
-        admin,
-        name,
-        email,
+        admin: userEssentialInfos.admin,
+        name: userEssentialInfos.name,
+        email: userEssentialInfos.email,
       },
       session.secretRefreshToken,
       {
@@ -73,9 +113,9 @@ export class RefreshTokenUseCase {
       },
     )
 
-    const expiresDate = this.dateProvider
-      .addDays(Number(session.expiresRefreshTokenDays))
-      .toString()
+    const expiresDate = this.dateProvider.addDays(
+      Number(session.expiresRefreshTokenDays),
+    )
 
     await this.refreshTokenRepository.create({
       expires_date: expiresDate,
@@ -85,13 +125,13 @@ export class RefreshTokenUseCase {
 
     const newToken = sign(
       {
-        admin: userExiste.admin,
-        name: userExiste.username,
-        email: userExiste.email,
+        admin: userEssentialInfos.admin,
+        name: userEssentialInfos.name,
+        email: userEssentialInfos.email,
       },
       session.secretToken,
       {
-        subject: userExiste.id,
+        subject: userEssentialInfos.id,
         expiresIn: session.expiresInToken,
       },
     )

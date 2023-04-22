@@ -1,19 +1,18 @@
 export interface IUpdatePlotDTO {
-  onePhrase?: string
-  premise?: string
-  storyteller?: string
-  literaryGenre?: string
-  subgenre?: string
-  ambient?: string
-  countTime?: string
-  historicalFact?: string
-  details?: string
-  summary?: string
-  persons?: string[]
-  urlOfText?: string
+  onePhrase?: string | null
+  premise?: string | null
+  storyteller?: string | null
+  literaryGenre?: string | null
+  subgenre?: string | null
+  ambient?: string | null
+  countTime?: string | null
+  historicalFact?: string | null
+  details?: string | null
+  summary?: string | null
+  urlOfText?: string | null
   structure?: {
-    act1?: string
-    act2?: string
-    act3?: string
+    act1?: string | null
+    act2?: string | null
+    act3?: string | null
   }
 }

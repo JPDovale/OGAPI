@@ -315,7 +315,9 @@ export class MigrateUseCase {
                     },
                   },
                 }
-              : undefined,
+              : {
+                  create: {},
+                },
           users_with_access_edit:
             usersEdit.length > 0
               ? {
@@ -325,7 +327,9 @@ export class MigrateUseCase {
                     },
                   },
                 }
-              : undefined,
+              : {
+                  create: {},
+                },
           users_with_access_comment:
             usersComment.length > 0
               ? {
@@ -335,7 +339,9 @@ export class MigrateUseCase {
                     },
                   },
                 }
-              : undefined,
+              : {
+                  create: {},
+                },
         })
 
         const commentsInProject = projectM.plot.comments
@@ -774,18 +780,28 @@ export class MigrateUseCase {
 
     await Promise.all(
       capitulesToCreate.map(async (c) => {
-        const scenesToCreate = c.capitule.scenes.map((s) => {
-          return {
-            objective: s.objective,
-            sequence: Number(s.sequence),
-            structure_act_1: s.structure.act1,
-            structure_act_2: s.structure.act2,
-            structure_act_3: s.structure.act3,
-            complete: s.complete,
-            id: s.id,
-            written_words: Number(s.writtenWords),
-          }
-        })
+        const scenesToCreate: Prisma.SceneCreateManyCapituleInput[] =
+          c.capitule.scenes.map((s) => {
+            const personsToAddIn = s.persons.map((p) => {
+              return {
+                id: p,
+              }
+            })
+
+            return {
+              objective: s.objective,
+              sequence: Number(s.sequence),
+              structure_act_1: s.structure.act1,
+              structure_act_2: s.structure.act2,
+              structure_act_3: s.structure.act3,
+              complete: s.complete,
+              id: s.id,
+              written_words: Number(s.writtenWords),
+              persons: {
+                connect: personsToAddIn,
+              },
+            }
+          })
 
         await prisma.capitule.create({
           data: {

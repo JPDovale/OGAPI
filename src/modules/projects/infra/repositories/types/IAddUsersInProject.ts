@@ -1,7 +1,7 @@
-import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
+import { type IUserInProject } from '../entities/IUsersWithAccess'
 
 export interface IAddUsersInProject {
-  users: IUser[]
+  users: IUserInProject[]
   projectId: string
   permission: 'edit' | 'view' | 'comment'
 }

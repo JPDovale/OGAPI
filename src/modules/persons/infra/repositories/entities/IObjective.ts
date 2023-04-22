@@ -8,5 +8,5 @@ export interface IObjective extends Objective {
   avoiders?: IObjectiveAvoiders
   supporters?: IObjectiveSupporters
   comments?: IComment[]
-  persons?: Array<{ id: string }>
+  persons?: Array<{ id: string; name: string; image_url: string | null }>
 }

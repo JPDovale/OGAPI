@@ -3,10 +3,12 @@ export interface IIsBefore {
   endDate: Date
 }
 
-export interface IDateProvider {
-  addDays: (days: number) => Date
-  getDate: (date: Date) => string
-  addHours: (hours: number) => Date
-  removeHours: (hours: number, date: Date) => Date
-  isBefore: ({ startDate, endDate }: IIsBefore) => boolean
+export abstract class IDateProvider {
+  abstract addSeconds(seconds: number): Date
+  abstract addDays(days: number): Date
+  abstract getDate(date: Date): string
+  abstract addHours(hours: number): Date
+  abstract removeHours(hours: number, date: Date): Date
+  abstract isBefore({ startDate, endDate }: IIsBefore): boolean
+  abstract addDaysInDate(date: Date, days: number): Date
 }

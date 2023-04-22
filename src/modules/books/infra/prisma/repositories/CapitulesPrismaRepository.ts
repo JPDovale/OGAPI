@@ -35,6 +35,16 @@ export class CapitulesPrismaRepository implements ICapitulesRepository {
             persons: true,
           },
         },
+        comments: {
+          include: {
+            responses: true,
+          },
+        },
+        book: {
+          select: {
+            project_id: true,
+          },
+        },
       },
     })
 

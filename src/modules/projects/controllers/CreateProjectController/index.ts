@@ -22,7 +22,7 @@ export class CreateProjectController {
     const { id } = req.user
 
     const createProjectUseCase = container.resolve(CreateProjectUseCase)
-    const { project } = await createProjectUseCase.execute({
+    await createProjectUseCase.execute({
       userId: id,
       name,
       private: priv,
@@ -30,6 +30,6 @@ export class CreateProjectController {
       password,
     })
 
-    return res.status(201).json({ project })
+    return res.status(201).end()
   }
 }

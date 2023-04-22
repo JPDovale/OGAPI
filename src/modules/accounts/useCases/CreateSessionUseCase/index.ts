@@ -5,7 +5,10 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUserEssentialInfos } from '@modules/accounts/infra/repositories/entities/IUserEssentialInfos'
+import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserInvalidCredentialsToLogin } from '@shared/errors/users/makeErrorUserInvalidCredentialsToLogin'
@@ -16,7 +19,7 @@ interface IRequest {
 }
 
 interface IResponse {
-  user: IUserInfosResponse
+  user: IUserPreview
   refreshToken: string
   token: string
 }
@@ -32,6 +35,9 @@ export class CreateSessionUseCase {
 
     @inject(InjectableDependencies.Providers.DateProvider)
     private readonly dateProvider: IDateProvider,
+
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ email, password }: IRequest): Promise<IResponse> {
@@ -82,24 +88,29 @@ export class CreateSessionUseCase {
     await this.refreshTokenRepository.deletePerUserId(userExiste.id)
 
     await this.refreshTokenRepository.create({
-      expires_date: expiresDate.toString(),
+      expires_date: expiresDate,
       refresh_token: refreshToken,
       user_id: userExiste.id,
     })
+
+    await this.cacheProvider.setInfo<IUserEssentialInfos>(
+      KeysRedis.userEssentialInfos + userExiste.id,
+      {
+        id: userExiste.id,
+        email: userExiste.email,
+        name: userExiste.name,
+        admin: userExiste.admin,
+      },
+      KeysRedis.userEssentialInfosExpires, // 3 days
+    )
 
     return {
       user: {
         id: userExiste.id,
         username: userExiste.username,
         email: userExiste.email,
-        avatar_filename: userExiste.avatar_filename,
         avatar_url: userExiste.avatar_url,
-        is_social_login: userExiste.is_social_login,
-        age: userExiste.age,
-        sex: userExiste.sex,
-        created_at: userExiste.created_at,
         notifications: userExiste.notifications ?? [],
-        name: userExiste.name,
         new_notifications: userExiste.new_notifications,
       },
       refreshToken,

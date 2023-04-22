@@ -2,7 +2,8 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
-import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotCreated } from '@shared/errors/projects/makeErrorProjectNotCreated'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
@@ -16,10 +17,6 @@ interface IRequest {
   password?: string
 }
 
-interface IResponse {
-  project: IProject
-}
-
 @injectable()
 export class CreateProjectUseCase {
   constructor(
@@ -28,6 +25,9 @@ export class CreateProjectUseCase {
 
     @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
+
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({
@@ -36,7 +36,7 @@ export class CreateProjectUseCase {
     type,
     userId,
     password,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<void> {
     const infoUser = await this.usersRepository.findById(userId)
     if (!infoUser) throw makeErrorUserNotFound()
 
@@ -55,10 +55,19 @@ export class CreateProjectUseCase {
       type,
       password,
       user_id: userId,
+      users_with_access_comment: {
+        create: {},
+      },
+      users_with_access_edit: {
+        create: {},
+      },
+      users_with_access_view: {
+        create: {},
+      },
     })
 
     if (!newProject) throw makeErrorProjectNotCreated()
 
-    return { project: newProject }
+    await this.cacheProvider.delete(KeysRedis.userProjectsPreview + userId)
   }
 }

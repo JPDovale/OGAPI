@@ -23,6 +23,8 @@ const defaultInclude: Prisma.PersonInclude = {
           persons: {
             select: {
               id: true,
+              name: true,
+              image_url: true,
             },
           },
         },
@@ -32,6 +34,8 @@ const defaultInclude: Prisma.PersonInclude = {
           persons: {
             select: {
               id: true,
+              name: true,
+              image_url: true,
             },
           },
         },
