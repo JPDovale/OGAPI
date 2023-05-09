@@ -1,8 +1,10 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IUsersRepository } from '@modules/accounts/infra/mongoose/repositories/IUsersRepository'
-import { IProjectsRepository } from '@modules/projects/repositories/IProjectRepository'
-import { AppError } from '@shared/errors/AppError'
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
+import InjectableDependencies from '@shared/container/types'
+import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
+import { makeErrorUserDoesPermissionToProject } from '@shared/errors/projects/makeErrorUserDoesPermissionToProject'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 import { type IVerifyPermissionsService } from '../IVerifyPermissions'
@@ -12,9 +14,10 @@ import { type IResponseVerify } from '../types/IResponseVerify'
 @injectable()
 export class VerifyPermissions implements IVerifyPermissionsService {
   constructor(
-    @inject('ProjectsRepository')
+    @inject(InjectableDependencies.Repositories.ProjectsRepository)
     private readonly projectsRepository: IProjectsRepository,
-    @inject('UsersRepository')
+
+    @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
   ) {}
 
@@ -24,54 +27,68 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     verifyPermissionTo,
   }: IRequestVerify): Promise<IResponseVerify> {
     const user = await this.usersRepository.findById(userId)
-
     if (!user) throw makeErrorUserNotFound()
 
     const project = await this.projectsRepository.findById(projectId)
+    if (!project) throw makeErrorProjectNotFound()
 
-    if (!project)
-      throw new AppError({
-        title: 'Projeto não encontrado.',
-        message: 'Parece que esse projeto não existe na nossa base de dados...',
-        statusCode: 404,
-      })
+    const usersWithPermissionToEdit = project.users_with_access_edit
+    const usersWithPermissionToView = project.users_with_access_view
+    const usersWithPermissionToComment = project.users_with_access_comment
 
-    const permissionOfThisUser = project.users.find(
-      (user) => user.id === userId,
-    )
+    if (project.user?.id !== userId) {
+      switch (verifyPermissionTo) {
+        case 'edit': {
+          const userHasPermission = !!usersWithPermissionToEdit?.users?.find(
+            (u) => u.id === user.id,
+          )
 
-    if (!permissionOfThisUser) {
-      throw new AppError({
-        title: 'Acesso negado!',
-        message: 'Você não tem permissão para alterar o projeto.',
-        statusCode: 401,
-      })
-    }
+          if (!userHasPermission)
+            throw makeErrorUserDoesPermissionToProject('editar')
 
-    if (
-      verifyPermissionTo === 'edit' &&
-      permissionOfThisUser.permission !== 'edit'
-    ) {
-      throw new AppError({
-        title: 'Acesso negado!',
-        message: 'Você não tem permissão para alterar o projeto.',
-        statusCode: 401,
-      })
-    }
+          break
+        }
 
-    if (
-      verifyPermissionTo === 'comment' &&
-      permissionOfThisUser.permission === 'view'
-    ) {
-      throw new AppError({
-        title: 'Acesso negado!',
-        message: 'Você não tem permissão para alterar o projeto.',
-        statusCode: 401,
-      })
+        case 'comment': {
+          const userHasPermissionToComment =
+            !!usersWithPermissionToComment?.users.find((u) => u.id === user.id)
+
+          const userHasPermissionToEdit =
+            !!usersWithPermissionToEdit?.users.find((u) => u.id === user.id)
+
+          if (!userHasPermissionToComment && !userHasPermissionToEdit)
+            throw makeErrorUserDoesPermissionToProject('comentar')
+
+          break
+        }
+
+        case 'view': {
+          const userHasPermissionView = !!usersWithPermissionToView?.users.find(
+            (u) => u.id === user.id,
+          )
+
+          const userHasPermissionToEdit =
+            !!usersWithPermissionToEdit?.users.find((u) => u.id === user.id)
+
+          const userHasPermissionToComment =
+            !!usersWithPermissionToComment?.users.find((u) => u.id === user.id)
+
+          if (
+            !userHasPermissionView &&
+            !userHasPermissionToEdit &&
+            !userHasPermissionToComment
+          )
+            throw makeErrorUserDoesPermissionToProject('visualizar')
+
+          break
+        }
+
+        default:
+          break
+      }
     }
 
     const response: IResponseVerify = {
-      permission: permissionOfThisUser.permission,
       project,
       user,
     }

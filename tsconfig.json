@@ -29,16 +29,27 @@
       ],
       "@env/*": [
         "env/*"
+      ],
+      "@utils/*": [
+        "utils/*"
       ]
     },
     "strictNullChecks": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
     "esModuleInterop": true,
+    "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "types": [
       "vitest/importMeta"
     ]
-  }
+  },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "./build",
+    "node_modules"
+  ]
 }

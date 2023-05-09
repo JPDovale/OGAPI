@@ -1,6 +1,3 @@
-export interface ICreateCoupleDTO {
-  title: string
-  description: string
-  personId: string
-  final: boolean
-}
+import { type Prisma } from '@prisma/client'
+
+export type ICreateCoupleDTO = Prisma.CoupleCreateInput

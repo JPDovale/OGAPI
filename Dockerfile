@@ -10,4 +10,4 @@ RUN npm install
 COPY ./ ./
 
 EXPOSE 3030
-CMD ["npm", "run", "application"]
+CMD ["npm", "run", "dev"]

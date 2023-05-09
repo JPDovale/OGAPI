@@ -5,7 +5,6 @@ services:
     image: redis/redis-stack:latest
     ports:
       - 6379:6379
-      - 8001:8001
     volumes:
       - /local-data/:/data
   # og-database:

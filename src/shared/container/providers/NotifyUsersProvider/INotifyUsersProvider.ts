@@ -1,19 +1,27 @@
-import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
-import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
+import { type IProjectToVerifyPermission } from '@modules/projects/infra/repositories/entities/IProjectToVerifyPermission'
 
 export interface INotifyAll {
-  sendBy: IUserMongo
   title: string
   content: string
 }
 
-export interface INotifyUsersProvider {
-  notify: (
-    sendBy: IUserMongo,
-    project: IProjectMongo,
-    title: string,
-    content: string,
-  ) => Promise<void>
+export interface INotifyUsersInOneProject {
+  project: IProject | IProjectToVerifyPermission
+  title: string
+  content: string
+  creatorId: string
+}
 
-  notifyAll: ({ content, sendBy, title }: INotifyAll) => Promise<void>
+export interface INotifyOneUser {
+  title: string
+  content: string
+  userToNotifyId: string
+}
+export abstract class INotifyUsersProvider {
+  abstract notifyUsersInOneProject(
+    data: INotifyUsersInOneProject,
+  ): Promise<void>
+  abstract notifyAll({ content, title }: INotifyAll): Promise<void>
+  abstract notifyOneUser(data: INotifyOneUser): Promise<void>
 }

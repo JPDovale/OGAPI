@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   test: {
     includeSource: ['src/**/*.ts'],
+    exclude: ['node_modules', 'build'],
   },
   resolve: {
     alias: {
@@ -15,6 +16,7 @@ export default defineConfig({
       '@config/': '/src/config/',
       '@shared/': '/src/shared/',
       '@env/': '/src/env/',
+      '@utils/': '/src/utils/',
     },
   },
 })

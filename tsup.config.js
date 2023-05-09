@@ -11,6 +11,7 @@ export default defineConfig({
     'src/modules/projects/**/*.ts',
     'src/shared/**/*.ts',
     'src/env/**/*.ts',
+    'src/utils/**/*.ts',
     'src/**/*.hbs'
   ],
   format: 'cjs',

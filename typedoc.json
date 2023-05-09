@@ -1,0 +1,10 @@
+{
+  "entryPoints": [
+    "src"
+  ],
+  "out": "./docs",
+  "name": "Ognare API Documentation",
+  "theme": "default",
+  "tsconfig": "./tsconfig.json",
+  "entryPointStrategy": "expand",
+}

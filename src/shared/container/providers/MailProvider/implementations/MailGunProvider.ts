@@ -4,8 +4,6 @@ import handlebars from 'handlebars'
 import nodemailer, { type Transporter } from 'nodemailer'
 import { injectable } from 'tsyringe'
 
-import { AppError } from '@shared/errors/AppError'
-
 import { type IMailProvider, type ISendMail } from '../IMailProvider'
 dotenv.config()
 
@@ -32,7 +30,7 @@ export class MailGunProvider implements IMailProvider {
 
     await this.client.sendMail({
       to: `${to}`,
-      from: 'Ognare | <noreply@ognare.com>',
+      from: 'MagiScrita | <noreply@ognare.com.br>',
       subject,
       html: templateHTML,
       watchHtml: templateHTML,

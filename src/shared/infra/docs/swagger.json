@@ -1,0 +1,407 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OGNARE API INTEGRATION",
+    "description": "Documentation of integration with api Ognare",
+    "version": "1.0.0",
+    "contact": {
+      "email": "ognare.app@gmail.com"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer token": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authorization have properties like user id, and this possible get user whiteout any parameters"
+      },
+      "Bearer token admin": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authorization created for admins"
+      }
+    },
+    "responsesSchemas": {
+      "userInfos": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "avatar_filename": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "avatar_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "age": {
+                "type": "string"
+              },
+              "sex": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "notifications": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "date",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "is_social_login": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "new_notifications": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "errorResponse": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/migrate": {
+      "post": {
+        "tags": [
+          "Dev"
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users",
+          "Get",
+          "Final user"
+        ],
+        "summary": "Get information's profile of user",
+        "description": "This route get information's of user aready registered in application",
+        "security": [
+          {
+            "Bearer token": []
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "User don't existes in register of application",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/errorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "User return",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/userInfos"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users",
+          "Post",
+          "Final user"
+        ],
+        "summary": "Create a new user",
+        "description": "This route is used to create a new user with the provided information.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 200
+                  },
+                  "age": {
+                    "type": "string",
+                    "maxLength": 4,
+                    "nullable": true
+                  },
+                  "sex": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "nullable": true
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/userInfos"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/errorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Usuário já cadastrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/errorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/errorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/all": {
+      "get": {
+        "tags": [
+          "Users",
+          "Get",
+          "Admin"
+        ],
+        "summary": "Get all users registered in application",
+        "description": "This route is protect per JWT to only accessibility for admins, and list all users in application",
+        "security": [
+          {
+            "Bearer token admin": []
+          }
+        ]
+      }
+    },
+    "/api/sessions/": {
+      "post": {
+        "summary": "Create session.",
+        "tags": [
+          "Sessions",
+          "Users",
+          "Final user",
+          "Post"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionBody"
+              },
+              "example": {
+                "email": "john@example.com",
+                "password": "password123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticação realizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "avatar_filename": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "avatar_url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "age": {
+                          "type": "string"
+                        },
+                        "sex": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "notifications": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "date",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        },
+                        "is_social_login": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "new_notifications": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciais inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/errorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/responsesSchemas/errorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

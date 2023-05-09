@@ -1,8 +1,7 @@
-import { type IUserMongo } from '@modules/accounts/infra/mongoose/entities/User'
-import { type IProjectMongo } from '@modules/projects/infra/mongoose/entities/Project'
+import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
+import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
 
 export interface IResponseVerify {
-  permission: 'edit' | 'comment' | string
-  project: IProjectMongo
-  user: IUserMongo
+  project: IProject
+  user: IUser
 }

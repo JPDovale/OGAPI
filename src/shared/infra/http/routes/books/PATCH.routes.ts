@@ -1,6 +1,6 @@
 import { Router } from 'express'
 
-import { UpdateFrontCoverBookController } from '@modules/books/useCases/UpdateFrontCover/UpdateFrontCoverBookController'
+import { UpdateFrontCoverBookController } from '@modules/books/controllers/UpdateFrontCoverBookController'
 
 import { Uploads } from '../../middlewares/upload'
 
@@ -10,8 +10,9 @@ const updateFrontCoverBookController = new UpdateFrontCoverBookController()
 
 const uploads = new Uploads('books', 'image')
 
+// PATH: api/books
 booksRoutesPatch.patch(
-  '/update-frontCover/:bookId',
+  '/:bookId/image',
   uploads.upload.single('file'),
   updateFrontCoverBookController.handle,
 )

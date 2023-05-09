@@ -1,8 +1,6 @@
+import { type Prisma } from '@prisma/client'
+
 export interface IUpdateBoxDTO {
-  id: string
-  name: string
-  description: string
-  tags: Array<{
-    name: string
-  }>
+  boxId: string
+  data: Prisma.BoxUpdateInput
 }
