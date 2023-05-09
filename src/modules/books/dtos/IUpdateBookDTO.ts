@@ -1,7 +1,6 @@
+import { type Prisma } from '@prisma/client'
+
 export interface IUpdateBookDTO {
-  words: string
-  title: string
-  subtitle: string
-  isbn: string
-  literaryGenere: string
+  bookId: string
+  data: Prisma.BookUpdateInput
 }

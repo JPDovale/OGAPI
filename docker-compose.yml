@@ -1,16 +1,37 @@
 version: "2.2"
 
 services:
-  og-api:
-    build: .
-    command: npm run application
-    restart: always
-    environment:
-      - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}
-    env_file:
-      - .env
+  og-cache:
+    image: redis/redis-stack:latest
     ports:
-      - 3030:3030
+      - 6379:6379
+      - 8001:8001
     volumes:
-      - .:/usr/app
-      - /usr/app/node_modules
+      - /local-data/:/data
+  # og-database:
+  #   image: mysql:latest
+  #   ports:
+  #     - 3306:3306
+
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=Karanthir-Akira1342!@
+  #     - MYSQL_DATABASE=ogDatabase
+  #     - MYSQL_USER=ognare
+  #     - MYSQL_PASSWORD=Karanthir-Akira1342!@
+  # og-api:
+  #   build: .
+  #   command: npm run dev
+  #   restart: always
+  #   environment:
+  #     - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - 3030:3030
+  #   volumes:
+  #     - .:/usr/app
+  #     - /usr/app/node_modules
+  #   depends_on:
+  #     - og-cache
+  #   links:
+  #     - "og-cache"

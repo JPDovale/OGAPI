@@ -3,7 +3,7 @@ name: Continuous integrations Ognare
 on:
   push:
     branches:
-      - "main"
+      - "dev"
 
 jobs:
   build:

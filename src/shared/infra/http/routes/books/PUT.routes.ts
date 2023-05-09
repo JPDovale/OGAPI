@@ -1,12 +1,11 @@
 import { Router } from 'express'
 
-import { RemoveGenreController } from '@modules/books/useCases/removeGenre/RemoveGenreController'
-import { ReorderCapitulesController } from '@modules/books/useCases/ReorderCapitules/ReorderCapitulesController'
-import { ReorderScenesController } from '@modules/books/useCases/ReorderScenes/ReorderScenesController'
-import { SetCompleteSceneController } from '@modules/books/useCases/SetCompleteScene/SetCompleteSceneController'
-import { UpdateBookController } from '@modules/books/useCases/UpdateBook/UpdateBookController'
-import { UpdateCapituleController } from '@modules/books/useCases/UpdateCapitule/UpdateCapituleController'
-import { UpdateSceneController } from '@modules/books/useCases/UpdateScene/UpdateSceneController'
+import { ReorderCapitulesController } from '@modules/books/controllers/ReorderCapitulesController/ReorderCapitulesController'
+import { ReorderScenesController } from '@modules/books/controllers/ReorderScenesController'
+import { SetCompleteSceneController } from '@modules/books/controllers/SetCompleteSceneController'
+import { UpdateBookController } from '@modules/books/controllers/UpdateBookController'
+import { UpdateCapituleController } from '@modules/books/controllers/UpdateCapituleController/UpdateCapituleController'
+import { UpdateSceneController } from '@modules/books/controllers/UpdateSceneController'
 
 export const booksRoutesPut = Router()
 
@@ -15,16 +14,30 @@ const setCompleteSceneController = new SetCompleteSceneController()
 const reorderScenesController = new ReorderScenesController()
 const updateSceneController = new UpdateSceneController()
 const reorderCapitulesController = new ReorderCapitulesController()
-const removeGenreController = new RemoveGenreController()
 const updateBookController = new UpdateBookController()
 
-booksRoutesPut.put('/capitules', updateCapituleController.handle)
+// PATH: api/books
+booksRoutesPut.put('/:bookId', updateBookController.handle)
+
 booksRoutesPut.put(
-  '/capitules/scenes/complete',
+  '/:bookId/capitules/reorder',
+  reorderCapitulesController.handle,
+)
+
+booksRoutesPut.put(
+  '/:bookId/capitules/:capituleId',
+  updateCapituleController.handle,
+)
+booksRoutesPut.put(
+  '/:bookId/capitules/:capituleId/scenes/:sceneId/complete',
   setCompleteSceneController.handle,
 )
-booksRoutesPut.put('/capitules/scenes/reorder', reorderScenesController.handle)
-booksRoutesPut.put('/capitules/scenes', updateSceneController.handle)
-booksRoutesPut.put('/capitules/reorder', reorderCapitulesController.handle)
-booksRoutesPut.put('/genres', removeGenreController.handle)
-booksRoutesPut.put('/', updateBookController.handle)
+booksRoutesPut.put(
+  '/:bookId/capitules/:capituleId/scenes/reorder',
+  reorderScenesController.handle,
+)
+
+booksRoutesPut.put(
+  '/:bookId/capitules/:capituleId/scenes/:sceneId',
+  updateSceneController.handle,
+)

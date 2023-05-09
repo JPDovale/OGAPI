@@ -1,74 +1,38 @@
-import { v4 as uuidV4 } from 'uuid'
-
-import { type ICreateUserTokenDTO } from '@modules/accounts/dtos/ICreateUserTokenDTO'
-
-import {
-  type IRefreshTokenMongo,
-  RefreshTokenMongo,
-} from '../../entities/RefreshToken'
 import {
   type IFindByRefreshToken,
   type IRefreshTokenRepository,
-} from '../IRefreshTokenRepository'
+} from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
+import { type Prisma, type RefreshToken } from '@prisma/client'
 
 export class RefreshTokenRepository implements IRefreshTokenRepository {
   async create(
-    dataUserTokenObj: ICreateUserTokenDTO,
-  ): Promise<IRefreshTokenMongo | null | undefined> {
-    const { expiresDate, refreshToken, userId, accessCode } = dataUserTokenObj
-
-    const tokenInAppAlreadyExists = await RefreshTokenMongo.findOne({
-      userId,
-      application: 'OG-web',
-    })
-
-    if (tokenInAppAlreadyExists) {
-      await RefreshTokenMongo.findOneAndDelete(tokenInAppAlreadyExists.id)
-    }
-
-    const userToken = new RefreshTokenMongo({
-      id: uuidV4(),
-      userId,
-      expiresDate,
-      refreshToken,
-      accessCode,
-    })
-
-    await userToken.save()
-
-    return userToken
+    refreshToken: Prisma.RefreshTokenUncheckedCreateInput,
+  ): Promise<RefreshToken | null> {
+    throw new Error('Method not implemented.')
   }
 
   async findByUserIdAndRefreshToken(
     userId: string,
     refreshToken: string,
-  ): Promise<IRefreshTokenMongo | null | undefined> {
-    const userToken = await RefreshTokenMongo.findOne({
-      userId,
-      refreshToken,
-    })
-    return userToken
+  ): Promise<RefreshToken | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async deleteById(id: string): Promise<void> {
-    await RefreshTokenMongo.deleteOne({ id })
+  async deleteById(refreshTokenId: string): Promise<void> {
+    throw new Error('Method not implemented.')
   }
 
   async deletePerUserId(userId: string): Promise<void> {
-    await RefreshTokenMongo.deleteMany({ userId })
+    throw new Error('Method not implemented.')
   }
 
-  async findByUserId(userId: string): Promise<IRefreshTokenMongo[]> {
-    const tokens = await RefreshTokenMongo.find({ userId })
-    return tokens
+  async findByUserId(userId: string): Promise<RefreshToken[]> {
+    throw new Error('Method not implemented.')
   }
 
-  async findByRefreshToken({
-    refreshToken,
-  }: IFindByRefreshToken): Promise<IRefreshTokenMongo | null | undefined> {
-    const token = await RefreshTokenMongo.findOne({
-      refreshToken,
-    })
-    return token
+  async findByRefreshToken(
+    query: IFindByRefreshToken,
+  ): Promise<RefreshToken | null> {
+    throw new Error('Method not implemented.')
   }
 }

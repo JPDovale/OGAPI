@@ -1,8 +1,6 @@
+import { type Prisma } from '@prisma/client'
+
 export interface IUpdatePersonalityDTO {
-  title?: string
-  description?: string
-  consequences?: Array<{
-    title: string
-    description: string
-  }>
+  personalityId: string
+  data: Prisma.PersonalityUpdateInput
 }

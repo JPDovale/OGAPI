@@ -1,16 +1,3 @@
-import { type IAvatar } from '../infra/mongoose/entities/Avatar'
+import { type Prisma } from '@prisma/client'
 
-export interface ICreateUserDTO {
-  name: string
-  email: string
-  password: string
-  sex: string
-  age: string
-  username: string
-  isInitialized?: boolean
-  isSocialLogin?: boolean
-  code?: string
-  avatar?: IAvatar
-  admin?: boolean
-  payed?: boolean
-}
+export type ICreateUserDTO = Prisma.UserCreateInput

@@ -1,6 +1,3 @@
-export interface ICreateUserTokenDTO {
-  userId: string
-  expiresDate: string
-  refreshToken: string
-  accessCode?: string
-}
+import { type Prisma } from '@prisma/client'
+
+export type ICreateUserTokenDTO = Prisma.RefreshTokenUncheckedCreateInput
