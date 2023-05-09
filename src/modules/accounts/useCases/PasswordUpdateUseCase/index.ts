@@ -30,6 +30,11 @@ export class PasswordUpdateUseCase {
 
     const passwordHash = hashSync(password, 8)
 
-    await this.usersRepository.updatePassword(id, passwordHash)
+    await this.usersRepository.updateUser({
+      userId: id,
+      data: {
+        password: passwordHash,
+      },
+    })
   }
 }

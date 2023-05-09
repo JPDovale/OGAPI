@@ -5,9 +5,6 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserEssentialInfos } from '@modules/accounts/infra/repositories/entities/IUserEssentialInfos'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
-import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorRefreshTokenInvalid } from '@shared/errors/refreshToken/makeErrorRefreshTokenInvalid'
@@ -41,44 +38,35 @@ export class RefreshTokenUseCase {
 
     @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly userRepository: IUsersRepository,
-
-    @inject(InjectableDependencies.Providers.CacheProvider)
-    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ token }: IRequest): Promise<IResponse> {
-    const { sub: userId } = verify(
-      token,
-      session.secretRefreshToken,
-    ) as IPayload
+    if (!token) throw makeErrorSessionExpires()
 
-    let userEssentialInfos: IUserEssentialInfos | null
+    let userId = ''
 
-    userEssentialInfos = await this.cacheProvider.getInfo<IUserEssentialInfos>(
-      KeysRedis.userEssentialInfos + userId,
-    )
+    try {
+      const { sub } = verify(token, session.secretRefreshToken) as IPayload
 
-    if (!userEssentialInfos) {
-      const userExiste = await this.userRepository.findById(userId)
-      if (!userExiste) throw makeErrorUserNotFound()
+      userId = sub
+    } catch (err) {
+      throw makeErrorSessionExpires()
+    }
 
-      await this.cacheProvider.setInfo<IUserEssentialInfos>(
-        KeysRedis.userEssentialInfos + userId,
-        {
-          admin: userExiste.admin,
-          email: userExiste.email,
-          id: userExiste.id,
-          name: userExiste.name,
-        },
-        KeysRedis.userEssentialInfosExpires, // 3days
-      )
+    const userExiste = await this.userRepository.findById(userId)
+    if (!userExiste) throw makeErrorUserNotFound()
 
-      userEssentialInfos = {
-        admin: userExiste.admin,
-        email: userExiste.email,
-        id: userExiste.id,
-        name: userExiste.name,
-      }
+    const userEssentialInfos = {
+      admin: userExiste.admin,
+      email: userExiste.email,
+      id: userExiste.id,
+      name: userExiste.name,
+      username: userExiste.username,
+      _count: {
+        books: userExiste._count?.books ?? 0,
+        projects: userExiste._count?.projects ?? 0,
+      },
+      last_payment_date: userExiste.last_payment_date,
     }
 
     const userToken =

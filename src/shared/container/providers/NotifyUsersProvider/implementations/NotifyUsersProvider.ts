@@ -25,6 +25,7 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
     content,
     project,
     title,
+    creatorId,
   }: INotifyUsersInOneProject): Promise<void> {
     const usersWithPermissionToComment =
       project.users_with_access_comment?.users ?? []
@@ -45,9 +46,11 @@ export class NotifyUsersProvider implements INotifyUsersProvider {
       }
     })
 
-    usersToConnectIn.push({
-      id: project.user!.id,
-    })
+    if (creatorId !== project.user!.id) {
+      usersToConnectIn.push({
+        id: project.user!.id,
+      })
+    }
 
     await this.notificationsRepository.create({
       title,

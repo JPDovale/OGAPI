@@ -55,12 +55,14 @@ export class ResponseCommentPlotProjectUseCase {
     if (newResponse.user_id !== comment.user_id) {
       await this.notifyUsersProvider.notifyUsersInOneProject({
         project,
+        creatorId: user.id,
         title: `${user.username} respondeu o comentário em ${comment.to_unknown}`,
         content: `${user.username} acabou de responder o comentário "${comment.content}" em ${comment.to_unknown}: ${newResponse.content}`,
       })
     } else {
       await this.notifyUsersProvider.notifyUsersInOneProject({
         project,
+        creatorId: user.id,
         title: `${user.username} respondeu o próprio comentário em ${comment.to_unknown}`,
         content: `${user.username} acabou de responder o próprio comentário "${comment.content}" em ${comment.to_unknown}: ${newResponse.content}`,
       })

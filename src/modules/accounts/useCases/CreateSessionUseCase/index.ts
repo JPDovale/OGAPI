@@ -5,10 +5,7 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserEssentialInfos } from '@modules/accounts/infra/repositories/entities/IUserEssentialInfos'
 import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
-import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserInvalidCredentialsToLogin } from '@shared/errors/users/makeErrorUserInvalidCredentialsToLogin'
@@ -35,9 +32,6 @@ export class CreateSessionUseCase {
 
     @inject(InjectableDependencies.Providers.DateProvider)
     private readonly dateProvider: IDateProvider,
-
-    @inject(InjectableDependencies.Providers.CacheProvider)
-    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ email, password }: IRequest): Promise<IResponse> {
@@ -92,17 +86,6 @@ export class CreateSessionUseCase {
       refresh_token: refreshToken,
       user_id: userExiste.id,
     })
-
-    await this.cacheProvider.setInfo<IUserEssentialInfos>(
-      KeysRedis.userEssentialInfos + userExiste.id,
-      {
-        id: userExiste.id,
-        email: userExiste.email,
-        name: userExiste.name,
-        admin: userExiste.admin,
-      },
-      KeysRedis.userEssentialInfosExpires, // 3 days
-    )
 
     return {
       user: {

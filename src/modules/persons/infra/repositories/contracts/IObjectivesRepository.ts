@@ -6,10 +6,14 @@ import { type IAddOnePersonInObject } from '../types/IAddOnePersonInObject'
 import { type IRemoveOnePersonById } from '../types/IRemoveOnePersonById'
 
 export abstract class IObjectivesRepository {
-  abstract create(data: ICreateObjectiveDTO): Promise<IObjective | null>
+  abstract create(
+    data: ICreateObjectiveDTO,
+    personId: string,
+  ): Promise<IObjective | null>
   abstract findById(objectiveId: string): Promise<IObjective | null>
   abstract delete(objectiveId: string): Promise<void>
   abstract removeOnePersonById(data: IRemoveOnePersonById): Promise<void>
   abstract addPerson(data: IAddOnePersonInObject): Promise<void>
   abstract update(data: IUpdateObjectiveDTO): Promise<IObjective | null>
+  abstract listPerPersons(personIds: string[]): Promise<IObjective[]>
 }

@@ -104,7 +104,7 @@ export class SetCompleteSceneUseCase {
       await this.booksRepository.update({
         bookId,
         data: {
-          written_words: writtenWords,
+          written_words: wordsInBook,
         },
       })
     }

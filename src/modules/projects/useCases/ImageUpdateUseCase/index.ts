@@ -54,10 +54,12 @@ export class ImageUpdateUseCase {
 
     const url = await this.storageProvider.upload(file, 'projects/images')
 
-    const updatedProject = await this.projectsRepository.updateImage({
-      imageFilename: file.filename,
-      imageUrl: url,
+    const updatedProject = await this.projectsRepository.update({
       projectId,
+      data: {
+        image_filename: file.filename,
+        image_url: url,
+      },
     })
 
     fs.rmSync(file.path)
@@ -65,6 +67,7 @@ export class ImageUpdateUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} alterou a imagem do projeto.`,
       content: `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
     })

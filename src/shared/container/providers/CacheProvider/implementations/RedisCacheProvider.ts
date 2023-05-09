@@ -1,13 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
 import { redisClient } from '@config/redis'
-import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
 import InjectableDependencies from '@shared/container/types'
 
 import { IDateProvider } from '../../DateProvider/IDateProvider'
 import { type ICacheProvider } from '../ICacheProvider'
 import { type ICacheSaved } from '../types/ICacheSaved'
-import { KeysRedis } from '../types/Keys'
+import { type KeysUnchecked, type IKeysRedis, KeysRedis } from '../types/Keys'
 
 @injectable()
 export class RedisCacheProvider implements ICacheProvider {
@@ -17,7 +16,10 @@ export class RedisCacheProvider implements ICacheProvider {
   ) {}
 
   async setInfo<T>(
-    key: string,
+    key: {
+      key: IKeysRedis
+      objectId: string
+    },
     value: T,
     validateInSeconds?: number,
   ): Promise<void> {
@@ -31,11 +33,17 @@ export class RedisCacheProvider implements ICacheProvider {
     }
 
     const valueToSaveStringed = JSON.stringify(valueToSave)
-    await redisClient.set(key, valueToSaveStringed)
+    await redisClient.set(
+      KeysRedis[key.key] + key.objectId,
+      valueToSaveStringed,
+    )
   }
 
-  async getInfo<T>(key: string): Promise<T | null> {
-    const value = await redisClient.get(key)
+  async getInfo<T>(key: {
+    key: IKeysRedis
+    objectId: string
+  }): Promise<T | null> {
+    const value = await redisClient.get(KeysRedis[key.key] + key.objectId)
 
     if (!value) return null
 
@@ -47,7 +55,7 @@ export class RedisCacheProvider implements ICacheProvider {
     })
 
     if (validateOfCacheExpire) {
-      await redisClient.del(key)
+      await redisClient.del(KeysRedis[key.key] + key.objectId)
       return null
     }
 
@@ -58,34 +66,22 @@ export class RedisCacheProvider implements ICacheProvider {
     await redisClient.flushdb()
   }
 
-  async delete(key: string): Promise<void> {
-    await redisClient.del(key)
+  async delete(
+    key: { key: IKeysRedis; objectId: string } | KeysUnchecked,
+  ): Promise<void> {
+    if (typeof key === 'object') {
+      if (key.objectId === '*') {
+        const keys = await redisClient.keys(KeysRedis[key.key] + key.objectId)
+        await redisClient.del(...keys)
+      } else {
+        await redisClient.del(KeysRedis[key.key] + key.objectId)
+      }
+    } else {
+      await redisClient.del(key)
+    }
   }
 
-  async cleanCacheOfOneProject(project: IProject): Promise<void> {
-    const usersWithPermissionToComment =
-      project.users_with_access_comment?.users ?? []
-    const usersWithPermissionToEdit =
-      project.users_with_access_edit?.users ?? []
-    const usersWithPermissionToView =
-      project.users_with_access_view?.users ?? []
-
-    const usersToCleanCache = [
-      ...usersWithPermissionToComment,
-      ...usersWithPermissionToEdit,
-      ...usersWithPermissionToView,
-    ]
-
-    await redisClient.del(KeysRedis.project + project.id)
-
-    Promise.all(
-      usersToCleanCache.map(async (user) => {
-        await redisClient.del(KeysRedis.userPreview + user.id)
-        await redisClient.del(KeysRedis.userProjectsPreview + user.id)
-      }),
-    ).catch((err) => {
-      console.log(err)
-      throw err
-    })
+  async deleteMany(keys: KeysUnchecked[]): Promise<void> {
+    await redisClient.del(...keys)
   }
 }

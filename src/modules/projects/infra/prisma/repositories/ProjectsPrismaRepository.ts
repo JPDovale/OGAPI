@@ -1,15 +1,23 @@
+import { inject, injectable } from 'tsyringe'
+
 import { type IUpdateProjectDTO } from '@modules/projects/dtos/IUpdateProjectDTO'
 import { type IPreviewProject } from '@modules/projects/responses/IPreviewProject'
 import { type Prisma } from '@prisma/client'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import InjectableDependencies from '@shared/container/types'
 import { prisma } from '@shared/infra/database/createConnection'
 
 import { type IProjectsRepository } from '../../repositories/contracts/IProjectsRepository'
 import { type IProject } from '../../repositories/entities/IProject'
-import { type IProjectToVerifyPermission } from '../../repositories/entities/IProjectToVerifyPermission'
 import { type IAddUsersInProject } from '../../repositories/types/IAddUsersInProject'
-import { type IUpdateImage } from '../../repositories/types/IUpdateImage'
 
+@injectable()
 export class ProjectsPrismaRepository implements IProjectsRepository {
+  constructor(
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
+  ) {}
+
   private readonly defaultInclude: Prisma.ProjectInclude | null | undefined = {
     users_with_access_edit: {
       include: {
@@ -106,7 +114,14 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
     },
     comments: {
       include: {
-        responses: true,
+        responses: {
+          orderBy: {
+            created_at: 'desc',
+          },
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
       },
     },
     _count: {
@@ -117,25 +132,59 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
     },
   }
 
+  private async setProjectInCache(project: IProject): Promise<void> {
+    await this.cacheProvider.setInfo<IProject>(
+      {
+        key: 'project',
+        objectId: project.id,
+      },
+      project,
+      60 * 60 * 24, // 1 day
+    )
+  }
+
+  private async getProjectInCache(projectId: string): Promise<IProject | null> {
+    return await this.cacheProvider.getInfo<IProject>({
+      key: 'project',
+      objectId: projectId,
+    })
+  }
+
   async create(
     data: Prisma.ProjectUncheckedCreateInput,
   ): Promise<IProject | null> {
     const project = await prisma.project.create({
       data,
+      include: this.defaultInclude,
     })
+
+    if (project) {
+      this.setProjectInCache(project).catch((err) => {
+        throw err
+      })
+    }
 
     return project
   }
 
   async findById(projectId: string): Promise<IProject | null> {
-    const project = prisma.project.findUnique({
+    const projectInCache = await this.getProjectInCache(projectId)
+    if (projectInCache) return projectInCache
+
+    const project = await prisma.project.findUnique({
       where: {
         id: projectId,
       },
       include: this.defaultInclude,
     })
 
-    return await project
+    if (project) {
+      this.setProjectInCache(project).catch((err) => {
+        throw err
+      })
+    }
+
+    return project
   }
 
   async addUsers({
@@ -185,37 +234,29 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
               }
             : undefined,
       },
-
       include: this.defaultInclude,
     })
 
-    return project
-  }
-
-  async updateImage({
-    imageFilename,
-    imageUrl,
-    projectId,
-  }: IUpdateImage): Promise<IProject | null> {
-    const project = await prisma.project.update({
-      where: {
-        id: projectId,
-      },
-      data: {
-        image_filename: imageFilename,
-        image_url: imageUrl,
-      },
-      include: this.defaultInclude,
-    })
+    if (project) {
+      this.setProjectInCache(project).catch((err) => {
+        throw err
+      })
+    }
 
     return project
   }
 
   async delete(projectId: string): Promise<void> {
-    await prisma.project.delete({
-      where: {
-        id: projectId,
-      },
+    await Promise.all([
+      prisma.project.delete({
+        where: {
+          id: projectId,
+        },
+      }),
+
+      this.cacheProvider.delete({ key: 'project', objectId: projectId }),
+    ]).catch((err) => {
+      throw err
     })
   }
 
@@ -231,6 +272,12 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
       include: this.defaultInclude,
     })
 
+    if (project) {
+      this.setProjectInCache(project).catch((err) => {
+        throw err
+      })
+    }
+
     return project
   }
 
@@ -243,7 +290,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
   }
 
   async listProjectsOfOneUser(userId: string): Promise<IPreviewProject[]> {
-    const projects = prisma.project.findMany({
+    const projects = await prisma.project.findMany({
       where: {
         OR: [
           {
@@ -330,53 +377,25 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
       },
     })
 
-    return await projects
+    return projects
   }
 
-  async findOneToVerifyPermission(
-    projectId: string,
-  ): Promise<IProjectToVerifyPermission | null> {
+  async listPersonsIds(projectId: string): Promise<string[]> {
     const project = await prisma.project.findUnique({
       where: {
         id: projectId,
       },
       select: {
-        id: true,
-        user: {
+        persons: {
           select: {
             id: true,
-          },
-        },
-        users_with_access_edit: {
-          include: {
-            users: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
-        users_with_access_view: {
-          include: {
-            users: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
-        users_with_access_comment: {
-          include: {
-            users: {
-              select: {
-                id: true,
-              },
-            },
           },
         },
       },
     })
 
-    return project
+    const personIds = project?.persons.map((person) => person.id) ?? []
+
+    return personIds
   }
 }

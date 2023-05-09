@@ -43,12 +43,17 @@ export class CommentInPlotProjectUseCase {
       verifyPermissionTo: 'comment',
     })
 
-    const newComment = await this.commentsRepository.create({
-      user_id: userId,
-      content,
-      to_unknown: to,
-      project_id: projectId,
-    })
+    const newComment = await this.commentsRepository.create(
+      {
+        user_id: userId,
+        content,
+        to_unknown: to,
+        project_id: projectId,
+      },
+      {
+        key: 'project',
+      },
+    )
 
     if (!newComment) throw makeErrorCommentNotCreated()
 
@@ -57,6 +62,7 @@ export class CommentInPlotProjectUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} comentou`,
       content: `${user.username} comentou no projeto ${project.name} em |${commentSentInto}: ${commentContent}`,
     })

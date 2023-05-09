@@ -1,4 +1,5 @@
 import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
+import { type IProjectToVerifyPermission } from '@modules/projects/infra/repositories/entities/IProjectToVerifyPermission'
 
 export interface INotifyAll {
   title: string
@@ -6,9 +7,10 @@ export interface INotifyAll {
 }
 
 export interface INotifyUsersInOneProject {
-  project: IProject
+  project: IProject | IProjectToVerifyPermission
   title: string
   content: string
+  creatorId: string
 }
 
 export interface INotifyOneUser {

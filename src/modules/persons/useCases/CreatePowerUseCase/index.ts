@@ -57,15 +57,18 @@ export class CreatePowerUseCase {
         whatExistes: 'um poder',
       })
 
-    const power = await this.powersRepository.create({
-      title,
-      description,
-      persons: {
-        connect: {
-          id: person.id,
+    const power = await this.powersRepository.create(
+      {
+        title,
+        description,
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-    })
+      personId,
+    )
 
     if (!power) throw makeErrorPersonNotUpdate()
 

@@ -7,7 +7,7 @@ import { userRoutesPost } from './POST.routes'
 
 export const userRoutes = Router()
 
-userRoutes.use(userRoutesPost)
 userRoutes.use(userRoutesGet)
+userRoutes.use(userRoutesPost)
 userRoutes.use(userRoutesPatch)
 userRoutes.use(userRoutesDelete)

@@ -32,35 +32,35 @@ interface IResponse {
 }
 
 const factoryComment = {
-  appearance: (id, usrId, content) => {
-    return { appearance_id: id, user_id: usrId, content }
+  appearance: (id, usrId, prjId, content) => {
+    return { appearance_id: id, user_id: usrId, project_id: prjId, content }
   },
-  objective: (id, usrId, content) => {
-    return { objective_id: id, user_id: usrId, content }
+  objective: (id, usrId, prjId, content) => {
+    return { objective_id: id, user_id: usrId, project_id: prjId, content }
   },
-  personality: (id, usrId, content) => {
-    return { personality_id: id, user_id: usrId, content }
+  personality: (id, usrId, prjId, content) => {
+    return { personality_id: id, user_id: usrId, project_id: prjId, content }
   },
-  dream: (id, usrId, content) => {
-    return { dream_id: id, user_id: usrId, content }
+  dream: (id, usrId, prjId, content) => {
+    return { dream_id: id, user_id: usrId, project_id: prjId, content }
   },
-  fear: (id, usrId, content) => {
-    return { fear_id: id, user_id: usrId, content }
+  fear: (id, usrId, prjId, content) => {
+    return { fear_id: id, user_id: usrId, project_id: prjId, content }
   },
-  power: (id, usrId, content) => {
-    return { power_id: id, user_id: usrId, content }
+  power: (id, usrId, prjId, content) => {
+    return { power_id: id, user_id: usrId, project_id: prjId, content }
   },
-  couple: (id, usrId, content) => {
-    return { couple_id: id, user_id: usrId, content }
+  couple: (id, usrId, prjId, content) => {
+    return { couple_id: id, user_id: usrId, project_id: prjId, content }
   },
-  value: (id, usrId, content) => {
-    return { value_id: id, user_id: usrId, content }
+  value: (id, usrId, prjId, content) => {
+    return { value_id: id, user_id: usrId, project_id: prjId, content }
   },
-  wishe: (id, usrId, content) => {
-    return { wishe_id: id, user_id: usrId, content }
+  wishe: (id, usrId, prjId, content) => {
+    return { wishe_id: id, user_id: usrId, project_id: prjId, content }
   },
-  trauma: (id, usrId, content) => {
-    return { trauma_id: id, user_id: usrId, content }
+  trauma: (id, usrId, prjId, content) => {
+    return { trauma_id: id, user_id: usrId, project_id: prjId, content }
   },
 }
 
@@ -98,10 +98,16 @@ export class CommentInPersonUseCase {
     const commentFactoredIn = factoryComment[mapperToCommentIn[commentIn]](
       toId,
       userId,
+      person.project_id,
       content,
     )
 
-    const comment = await this.commentsRepository.create(commentFactoredIn)
+    const comment = await this.commentsRepository.create(commentFactoredIn, {
+      key: commentIn,
+      deleteCache: {
+        personId,
+      },
+    })
     if (!comment) throw makeErrorCommentNotCreated()
 
     return { comment }

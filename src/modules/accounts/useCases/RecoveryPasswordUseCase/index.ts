@@ -48,7 +48,10 @@ export class RecoveryPasswordUseCase {
 
     if (!user) throw makeErrorUserNotFound()
 
-    await this.usersRepository.updatePassword(user.id, passwordHash)
+    await this.usersRepository.updateUser({
+      userId: user.id,
+      data: { password: passwordHash },
+    })
     await this.refreshTokenRepository.deleteById(userToken.id)
   }
 }

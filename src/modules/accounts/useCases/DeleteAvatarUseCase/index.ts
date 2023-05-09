@@ -34,10 +34,12 @@ export class DeleteAvatarUseCase {
       await this.storageProvider.delete(user.avatar_filename, 'avatar')
     }
 
-    const updatedUser = await this.usersRepository.updateAvatar({
+    const updatedUser = await this.usersRepository.updateUser({
       userId,
-      avatarFilename: null,
-      avatarUrl: null,
+      data: {
+        avatar_filename: null,
+        avatar_url: null,
+      },
     })
 
     if (!updatedUser) throw makeErrorUserNotUpdate()

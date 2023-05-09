@@ -83,8 +83,20 @@ export class CreateSceneUseCase {
 
     if (!scene) throw makeErrorBookNotUpdate()
 
+    this.capitulesRepository
+      .update({
+        capituleId,
+        data: {
+          complete: false,
+        },
+      })
+      .catch((err) => {
+        throw err
+      })
+
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} criou uma nova cena no capitulo: ${capituleToAddScene.name}`,
       content: `${user.username} acabou de criar uma nova cena no capitulo ${
         capituleToAddScene.name

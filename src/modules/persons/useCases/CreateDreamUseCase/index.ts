@@ -58,15 +58,18 @@ export class CreateDreamUseCase {
         whatExistes: 'um sonho',
       })
 
-    const dream = await this.dreamsRepository.create({
-      title,
-      description,
-      persons: {
-        connect: {
-          id: person.id,
+    const dream = await this.dreamsRepository.create(
+      {
+        title,
+        description,
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-    })
+      personId,
+    )
 
     if (!dream) throw makeErrorPersonNotUpdate()
 

@@ -81,6 +81,7 @@ export class CreateBookUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} criou o livro: ${newBook.title}`,
       content: `${user.username} acabou de criar o livro ${newBook.title}${
         newBook.subtitle ? ` ${newBook.subtitle}` : ''

@@ -7,7 +7,6 @@ import {
   type IProjectUsers,
   type IUserInProject,
 } from '@modules/projects/infra/repositories/entities/IUsersWithAccess'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectAlreadySharedWithUser } from '@shared/errors/projects/makeErrorProjectAlreadySharedWithUser'
@@ -54,9 +53,6 @@ export class ShareProjectUseCase {
 
     @inject(InjectableDependencies.Providers.NotifyUsersProvider)
     private readonly notifyUsersProvider: INotifyUsersProvider,
-
-    @inject(InjectableDependencies.Providers.CacheProvider)
-    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({
@@ -121,8 +117,6 @@ export class ShareProjectUseCase {
       content: `${user.name} acabou de compartilhar o projeto "${project.name}" com você. Acesse os projetos compartilhados para ver.`,
       userToNotifyId: userToAddProject.id,
     })
-
-    await this.cacheProvider.cleanCacheOfOneProject(updatedProject)
 
     return { project: updatedProject }
   }

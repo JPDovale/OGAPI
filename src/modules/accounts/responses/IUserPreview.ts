@@ -4,7 +4,7 @@ export interface IUserPreview {
   email: string
   id: string
   avatar_url: string | null
-  notifications: INotification[]
+  notifications?: INotification[]
   new_notifications: number
   username: string
 }

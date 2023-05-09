@@ -358,15 +358,17 @@ export class MigrateUseCase {
             }),
           )
 
-          await this.commentsRepository.create({
-            user_id: comment.userId,
-            content: comment.content,
-            id: comment.id,
-            project_id: projectM.id,
-            to_unknown: comment.to,
-            responses: {
-              createMany: {
-                data: responsesToCreate,
+          await prisma.comment.create({
+            data: {
+              user_id: comment.userId,
+              content: comment.content,
+              id: comment.id,
+              project_id: projectM.id,
+              to_unknown: comment.to,
+              responses: {
+                createMany: {
+                  data: responsesToCreate,
+                },
               },
             },
           })
@@ -511,9 +513,9 @@ export class MigrateUseCase {
           }
         })
 
-        const supporters = oct.avoiders.map((a) => {
+        const supporters = oct.supporters.map((s) => {
           return {
-            id: a,
+            id: s,
           }
         })
 
@@ -778,30 +780,32 @@ export class MigrateUseCase {
       throw err
     })
 
+    const scenesToCreateUncke: Prisma.SceneUncheckedCreateInput[] = []
+
     await Promise.all(
       capitulesToCreate.map(async (c) => {
-        const scenesToCreate: Prisma.SceneCreateManyCapituleInput[] =
-          c.capitule.scenes.map((s) => {
-            const personsToAddIn = s.persons.map((p) => {
-              return {
-                id: p,
-              }
-            })
-
+        c.capitule.scenes.map((s) => {
+          const personsToAddIn = s.persons.map((p) => {
             return {
-              objective: s.objective,
-              sequence: Number(s.sequence),
-              structure_act_1: s.structure.act1,
-              structure_act_2: s.structure.act2,
-              structure_act_3: s.structure.act3,
-              complete: s.complete,
-              id: s.id,
-              written_words: Number(s.writtenWords),
-              persons: {
-                connect: personsToAddIn,
-              },
+              id: p,
             }
           })
+
+          return scenesToCreateUncke.push({
+            objective: s.objective,
+            capitule_id: c.capitule.id,
+            sequence: Number(s.sequence),
+            structure_act_1: s.structure.act1,
+            structure_act_2: s.structure.act2,
+            structure_act_3: s.structure.act3,
+            complete: s.complete,
+            id: s.id,
+            written_words: Number(s.writtenWords),
+            persons: {
+              connect: personsToAddIn,
+            },
+          })
+        })
 
         await prisma.capitule.create({
           data: {
@@ -819,17 +823,20 @@ export class MigrateUseCase {
             structure_act_1: c.capitule.structure.act1,
             structure_act_2: c.capitule.structure.act2,
             structure_act_3: c.capitule.structure.act3,
-            scenes: {
-              createMany: {
-                data: scenesToCreate,
-              },
-            },
           },
         })
       }),
     ).catch((err) => {
       throw err
     })
+
+    await Promise.all(
+      scenesToCreateUncke.map(async (s) => {
+        await prisma.scene.create({
+          data: s,
+        })
+      }),
+    )
 
     const archivesToCreate: Array<{ boxId: string; archive: IArchive }> = []
 

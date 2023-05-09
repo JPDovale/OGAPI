@@ -44,10 +44,12 @@ export class AvatarUpdateUseCase {
 
     const url = await this.storageProvider.upload(file, 'avatar')
 
-    const updatedUser = await this.usersRepository.updateAvatar({
+    const updatedUser = await this.usersRepository.updateUser({
       userId,
-      avatarFilename: file.filename,
-      avatarUrl: url,
+      data: {
+        avatar_filename: file.filename,
+        avatar_url: url,
+      },
     })
 
     if (!updatedUser) throw makeErrorUserNotUpdate()

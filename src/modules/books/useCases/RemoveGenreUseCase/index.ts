@@ -38,6 +38,7 @@ export class RemoveGenreUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} removeu um gênero ao livro: ${book.title}`,
       content: `${user.username} acabou de remover um gênero no livro ${
         book.title

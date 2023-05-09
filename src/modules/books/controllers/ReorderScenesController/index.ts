@@ -17,7 +17,7 @@ export class ReorderScenesController {
     })
 
     const { id } = req.user
-    const { bookId, capituleId } = reorderScenesParamsSchema.parse(req.body)
+    const { bookId, capituleId } = reorderScenesParamsSchema.parse(req.params)
     const { sequenceFrom, sequenceTo } = reorderScenesBodySchema.parse(req.body)
 
     const reorderScenesUseCase = container.resolve(ReorderScenesUseCase)

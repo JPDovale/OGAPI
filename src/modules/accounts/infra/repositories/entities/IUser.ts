@@ -8,5 +8,6 @@ export interface IUser extends User {
     projects?: number
     notifications?: number
     boxes?: number
+    books?: number
   }
 }

@@ -7,6 +7,7 @@ export class RefreshTokenController {
   async handle(req: Request, res: Response): Promise<Response> {
     const token = req.cookies['@og-refresh-token']
 
+
     const refreshTokenUseCase = container.resolve(RefreshTokenUseCase)
     const { refreshToken, token: accessToken } =
       await refreshTokenUseCase.execute({ token })
@@ -16,6 +17,7 @@ export class RefreshTokenController {
       httpOnly: true,
       path: '/',
       secure: false,
+      sameSite: true
     })
 
     res.cookie('@og-token', accessToken, {
@@ -23,6 +25,8 @@ export class RefreshTokenController {
       httpOnly: true,
       path: '/',
       secure: false,
+      sameSite: true
+
     })
 
     return res.status(204).end()

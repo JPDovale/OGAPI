@@ -22,9 +22,12 @@ export class VisualizeNotificationsUseCase {
   ) {}
 
   async execute({ userId }: IRequest): Promise<IResponse> {
-    const updatedUser = await this.usersRepository.visualizeNotifications(
+    const updatedUser = await this.usersRepository.updateUser({
       userId,
-    )
+      data: {
+        new_notifications: 0,
+      },
+    })
 
     if (!updatedUser) throw makeErrorUserNotFound()
 

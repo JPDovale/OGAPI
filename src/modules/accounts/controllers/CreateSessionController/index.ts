@@ -24,6 +24,7 @@ export class CreateSessionController {
       httpOnly: true,
       path: '/',
       secure: false,
+      sameSite: true,
     })
 
     res.cookie('@og-token', token, {
@@ -31,6 +32,7 @@ export class CreateSessionController {
       httpOnly: true,
       path: '/',
       secure: false,
+      sameSite: true,
     })
 
     return res.status(200).json({ user })

@@ -2,8 +2,6 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
-import { KeysRedis } from '@shared/container/providers/CacheProvider/types/Keys'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotCreated } from '@shared/errors/projects/makeErrorProjectNotCreated'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
@@ -25,9 +23,6 @@ export class CreateProjectUseCase {
 
     @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
-
-    @inject(InjectableDependencies.Providers.CacheProvider)
-    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({
@@ -37,16 +32,12 @@ export class CreateProjectUseCase {
     userId,
     password,
   }: IRequest): Promise<void> {
-    const infoUser = await this.usersRepository.findById(userId)
-    if (!infoUser) throw makeErrorUserNotFound()
+    const user = await this.usersRepository.findById(userId)
+    if (!user) throw makeErrorUserNotFound()
 
-    const numberOfProjectsThisUser = infoUser._count?.projects ?? 0
+    const numberOfProjectsThisUser = user._count?.projects ?? 0
 
-    if (
-      numberOfProjectsThisUser >= 2 &&
-      !infoUser.last_payment_date &&
-      !infoUser.admin
-    )
+    if (numberOfProjectsThisUser >= 2 && !user.last_payment_date && !user.admin)
       throw makeErrorLimitFreeInEnd()
 
     const newProject = await this.projectsRepository.create({
@@ -67,7 +58,5 @@ export class CreateProjectUseCase {
     })
 
     if (!newProject) throw makeErrorProjectNotCreated()
-
-    await this.cacheProvider.delete(KeysRedis.userProjectsPreview + userId)
   }
 }

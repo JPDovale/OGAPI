@@ -78,6 +78,8 @@ export class DeleteCapituleUseCase {
 
     if (!updatedBook) throw makeErrorBookNotUpdate()
 
+    await this.capitulesRepository.delete(capituleId)
+
     return {
       capitules: book.capitules ?? [],
       writtenWords: updatedBook.written_words,

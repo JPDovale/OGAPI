@@ -73,6 +73,7 @@ export class CreateCapituleUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} criou um novo capitulo: ${capitule.name}`,
       content: `${user.username} acabou de criar um novo capitulo no livro ${
         book.title

@@ -68,6 +68,7 @@ export class UpdateBookUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} acabou de alterar o livro: ${book.title}`,
       content: `${user.username} acabou de alterar o livro ${book.title}${
         book.subtitle ? ` ${book.subtitle}` : ''

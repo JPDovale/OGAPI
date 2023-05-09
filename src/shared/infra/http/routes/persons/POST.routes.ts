@@ -105,11 +105,11 @@ personsRoutesPost.post(
   '/:personId/traumas/references/:referenceId',
   referenceTraumaController.handle,
 )
-personsRoutesPost.patch(
+personsRoutesPost.post(
   '/:personId/values/references/:referenceId',
   referenceValueController.handle,
 )
-personsRoutesPost.patch(
+personsRoutesPost.post(
   '/:personId/wishes/references/:referenceId',
   referenceWishesController.handle,
 )

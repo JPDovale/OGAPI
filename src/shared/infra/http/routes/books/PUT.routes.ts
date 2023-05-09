@@ -17,6 +17,13 @@ const reorderCapitulesController = new ReorderCapitulesController()
 const updateBookController = new UpdateBookController()
 
 // PATH: api/books
+booksRoutesPut.put('/:bookId', updateBookController.handle)
+
+booksRoutesPut.put(
+  '/:bookId/capitules/reorder',
+  reorderCapitulesController.handle,
+)
+
 booksRoutesPut.put(
   '/:bookId/capitules/:capituleId',
   updateCapituleController.handle,
@@ -29,12 +36,8 @@ booksRoutesPut.put(
   '/:bookId/capitules/:capituleId/scenes/reorder',
   reorderScenesController.handle,
 )
+
 booksRoutesPut.put(
   '/:bookId/capitules/:capituleId/scenes/:sceneId',
   updateSceneController.handle,
 )
-booksRoutesPut.put(
-  '/:bookId/capitules/reorder',
-  reorderCapitulesController.handle,
-)
-booksRoutesPut.put('/:bookId', updateBookController.handle)

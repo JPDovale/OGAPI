@@ -1,13 +1,21 @@
-import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
+import { type KeysUnchecked, type IKeysRedis } from './types/Keys'
 
 export abstract class ICacheProvider {
   abstract setInfo<T>(
-    key: string,
+    key: {
+      key: IKeysRedis
+      objectId: string
+    },
     value: T,
     validateInSeconds?: number,
   ): Promise<void>
-  abstract getInfo<T>(key: string): Promise<T | null>
+  abstract getInfo<T>(key: {
+    key: IKeysRedis
+    objectId: string
+  }): Promise<T | null>
   abstract refresh(): Promise<void>
-  abstract delete(key: string): Promise<void>
-  abstract cleanCacheOfOneProject(project: IProject): Promise<void>
+  abstract delete(
+    key: { key: IKeysRedis; objectId: string } | KeysUnchecked,
+  ): Promise<void>
+  abstract deleteMany(keys: KeysUnchecked[]): Promise<void>
 }

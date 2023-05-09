@@ -1,5 +1,6 @@
 export interface IProjectToVerifyPermission {
   id: string
+  name: string
   users_with_access_view?: {
     users: Array<{
       id: string
@@ -17,5 +18,8 @@ export interface IProjectToVerifyPermission {
   } | null
   user: {
     id: string
+  }
+  _count: {
+    books: number
   }
 }

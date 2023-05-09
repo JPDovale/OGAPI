@@ -1,11 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
 import { makeErrorUserDoesPermissionToProject } from '@shared/errors/projects/makeErrorUserDoesPermissionToProject'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
-import { IUsersServices } from '../../usersServices/IUsersServices'
 import { type IVerifyPermissionsService } from '../IVerifyPermissions'
 import { type IRequestVerify } from '../types/IRequestVerify'
 import { type IResponseVerify } from '../types/IResponseVerify'
@@ -16,8 +17,8 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     @inject(InjectableDependencies.Repositories.ProjectsRepository)
     private readonly projectsRepository: IProjectsRepository,
 
-    @inject(InjectableDependencies.Services.UsersServices)
-    private readonly usersServices: IUsersServices,
+    @inject(InjectableDependencies.Repositories.UsersRepository)
+    private readonly usersRepository: IUsersRepository,
   ) {}
 
   async verify({
@@ -25,24 +26,21 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     userId,
     verifyPermissionTo,
   }: IRequestVerify): Promise<IResponseVerify> {
-    const essentialInfosUser = await this.usersServices.getEssentialInfos(
-      userId,
-    )
+    const user = await this.usersRepository.findById(userId)
+    if (!user) throw makeErrorUserNotFound()
 
-    const project = await this.projectsRepository.findOneToVerifyPermission(
-      projectId,
-    )
+    const project = await this.projectsRepository.findById(projectId)
     if (!project) throw makeErrorProjectNotFound()
 
     const usersWithPermissionToEdit = project.users_with_access_edit
     const usersWithPermissionToView = project.users_with_access_view
     const usersWithPermissionToComment = project.users_with_access_comment
 
-    if (project.user.id !== userId) {
+    if (project.user?.id !== userId) {
       switch (verifyPermissionTo) {
         case 'edit': {
           const userHasPermission = !!usersWithPermissionToEdit?.users?.find(
-            (u) => u.id === essentialInfosUser.id,
+            (u) => u.id === user.id,
           )
 
           if (!userHasPermission)
@@ -53,14 +51,10 @@ export class VerifyPermissions implements IVerifyPermissionsService {
 
         case 'comment': {
           const userHasPermissionToComment =
-            !!usersWithPermissionToComment?.users.find(
-              (u) => u.id === essentialInfosUser.id,
-            )
+            !!usersWithPermissionToComment?.users.find((u) => u.id === user.id)
 
           const userHasPermissionToEdit =
-            !!usersWithPermissionToEdit?.users.find(
-              (u) => u.id === essentialInfosUser.id,
-            )
+            !!usersWithPermissionToEdit?.users.find((u) => u.id === user.id)
 
           if (!userHasPermissionToComment && !userHasPermissionToEdit)
             throw makeErrorUserDoesPermissionToProject('comentar')
@@ -70,18 +64,14 @@ export class VerifyPermissions implements IVerifyPermissionsService {
 
         case 'view': {
           const userHasPermissionView = !!usersWithPermissionToView?.users.find(
-            (u) => u.id === essentialInfosUser.id,
+            (u) => u.id === user.id,
           )
 
           const userHasPermissionToEdit =
-            !!usersWithPermissionToEdit?.users.find(
-              (u) => u.id === essentialInfosUser.id,
-            )
+            !!usersWithPermissionToEdit?.users.find((u) => u.id === user.id)
 
           const userHasPermissionToComment =
-            !!usersWithPermissionToComment?.users.find(
-              (u) => u.id === essentialInfosUser.id,
-            )
+            !!usersWithPermissionToComment?.users.find((u) => u.id === user.id)
 
           if (
             !userHasPermissionView &&
@@ -100,7 +90,7 @@ export class VerifyPermissions implements IVerifyPermissionsService {
 
     const response: IResponseVerify = {
       project,
-      user: essentialInfosUser,
+      user,
     }
 
     return response

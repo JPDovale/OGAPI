@@ -4,4 +4,9 @@ export interface IUserEssentialInfos {
   email: string
   admin: boolean
   username: string
+  last_payment_date: Date | null
+  _count: {
+    books: number
+    projects: number
+  }
 }

@@ -62,20 +62,23 @@ export class CreateTraumaUseCase {
         whatExistes: 'um trauma',
       })
 
-    const trauma = await this.traumasRepository.create({
-      title,
-      description,
-      consequences: {
-        createMany: {
-          data: consequences ?? [],
+    const trauma = await this.traumasRepository.create(
+      {
+        title,
+        description,
+        consequences: {
+          createMany: {
+            data: consequences ?? [],
+          },
+        },
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-      persons: {
-        connect: {
-          id: person.id,
-        },
-      },
-    })
+      personId,
+    )
 
     if (!trauma) throw makeErrorPersonNotUpdate()
 

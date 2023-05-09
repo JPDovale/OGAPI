@@ -47,11 +47,18 @@ export class ResponseCommentPersonUseCase {
       verifyPermissionTo: 'comment',
     })
 
-    const { response } = await this.commentsRepository.createResponse({
-      comment_id: commentId,
-      content,
-      user_id: userId,
-    })
+    const { response } = await this.commentsRepository.createResponse(
+      {
+        comment_id: commentId,
+        content,
+        user_id: userId,
+      },
+      {
+        deleteCache: {
+          personId,
+        },
+      },
+    )
 
     if (!response) throw makeErrorCommentNotCreated()
 

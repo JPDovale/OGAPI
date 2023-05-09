@@ -43,18 +43,20 @@ export class DeleteImageUseCase {
 
     if (!project.image_filename) throw makeErrorImageNotFound()
 
-    const updatedProject = await this.projectsRepository.updateImage({
-      imageFilename: null,
-      imageUrl: null,
+    const updatedProject = await this.projectsRepository.update({
       projectId,
+      data: {
+        image_filename: null,
+        image_url: null,
+      },
     })
 
     if (!updatedProject) throw makeErrorProjectNotUpdate()
 
     await this.storageProvider.delete(project.image_filename, 'projects/images')
-
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} deletou a imagem do projeto.`,
       content: `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
     })

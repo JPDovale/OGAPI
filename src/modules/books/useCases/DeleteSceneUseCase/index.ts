@@ -82,7 +82,7 @@ export class DeleteSceneUseCase {
     await this.scenesRepository.updateMany(updatedScenes)
 
     let capitule: ICapitule
-    const capituleIsIncomplete = !!filteredScenes.find(
+    const capituleIsIncomplete = !filteredScenes.find(
       (scene) => !scene.complete,
     )
     const newNumberWordsInCapitule =
@@ -100,6 +100,11 @@ export class DeleteSceneUseCase {
         data: {
           words: newNumberWordsInCapitule,
           complete: capituleIsIncomplete,
+          scenes: {
+            delete: {
+              id: sceneId,
+            },
+          },
         },
       })
 

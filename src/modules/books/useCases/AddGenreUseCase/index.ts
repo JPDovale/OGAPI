@@ -64,6 +64,7 @@ export class AddGenreUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} adicionou um gênero ao livro: ${book.title}`,
       content: `${user.username} acabou de adicionar um novo gênero no livro ${
         book.title

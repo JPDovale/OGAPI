@@ -2,7 +2,6 @@ import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
-import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersProvider/INotifyUsersProvider'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import InjectableDependencies from '@shared/container/types'
@@ -29,9 +28,6 @@ export class DeleteProjectUseCase {
 
     @inject(InjectableDependencies.Providers.StorageProvider)
     private readonly storageProvider: IStorageProvider,
-
-    @inject(InjectableDependencies.Providers.CacheProvider)
-    private readonly cacheProvider: ICacheProvider,
   ) {}
 
   async execute({ projectId, userId }: IRequest): Promise<void> {
@@ -44,9 +40,9 @@ export class DeleteProjectUseCase {
     if (project.user_id !== userId) throw makeErrorDeniedPermission()
 
     await this.projectsRepository.delete(projectId)
-
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} deletou o projeto.`,
       content: `${user.username} acabou de deletar o projeto o qual havia sido compartilhado com você: ${project.name} `,
     })
@@ -57,7 +53,5 @@ export class DeleteProjectUseCase {
         'projects/images',
       )
     }
-
-    await this.cacheProvider.cleanCacheOfOneProject(project)
   }
 }

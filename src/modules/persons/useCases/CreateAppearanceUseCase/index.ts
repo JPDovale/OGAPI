@@ -57,15 +57,18 @@ export class CreateAppearanceUseCase {
         whatExistes: 'uma aparência',
       })
 
-    const newAppearance = await this.appearancesRepository.create({
-      title,
-      description,
-      persons: {
-        connect: {
-          id: person.id,
+    const newAppearance = await this.appearancesRepository.create(
+      {
+        title,
+        description,
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-    })
+      personId,
+    )
 
     if (!newAppearance) throw makeErrorPersonNotUpdate()
 

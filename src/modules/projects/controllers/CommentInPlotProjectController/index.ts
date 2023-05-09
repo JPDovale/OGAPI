@@ -15,7 +15,10 @@ export class CommentInPlotProjectController {
         .string()
         .max(2000)
         .regex(/^[^<>{}\\]+$/),
-      to: z.string().uuid(),
+      to: z
+        .string()
+        .max(300)
+        .regex(/^[^<>{}\\]+$/),
     })
 
     const { id } = req.user

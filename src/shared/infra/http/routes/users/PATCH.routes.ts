@@ -6,10 +6,12 @@ import { PasswordUpdateController } from '@modules/accounts/controllers/Password
 import { UserUpdateController } from '@modules/accounts/controllers/UserUpdateController'
 import { VisualizeNotificationsController } from '@modules/accounts/controllers/VisualizeNotificationsController'
 
-import { ensureAuthenticated } from '../../middlewares/ensureAuthenticated'
+import { EnsureAuthenticatedMiddleware } from '../../middlewares/ensureAuthenticated'
 import { Uploads } from '../../middlewares/upload'
 
 export const userRoutesPatch = Router()
+
+const ensureAuthenticated = new EnsureAuthenticatedMiddleware()
 
 const logoutController = new LogoutController()
 const avatarUpdateController = new AvatarUpdateController()
@@ -20,7 +22,7 @@ const visualizeNotificationsController = new VisualizeNotificationsController()
 const uploads = new Uploads('avatar', 'image')
 
 // PATH: api/users
-userRoutesPatch.use(ensureAuthenticated)
+userRoutesPatch.use(ensureAuthenticated.verify)
 userRoutesPatch.patch('/logout', logoutController.handle)
 userRoutesPatch.patch(
   '/avatar-update',

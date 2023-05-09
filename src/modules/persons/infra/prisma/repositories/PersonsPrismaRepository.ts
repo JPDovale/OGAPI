@@ -1,21 +1,102 @@
+import { inject, injectable } from 'tsyringe'
+
 import { type IUpdatePersonDTO } from '@modules/persons/dtos/IUpdatePersonDTO'
 import { type Prisma } from '@prisma/client'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import InjectableDependencies from '@shared/container/types'
+import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { prisma } from '@shared/infra/database/createConnection'
 
 import { type IPersonsRepository } from '../../repositories/contracts/IPersonsRepository'
 import { type IPerson } from '../../repositories/entities/IPerson'
-import { type IUpdateImage } from '../../repositories/types/IUpdateImage'
 
 const defaultInclude: Prisma.PersonInclude = {
   couples: {
     include: {
       coupleWithPerson: true,
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
     },
   },
-  coupleWithPersons: true,
-  appearances: true,
-  dreams: true,
-  fears: true,
+  coupleWithPersons: {
+    include: {
+      couple: {
+        include: {
+          coupleWithPerson: true,
+          comments: {
+            include: {
+              responses: {
+                orderBy: {
+                  created_at: 'desc',
+                },
+              },
+            },
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+      },
+    },
+  },
+  appearances: {
+    include: {
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
+    },
+  },
+  dreams: {
+    include: {
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
+    },
+  },
+  fears: {
+    include: {
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
+    },
+  },
   objectives: {
     include: {
       avoiders: {
@@ -40,27 +121,129 @@ const defaultInclude: Prisma.PersonInclude = {
           },
         },
       },
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
     },
   },
   personalities: {
     include: {
       consequences: true,
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
     },
   },
-  powers: true,
+  powers: {
+    include: {
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
+    },
+  },
   traumas: {
     include: {
       consequences: true,
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
     },
   },
   values: {
     include: {
       exceptions: true,
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
     },
   },
-  wishes: true,
+  wishes: {
+    include: {
+      comments: {
+        include: {
+          responses: {
+            orderBy: {
+              created_at: 'desc',
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      },
+    },
+  },
 }
+@injectable()
 export class PersonsPrismaRepository implements IPersonsRepository {
+  constructor(
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
+  ) {}
+
+  private async getPersonInCache(personId: string): Promise<IPerson | null> {
+    return await this.cacheProvider.getInfo<IPerson>({
+      key: 'person',
+      objectId: personId,
+    })
+  }
+
+  private async setPersonInCache(person: IPerson): Promise<void> {
+    await this.cacheProvider.setInfo<IPerson>(
+      {
+        key: 'person',
+        objectId: person.id,
+      },
+      person,
+      60 * 60 * 1, // 1 day
+    )
+  }
+
   async create(
     data: Prisma.PersonUncheckedCreateInput,
   ): Promise<IPerson | null> {
@@ -68,10 +251,26 @@ export class PersonsPrismaRepository implements IPersonsRepository {
       data,
       include: defaultInclude,
     })
+
+    if (person) {
+      Promise.all([
+        this.setPersonInCache(person),
+        this.cacheProvider.delete({
+          key: 'project',
+          objectId: person.project_id,
+        }),
+      ]).catch((err) => {
+        throw err
+      })
+    }
+
     return person
   }
 
   async findById(personId: string): Promise<IPerson | null> {
+    const personInCache = await this.getPersonInCache(personId)
+    if (personInCache) return personInCache
+
     const person = await prisma.person.findFirst({
       where: {
         id: personId,
@@ -79,24 +278,11 @@ export class PersonsPrismaRepository implements IPersonsRepository {
       include: defaultInclude,
     })
 
-    return person
-  }
-
-  async updateImage({
-    image_filename,
-    image_url,
-    personId,
-  }: IUpdateImage): Promise<IPerson | null> {
-    const person = await prisma.person.update({
-      where: {
-        id: personId,
-      },
-      data: {
-        image_filename,
-        image_url,
-      },
-      include: defaultInclude,
-    })
+    if (person) {
+      this.setPersonInCache(person).catch((err) => {
+        throw err
+      })
+    }
 
     return person
   }
@@ -113,6 +299,19 @@ export class PersonsPrismaRepository implements IPersonsRepository {
       include: defaultInclude,
     })
 
+    if (person) {
+      Promise.all([
+        this.setPersonInCache(person),
+
+        this.cacheProvider.delete({
+          key: 'project',
+          objectId: person.project_id,
+        }),
+      ]).catch((err) => {
+        throw err
+      })
+    }
+
     return person
   }
 
@@ -121,10 +320,58 @@ export class PersonsPrismaRepository implements IPersonsRepository {
   }
 
   async delete(personId: string): Promise<void> {
-    await prisma.person.delete({
+    const person = await prisma.person.findUnique({
       where: {
         id: personId,
       },
+      select: {
+        project_id: true,
+        scenes: {
+          select: {
+            capitule_id: true,
+          },
+        },
+      },
+    })
+
+    if (!person) throw makeErrorPersonNotFound()
+
+    const capitulesToCleanInCache = person.scenes.map(
+      (scene) => scene.capitule_id,
+    )
+    const uniqueCapitulesToCleanInCache = capitulesToCleanInCache.filter(
+      (capitule, index, self) => self.indexOf(capitule) === index,
+    )
+
+    const promises = [
+      prisma.person.delete({
+        where: {
+          id: personId,
+        },
+      }),
+
+      this.cacheProvider.delete({
+        key: 'person',
+        objectId: personId,
+      }),
+
+      this.cacheProvider.delete({
+        key: 'project',
+        objectId: person.project_id,
+      }),
+    ]
+
+    uniqueCapitulesToCleanInCache.map((capituleToCleanInCache) =>
+      promises.push(
+        this.cacheProvider.delete({
+          key: 'capitule',
+          objectId: capituleToCleanInCache,
+        }),
+      ),
+    )
+
+    await Promise.all(promises).catch((err) => {
+      throw err
     })
   }
 }

@@ -84,22 +84,34 @@ export class UpdateSceneUseCase {
         structure_act_1: structure?.act1,
         structure_act_2: structure?.act2,
         structure_act_3: structure?.act3,
+        persons: {
+          disconnect: sceneToUpdate.persons?.map((person) => ({
+            id: person.id,
+          })),
+          connect: persons.map((id) => ({ id })),
+        },
       },
     })
     if (!scene) throw makeErrorBookNotUpdate()
 
-    const filteredScenes = capituleToUpdate.scenes?.filter(
-      (scene) => scene.id !== sceneId,
-    )
-    const capituleIsIncomplete = !!filteredScenes?.find(
+    const filteredScenes =
+      capituleToUpdate.scenes?.filter((scene) => scene.id !== sceneId) ?? []
+    const capituleIsIncomplete = !filteredScenes?.find(
       (scene) => !scene.complete,
+    )
+
+    const scenesInCapitule = [...filteredScenes, scene]
+    let wordsInCapitule = 0
+
+    scenesInCapitule.map(
+      (scene) => (wordsInCapitule = wordsInCapitule + scene.written_words),
     )
 
     const capitule = await this.capitulesRepository.update({
       capituleId,
       data: {
         complete: !capituleIsIncomplete,
-        words: capituleToUpdate.words + scene.written_words,
+        words: wordsInCapitule,
       },
     })
 
@@ -119,7 +131,7 @@ export class UpdateSceneUseCase {
       await this.booksRepository.update({
         bookId,
         data: {
-          written_words: writtenWords,
+          written_words: wordsInBook,
         },
       })
     }

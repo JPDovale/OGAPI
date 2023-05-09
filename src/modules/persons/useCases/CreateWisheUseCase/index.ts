@@ -57,15 +57,18 @@ export class CreateWisheUseCase {
         whatExistes: 'um desejo',
       })
 
-    const wishe = await this.wishesRepository.create({
-      title,
-      description,
-      persons: {
-        connect: {
-          id: person.id,
+    const wishe = await this.wishesRepository.create(
+      {
+        title,
+        description,
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-    })
+      personId,
+    )
 
     if (!wishe) throw makeErrorPersonNotUpdate()
 

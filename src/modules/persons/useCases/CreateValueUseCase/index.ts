@@ -62,20 +62,23 @@ export class CreateValueUseCase {
         whatExistes: 'um valor',
       })
 
-    const value = await this.valuesRepository.create({
-      title,
-      description,
-      exceptions: {
-        createMany: {
-          data: exceptions ?? [],
+    const value = await this.valuesRepository.create(
+      {
+        title,
+        description,
+        exceptions: {
+          createMany: {
+            data: exceptions ?? [],
+          },
+        },
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-      persons: {
-        connect: {
-          id: person.id,
-        },
-      },
-    })
+      personId,
+    )
 
     if (!value) throw makeErrorPersonNotUpdate()
 

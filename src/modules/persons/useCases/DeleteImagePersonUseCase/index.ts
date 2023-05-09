@@ -38,10 +38,12 @@ export class DeleteImagePersonUseCase {
 
     if (!person.image_filename) throw makeErrorImageNotFound()
 
-    const updatedPerson = await this.personsRepository.updateImage({
-      image_filename: null,
-      image_url: null,
+    const updatedPerson = await this.personsRepository.updatePerson({
       personId,
+      data: {
+        image_filename: null,
+        image_url: null,
+      },
     })
 
     await this.storageProvider.delete(person.image_filename, 'persons/images')

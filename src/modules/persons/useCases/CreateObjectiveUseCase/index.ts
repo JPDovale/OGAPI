@@ -63,30 +63,33 @@ export class CreateObjectiveUseCase {
         whatExistes: 'um objetivo',
       })
 
-    const objective = await this.objectivesRepository.create({
-      title,
-      description,
-      it_be_realized: itBeRealized,
-      persons: {
-        connect: {
-          id: person.id,
+    const objective = await this.objectivesRepository.create(
+      {
+        title,
+        description,
+        it_be_realized: itBeRealized,
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
-      },
-      avoiders: {
-        create: {
-          persons: {
-            connect: avoiders,
+        avoiders: {
+          create: {
+            persons: {
+              connect: avoiders,
+            },
+          },
+        },
+        supporters: {
+          create: {
+            persons: {
+              connect: supporters,
+            },
           },
         },
       },
-      supporters: {
-        create: {
-          persons: {
-            connect: supporters,
-          },
-        },
-      },
-    })
+      personId,
+    )
 
     if (!objective) throw makeErrorPersonNotUpdate()
 

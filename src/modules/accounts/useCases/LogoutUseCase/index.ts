@@ -21,7 +21,6 @@ export class LogoutUseCase {
 
   async execute({ userId }: IRequest): Promise<void> {
     const user = await this.usersRepository.findById(userId)
-
     if (!user) throw makeErrorUserNotFound()
 
     await this.refreshTokenRepository.deletePerUserId(userId)

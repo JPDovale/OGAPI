@@ -57,15 +57,18 @@ export class CreateFearUseCase {
         whatExistes: 'um medo',
       })
 
-    const fear = await this.fearsRepository.create({
-      title,
-      description,
-      persons: {
-        connect: {
-          id: person.id,
+    const fear = await this.fearsRepository.create(
+      {
+        title,
+        description,
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-    })
+      personId,
+    )
 
     if (!fear) throw makeErrorPersonNotUpdate()
 

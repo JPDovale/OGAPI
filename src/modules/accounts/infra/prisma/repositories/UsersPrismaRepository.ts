@@ -1,37 +1,45 @@
+import { inject, injectable } from 'tsyringe'
+
 import { type ICreateManyUsersDTO } from '@modules/accounts/dtos/ICreateManyUsersDTO'
 import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { type IUpdateUserDTO } from '@modules/accounts/dtos/IUpdateUserDTO'
-import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
 import { type User } from '@prisma/client'
+import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
+import InjectableDependencies from '@shared/container/types'
 import { prisma } from '@shared/infra/database/createConnection'
 
 import { type IUsersRepository } from '../../repositories/contracts/IUsersRepository'
 import { type IUser } from '../../repositories/entities/IUser'
-import { type IUpdateAvatar } from '../../repositories/types/IUpdateAvatar'
 
+@injectable()
 export class UsersPrismaRepository implements IUsersRepository {
+  constructor(
+    @inject(InjectableDependencies.Providers.CacheProvider)
+    private readonly cacheProvider: ICacheProvider,
+  ) {}
+
+  private async setUserInCache(user: IUser): Promise<void> {
+    await this.cacheProvider.setInfo<IUser>(
+      {
+        key: 'user',
+        objectId: user.id,
+      },
+      user,
+      60 * 60 * 24, // 1 day
+    )
+  }
+
+  private async getUserInCache(userId: string): Promise<IUser | null> {
+    return await this.cacheProvider.getInfo<IUser>({
+      key: 'user',
+      objectId: userId,
+    })
+  }
+
   async createMany(dataManyUsers: ICreateManyUsersDTO): Promise<void> {
     await prisma.user.createMany({
       data: dataManyUsers,
     })
-  }
-
-  async getPreviewUser(userId: string): Promise<IUserPreview | null> {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        email: true,
-        id: true,
-        avatar_url: true,
-        notifications: true,
-        new_notifications: true,
-        username: true,
-      },
-    })
-
-    return user
   }
 
   async listAllIds(): Promise<Array<{ id: string }>> {
@@ -44,15 +52,29 @@ export class UsersPrismaRepository implements IUsersRepository {
     return allIds
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<IUser | null> {
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
       include: {
         notifications: true,
+        _count: {
+          select: {
+            projects: true,
+            notifications: true,
+            boxes: true,
+            books: true,
+          },
+        },
       },
     })
+
+    if (user) {
+      this.setUserInCache(user).catch((err) => {
+        throw err
+      })
+    }
 
     return user
   }
@@ -68,12 +90,32 @@ export class UsersPrismaRepository implements IUsersRepository {
   async create(data: ICreateUserDTO): Promise<User | null> {
     const user = await prisma.user.create({
       data,
+      include: {
+        notifications: true,
+        _count: {
+          select: {
+            projects: true,
+            notifications: true,
+            boxes: true,
+            books: true,
+          },
+        },
+      },
     })
+
+    if (user) {
+      this.setUserInCache(user).catch((err) => {
+        throw err
+      })
+    }
 
     return user
   }
 
   async findById(id: string): Promise<IUser | null> {
+    const userInCache = await this.getUserInCache(id)
+    if (userInCache) return userInCache
+
     const user = await prisma.user.findUnique({
       where: {
         id,
@@ -85,44 +127,39 @@ export class UsersPrismaRepository implements IUsersRepository {
             projects: true,
             notifications: true,
             boxes: true,
+            books: true,
           },
         },
       },
     })
 
+    if (user) {
+      this.setUserInCache(user).catch((err) => {
+        throw err
+      })
+    }
+
     return user
   }
 
   async delete(id: string): Promise<void> {
-    await prisma.user.delete({
-      where: {
-        id,
-      },
+    await Promise.all([
+      prisma.user.delete({
+        where: {
+          id,
+        },
+      }),
+
+      this.cacheProvider.delete({
+        key: 'user',
+        objectId: id,
+      }),
+    ]).catch((err) => {
+      throw err
     })
   }
 
-  async updateAvatar({
-    userId,
-    avatarFilename,
-    avatarUrl,
-  }: IUpdateAvatar): Promise<User | null> {
-    const user = await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        avatar_filename: avatarFilename,
-        avatar_url: avatarUrl,
-      },
-      include: {
-        notifications: true,
-      },
-    })
-
-    return user
-  }
-
-  async updateUser({ userId, data }: IUpdateUserDTO): Promise<User | null> {
+  async updateUser({ userId, data }: IUpdateUserDTO): Promise<IUser | null> {
     const user = await prisma.user.update({
       where: {
         id: userId,
@@ -130,24 +167,24 @@ export class UsersPrismaRepository implements IUsersRepository {
       data,
       include: {
         notifications: true,
+        _count: {
+          select: {
+            projects: true,
+            notifications: true,
+            boxes: true,
+            books: true,
+          },
+        },
       },
     })
+
+    if (user) {
+      this.setUserInCache(user).catch((err) => {
+        throw err
+      })
+    }
 
     return user
-  }
-
-  async updatePassword(userId: string, password: string): Promise<void> {
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        password,
-      },
-      include: {
-        notifications: true,
-      },
-    })
   }
 
   async findManyById(ids: string[]): Promise<User[]> {
@@ -155,27 +192,8 @@ export class UsersPrismaRepository implements IUsersRepository {
       where: {
         id: { in: ids },
       },
-      include: {
-        notifications: true,
-      },
     })
 
     return users
-  }
-
-  async visualizeNotifications(userId: string): Promise<IUser | null> {
-    const user = await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        new_notifications: 0,
-      },
-      include: {
-        notifications: true,
-      },
-    })
-
-    return user
   }
 }

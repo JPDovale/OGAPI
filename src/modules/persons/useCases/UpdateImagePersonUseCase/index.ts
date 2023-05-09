@@ -50,10 +50,12 @@ export class UpdateImagePersonUseCase {
 
     const url = await this.storageProvider.upload(file, 'persons/images')
 
-    await this.personsRepository.updateImage({
+    await this.personsRepository.updatePerson({
       personId,
-      image_filename: file.filename,
-      image_url: url,
+      data: {
+        image_filename: file.filename,
+        image_url: url,
+      },
     })
 
     fs.rmSync(file.path)

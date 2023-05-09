@@ -41,14 +41,14 @@ export class RemoveFrontCoverUseCase {
 
     if (!book.front_cover_filename) throw makeErrorImageNotFound()
 
-    await this.booksRepository.updateFrontCover({
+    await this.booksRepository.update({
       bookId,
-      front_cover_filename: null,
-      front_cover_url: null,
+      data: { front_cover_filename: null, front_cover_url: null },
     })
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} deletou a imagem do livro ${book.title} ${
         book.subtitle ? ' - ' + book.subtitle : ''
       }`,

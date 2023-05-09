@@ -56,14 +56,14 @@ export class UpdateFrontCoverBookUseCase {
 
     const url = await this.storageProvider.upload(file, 'books/images')
 
-    await this.booksRepository.updateFrontCover({
+    await this.booksRepository.update({
       bookId,
-      front_cover_filename: file.filename,
-      front_cover_url: url,
+      data: { front_cover_filename: file.filename, front_cover_url: url },
     })
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} alterou a imagem do livro ${book.title} ${
         book.subtitle ? ' - ' + book.subtitle : ''
       }`,

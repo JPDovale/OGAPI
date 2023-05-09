@@ -47,6 +47,7 @@ export class UpdateNameUseCase {
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
+      creatorId: user.id,
       title: `${user.username} alterou o nome do projeto.`,
       content: `${user.username} acabou de alterar o nome do projeto: de ${project.name} para ${updatedProject.name}`,
     })

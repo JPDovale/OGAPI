@@ -125,8 +125,8 @@ export class ReorderCapitulesUseCase {
 
     await this.capitulesRepository.updateMany(updatedCapitules)
 
-    const capitules = await this.booksRepository.listCapitules(bookId)
+    // const capitules = await this.booksRepository.listCapitules(bookId)
 
-    return { capitules }
+    return { capitules: [] }
   }
 }

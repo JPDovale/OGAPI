@@ -62,20 +62,23 @@ export class CreatePersonalityUseCase {
         whatExistes: 'uma característica de personalidade',
       })
 
-    const personality = await this.personalitiesRepository.create({
-      title,
-      description,
-      consequences: {
-        createMany: {
-          data: consequences ?? [],
+    const personality = await this.personalitiesRepository.create(
+      {
+        title,
+        description,
+        consequences: {
+          createMany: {
+            data: consequences ?? [],
+          },
+        },
+        persons: {
+          connect: {
+            id: person.id,
+          },
         },
       },
-      persons: {
-        connect: {
-          id: person.id,
-        },
-      },
-    })
+      personId,
+    )
 
     if (!personality) throw makeErrorPersonNotUpdate()
 
