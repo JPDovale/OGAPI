@@ -30,13 +30,14 @@ import { RateLimiter } from './middlewares/limiter'
 const app = express()
 const appName = env.APP_NAME
 const appPort = env.APP_PORT
+const appTest = env.TEST_APP_URL
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
 
 app.use(
   cors({
     allowedHeaders: ['Content-Type'],
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://ognare.com.br', appTest ?? ''],
     credentials: true,
   }),
 )
