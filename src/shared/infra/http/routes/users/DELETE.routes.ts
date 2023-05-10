@@ -14,8 +14,21 @@ const deleteUserController = new DeleteUserController()
 const deleteAvatarController = new DeleteAvatarController()
 
 // PATH: api/users
-userRoutesDelete.use(ensureAuthenticated.verify)
-userRoutesDelete.delete('/', deleteUserController.handle)
-userRoutesDelete.delete('/avatar', deleteAvatarController.handle)
 
-userRoutesDelete.delete('/:id', verifyIsAdmin, deleteUserController.handle)
+userRoutesDelete.delete(
+  '/',
+  ensureAuthenticated.verify,
+  deleteUserController.handle,
+)
+userRoutesDelete.delete(
+  '/avatar',
+  ensureAuthenticated.verify,
+  deleteAvatarController.handle,
+)
+
+userRoutesDelete.delete(
+  '/:id',
+  ensureAuthenticated.verify,
+  verifyIsAdmin,
+  deleteUserController.handle,
+)

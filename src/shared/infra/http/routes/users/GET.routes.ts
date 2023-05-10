@@ -14,7 +14,11 @@ const getInfosController = new GetInfosController()
 const listUsersController = new ListUsersController()
 
 // PATH: api/users
-userRoutesGet.use(ensureAuthenticated.verify)
-userRoutesGet.get('/', getInfosController.handle)
+userRoutesGet.get('/', ensureAuthenticated.verify, getInfosController.handle)
 
-userRoutesGet.get('/all', verifyIsAdmin, listUsersController.handle)
+userRoutesGet.get(
+  '/all',
+  ensureAuthenticated.verify,
+  verifyIsAdmin,
+  listUsersController.handle,
+)
