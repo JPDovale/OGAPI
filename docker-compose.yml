@@ -1,5 +1,8 @@
 version: "2.2"
 
+networks:
+  local-rede:
+    driver: bridge
 services:
   og-cache:
     image: redis/redis-stack:latest
@@ -7,6 +10,8 @@ services:
       - 6379:6379
     volumes:
       - /local-data/:/data
+    networks:
+      - local-rede
   # og-database:
   #   image: mysql:latest
   #   ports:
@@ -34,3 +39,5 @@ services:
       - og-cache
     links:
       - "og-cache"
+    networks:
+      - local-rede
