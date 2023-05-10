@@ -19,7 +19,7 @@ services:
   #     - MYSQL_PASSWORD=Karanthir-Akira1342!@
   og-api:
     build: .
-    command: npx prisma generate && npm run application
+    command: npm start
     restart: always
     environment:
       - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}

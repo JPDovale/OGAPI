@@ -9,6 +9,7 @@
   "scripts": {
     "publish": "npm i && npm run build:tsup",
     "application": "node build/shared/infra/http/index.js",
+    "start": "npx prisma generate && npm run application",
     "build:tsup": "tsup",
     "dev": "ts-node-dev -r tsconfig-paths/register --poll --inspect --transpile-only --ignore-watch node_modules --respawn src/shared/infra/http/index.ts",
     "dev:compile": "node build/shared/infra/http/index.js",
