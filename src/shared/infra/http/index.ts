@@ -36,7 +36,8 @@ const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
 
 app.use(
   cors({
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     origin: ['http://localhost:3000', 'https://ognare.com.br', appTest ?? ''],
     credentials: true,
   }),
