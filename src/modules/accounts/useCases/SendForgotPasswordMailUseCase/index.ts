@@ -57,7 +57,7 @@ export class SendForgotPasswordMailUseCase {
     if (!user) throw makeErrorUserNotFound()
 
     const token = uuidV4()
-    const expiresDate = this.dateProvider.addHours(1).toString()
+    const expiresDate = this.dateProvider.addHours(1)
 
     await this.refreshTokenRepository.create({
       refresh_token: token,

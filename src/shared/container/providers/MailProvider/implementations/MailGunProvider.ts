@@ -1,11 +1,11 @@
-import dotenv from 'dotenv'
-import fs from 'fs'
 import handlebars from 'handlebars'
+import fs from 'node:fs'
 import nodemailer, { type Transporter } from 'nodemailer'
 import { injectable } from 'tsyringe'
 
+import { env } from '@env/index'
+
 import { type IMailProvider, type ISendMail } from '../IMailProvider'
-dotenv.config()
 
 @injectable()
 export class MailGunProvider implements IMailProvider {
@@ -13,11 +13,11 @@ export class MailGunProvider implements IMailProvider {
 
   constructor() {
     this.client = nodemailer.createTransport({
-      host: process.env.MAILGUN_HOST,
-      port: Number(process.env.MAILGUN_PORT),
+      host: env.MAILGUN_HOST,
+      port: Number(env.MAILGUN_PORT),
       auth: {
-        user: process.env.MAILGUN_DOMAIN,
-        pass: process.env.MAILGUN_PASS,
+        user: env.MAILGUN_DOMAIN,
+        pass: env.MAILGUN_PASS,
       },
     })
   }

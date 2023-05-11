@@ -7,6 +7,7 @@ import { DayJsDateProvider } from './DateProvider/implementations/DayJsDateProvi
 import { type IMailProvider } from './MailProvider/IMailProvider'
 import { EtherealMailProvider } from './MailProvider/implementations/EtherealMailProvider'
 import { MailGunProvider } from './MailProvider/implementations/MailGunProvider'
+import { SendinBlueProvider } from './MailProvider/implementations/SendinBlueProvider'
 import { NotifyUsersProvider } from './NotifyUsersProvider/implementations/NotifyUsersProvider'
 import { type INotifyUsersProvider } from './NotifyUsersProvider/INotifyUsersProvider'
 import { FirebaseStorageProvider } from './StorageProvider/implementations/FirebaseStorageProvider'
@@ -31,7 +32,7 @@ container.registerInstance<IMailProvider>(
 
 container.registerInstance<IMailProvider>(
   'MailGunProvider',
-  new MailGunProvider(),
+  new SendinBlueProvider(),
 )
 
 container.registerSingleton<ICacheProvider>('CacheProvider', RedisCacheProvider)
