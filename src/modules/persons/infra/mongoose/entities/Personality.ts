@@ -1,6 +1,6 @@
 import { v4 as uuidV4 } from 'uuid'
 
-interface IConsequence {
+export interface IConsequence {
   title: string
   description: string
 }

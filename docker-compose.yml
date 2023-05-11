@@ -1,9 +1,30 @@
 version: "2.2"
 
+networks:
+  local-rede:
+    driver: bridge
 services:
+  og-cache:
+    image: redis/redis-stack:latest
+    ports:
+      - 6379:6379
+    volumes:
+      - /local-data/:/data
+    networks:
+      - local-rede
+  # og-database:
+  #   image: mysql:latest
+  #   ports:
+  #     - 3306:3306
+
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=Karanthir-Akira1342!@
+  #     - MYSQL_DATABASE=ogDatabase
+  #     - MYSQL_USER=ognare
+  #     - MYSQL_PASSWORD=Karanthir-Akira1342!@
   og-api:
     build: .
-    command: npm run application
+    command: npm start
     restart: always
     environment:
       - ID_PROJECT_WELCOME=${ID_PROJECT_WELCOME}
@@ -14,3 +35,9 @@ services:
     volumes:
       - .:/usr/app
       - /usr/app/node_modules
+    depends_on:
+      - og-cache
+    links:
+      - "og-cache"
+    networks:
+      - local-rede

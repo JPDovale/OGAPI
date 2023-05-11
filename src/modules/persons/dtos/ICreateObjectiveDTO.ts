@@ -1,7 +1,3 @@
-export interface ICreateObjectiveDTO {
-  title: string
-  description: string
-  objectified: boolean
-  avoiders?: string[]
-  supporting?: string[]
-}
+import { type Prisma } from '@prisma/client'
+
+export type ICreateObjectiveDTO = Prisma.ObjectiveCreateInput

@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express, {
   type NextFunction,
@@ -5,31 +6,44 @@ import express, {
   type Response,
 } from 'express'
 import morgan from 'morgan'
-import { ZodError } from 'zod'
-
-import { env } from '@env/index'
-import * as Sentry from '@sentry/node'
 // eslint-disable-next-line import-helpers/order-imports
-import * as Tracing from '@sentry/tracing'
 
 import 'express-async-errors'
 import 'reflect-metadata'
 
 import '@shared/container'
 
+import { MulterError } from 'multer'
+import swaggerUi from 'swagger-ui-express'
+import { ZodError } from 'zod'
+
+import { env } from '@env/index'
+import * as Sentry from '@sentry/node'
+import * as Tracing from '@sentry/tracing'
 import { AppError } from '@shared/errors/AppError'
 import { router } from '@shared/infra/http/routes'
 import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
+import docs from '../docs/swagger.json'
 import { RateLimiter } from './middlewares/limiter'
-
-import { MulterError } from 'multer'
 
 const app = express()
 const appName = env.APP_NAME
 const appPort = env.APP_PORT
+const appTest = env.TEST_APP_URL
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
+
+app.use(
+  cors({
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: ['http://localhost:3000', 'https://ognare.com.br', appTest ?? ''],
+    credentials: true,
+  }),
+)
+
+app.use(express.json())
 
 if (env.NODE_ENV !== 'dev') {
   app.use(rateLimit.rete)
@@ -47,16 +61,11 @@ if (env.NODE_ENV !== 'dev') {
   app.use(Sentry.Handlers.requestHandler())
   app.use(Sentry.Handlers.tracingHandler())
 }
-app.use(
-  cors({
-    allowedHeaders: '*',
-    origin: '*',
-  }),
-)
-app.use(express.json())
 
 if (env.NODE_ENV !== 'dev') {
   app.use(morgan('combined'))
+} else {
+  app.use(morgan('dev'))
 }
 
 getConnectionMongoDb()
@@ -67,6 +76,15 @@ getConnectionMongoDb()
     throw err
   })
 
+app.use(
+  '/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(docs, {
+    customSiteTitle: 'Ognare API',
+  }),
+)
+
+app.use(cookieParser())
 app.use('/api', router)
 
 if (env.NODE_ENV !== 'dev') {

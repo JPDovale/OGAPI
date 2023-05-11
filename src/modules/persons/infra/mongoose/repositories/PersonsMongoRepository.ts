@@ -1,282 +1,36 @@
-import { inject, injectable } from 'tsyringe'
-import { v4 as uuidV4 } from 'uuid'
+import { type IUpdatePersonDTO } from '@modules/persons/dtos/IUpdatePersonDTO'
+import { type Prisma } from '@prisma/client'
 
-import { type IAvatar } from '@modules/accounts/infra/mongoose/entities/Avatar'
-import { type ICreatePersonDTO } from '@modules/persons/dtos/ICreatePersonDTO'
-import { type IPersonsRepository } from '@modules/persons/repositories/IPersonsRepository'
-import { type IComment } from '@modules/projects/infra/mongoose/entities/Comment'
-import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
+import { type IPersonsRepository } from '../../repositories/contracts/IPersonsRepository'
+import { type IPerson } from '../../repositories/entities/IPerson'
+import { type IUpdateImage } from '../../repositories/types/IUpdateImage'
+import { PersonMongo } from '../entities/Person'
 
-import { type IAppearance } from '../entities/Appearance'
-import { type ICouple } from '../entities/Couple'
-import { type IDream } from '../entities/Dream'
-import { type IFear } from '../entities/Fear'
-import { type Objective } from '../entities/Objective'
-import { type IPersonMongo, PersonMongo } from '../entities/Person'
-import { type IPersonality } from '../entities/Personality'
-import { type IPower } from '../entities/Power'
-import { type ITrauma } from '../entities/Trauma'
-import { type IValue } from '../entities/Value'
-import { type IWishe } from '../entities/Wishe'
-
-@injectable()
 export class PersonsMongoRepository implements IPersonsRepository {
-  constructor(
-    @inject('DateProvider') private readonly dateProvider: IDateProvider,
-  ) {}
+  async delete(personId: string): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
 
   async create(
-    userId: string,
-    projectId: string,
-    person: ICreatePersonDTO,
-  ): Promise<IPersonMongo | null | undefined> {
-    const { age, history, lastName, name } = person
-
-    const newPerson = new PersonMongo({
-      id: uuidV4(),
-      name,
-      lastName,
-      age,
-      history,
-      defaultProject: projectId,
-      fromUser: userId,
-      createAt: this.dateProvider.getDate(new Date()),
-      updateAt: this.dateProvider.getDate(new Date()),
-    })
-
-    await newPerson.save()
-
-    return newPerson
+    data: Prisma.PersonUncheckedCreateInput,
+  ): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async findById(id: string): Promise<IPersonMongo | null | undefined> {
-    const person = await PersonMongo.findOne({ id })
-    return person
+  async findById(personId: string): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async updateObjectives(
-    id: string,
-    objectives: Objective[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { objectives, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
+  async updateImage(data: IUpdateImage): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async getAllPerUser(userId: string): Promise<IPersonMongo[]> {
-    const allPersonsThisUser = await PersonMongo.find({ fromUser: userId })
-    return allPersonsThisUser
+  async updatePerson(data: IUpdatePersonDTO): Promise<IPerson | null> {
+    throw new Error('Method not implemented.')
   }
 
-  async updatePerson(
-    id: string,
-    person: ICreatePersonDTO,
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      {
-        name: person.name,
-        lastName: person.lastName,
-        age: person.age,
-        history: person.history,
-        id,
-        updateAt: this.dateProvider.getDate(new Date()),
-      },
-    )
-
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async deleteById(id: string): Promise<void> {
-    await PersonMongo.findOneAndDelete({ id })
-  }
-
-  async updatePersonality(
-    id: string,
-    personality: IPersonality[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { personality, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateValues(
-    id: string,
-    values: IValue[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { values, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateDreams(
-    id: string,
-    dreams: IDream[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { dreams, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateFears(
-    id: string,
-    fears: IFear[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { fears, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateWishes(
-    id: string,
-    wishes: IWishe[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { wishes, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateImage(
-    image: IAvatar,
-    id: string,
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { image, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateCommentsPerson(
-    id: string,
-    comments: IComment[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { comments, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async getPersonsPerProject(projectId: string): Promise<IPersonMongo[]> {
-    const personsThisProject = await PersonMongo.find({
-      defaultProject: projectId,
-    })
-    return personsThisProject
-  }
-
-  async updateAppearance(
-    id: string,
-    appearance: IAppearance[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { appearance, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateTraumas(
-    id: string,
-    traumas: ITrauma[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { traumas, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updatePowers(
-    id: string,
-    powers: IPower[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { powers, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async updateCouples(
-    id: string,
-    couples: ICouple[],
-  ): Promise<IPersonMongo | null | undefined> {
-    await PersonMongo.findOneAndUpdate(
-      { id },
-      { couples, id, updateAt: this.dateProvider.getDate(new Date()) },
-    )
-    const updatedPerson = await PersonMongo.findOne({ id })
-    return updatedPerson
-  }
-
-  async deletePerUserId(userId: string): Promise<void> {
-    await PersonMongo.deleteMany({ fromUser: userId })
-  }
-
-  async deletePerProjectId(projectId: string): Promise<void> {
-    await PersonMongo.deleteMany({ defaultProject: projectId })
-  }
-
-  async findManyById(ids: string[]): Promise<IPersonMongo[]> {
-    const personsIds = ids.map((id) => {
-      return {
-        id,
-      }
-    })
-
-    const persons = await PersonMongo.find({ $or: personsIds })
-
-    return persons
-  }
-
-  async listPerUser(userId: string): Promise<IPersonMongo[]> {
-    const persons = await PersonMongo.find({ fromUser: userId })
-
-    return persons
-  }
-
-  async findByProjectIds(projectIds: string[]): Promise<IPersonMongo[]> {
-    const projectsIds = projectIds.map((id) => {
-      return {
-        defaultProject: id,
-      }
-    })
-
-    const persons = await PersonMongo.find({ $or: projectsIds })
-
-    return persons
-  }
-
-  async getNumberOfPersonsByProjectId(projectId: string): Promise<number> {
-    const numberOfRegisters = await PersonMongo.countDocuments({
-      defaultProject: projectId,
-    })
-
-    return numberOfRegisters
+  async listAll(): Promise<IPerson[]> {
+    const persons = await PersonMongo.find()
+    return persons as unknown as IPerson[]
   }
 }

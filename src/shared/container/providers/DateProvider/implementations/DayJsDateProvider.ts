@@ -16,6 +16,10 @@ export class DayJsDateProvider implements IDateProvider {
     dayjs.locale('pt-br')
   }
 
+  addSeconds(seconds: number): Date {
+    return dayjs().add(seconds, 'seconds').toDate()
+  }
+
   addDays(days: number): Date {
     return dayjs().add(days, 'days').toDate()
   }
@@ -36,5 +40,9 @@ export class DayJsDateProvider implements IDateProvider {
 
   isBefore({ startDate, endDate }: IIsBefore): boolean {
     return dayjs(startDate).isBefore(endDate)
+  }
+
+  addDaysInDate(date: Date, days: number): Date {
+    return dayjs(date).add(days, 'days').toDate()
   }
 }

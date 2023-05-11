@@ -1,12 +1,3 @@
-import { type IPlotProject } from '../infra/mongoose/entities/Plot'
-import { type ISharedWhitUsers } from '../infra/mongoose/entities/Project'
+import { type Prisma } from '@prisma/client'
 
-export interface ICreateProjectDTO {
-  name: string
-  createdPerUser: string
-  users: ISharedWhitUsers[]
-  type: 'book' | 'rpg' | 'roadMap' | 'gameplay'
-  private: boolean
-  password?: string
-  plot: IPlotProject
-}
+export type ICreateProjectDTO = Prisma.ProjectUncheckedCreateInput

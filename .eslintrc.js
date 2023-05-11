@@ -18,6 +18,7 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'eslint-plugin-import-helpers', 'prettier'],
   rules: {
+    "@typescript-eslint/restrict-template-expressions": 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-throw-literal': "off",
     '@typescript-eslint/no-misused-promises': 'off',

@@ -5,9 +5,9 @@ WORKDIR /usr/app
 COPY package*.json ./
 COPY .env ./
 
-RUN npm install
+RUN npm ci
 
 COPY ./ ./
 
 EXPOSE 3030
-CMD ["npm", "run", "application"]
+CMD ["npm", "run", "dev"]
