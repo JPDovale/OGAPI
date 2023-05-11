@@ -19,8 +19,8 @@ router.get('/', (req, res) => {
 
 router.post('/migrate', migrateController.handle)
 
-router.use('/users', userRoutes)
 router.use('/sessions', sessionsRoutes)
+router.use('/users', userRoutes)
 router.use('/projects', projectsRoutes)
 router.use('/persons', personsRoutes)
 router.use('/books', booksRoutes)
