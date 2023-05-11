@@ -21,16 +21,18 @@ export class CreateSessionController {
 
     res.cookie('@og-refresh-token', refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      httpOnly: false,
+      httpOnly: true,
       path: '/',
-      sameSite: true,
+      sameSite: 'none',
+      secure: true,
     })
 
     res.cookie('@og-token', token, {
       maxAge: 1000 * 60 * 10, // 10 min
-      httpOnly: false,
+      httpOnly: true,
       path: '/',
-      sameSite: true,
+      sameSite: 'none',
+      secure: true,
     })
 
     return res.status(200).json({ user })
