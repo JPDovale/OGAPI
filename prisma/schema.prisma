@@ -50,8 +50,8 @@ model User {
 
 model Notification {
   id         String   @id @default(uuid())
-  title      String
-  content    String   @db.LongText
+  title      String   @db.LongText
+  content    String   @db.VarChar(5000)
   created_at DateTime @default(now())
 
   usersNotified User[]
