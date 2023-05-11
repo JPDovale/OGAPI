@@ -8,6 +8,8 @@ const envSchema = z.object({
   IS_DEV: z.coerce.boolean().default(false),
   NODE_ENV: z.enum(['dev', 'test', 'production']).default('production'),
 
+  SENDINBLUE_API_KEY: z.string(),
+
   TEST_APP_URL: z.string().url().nullable().optional(),
   FORGOT_MAIL_URL: z
     .string()
