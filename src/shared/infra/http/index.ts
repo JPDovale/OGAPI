@@ -40,7 +40,7 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     origin: [
       'http://localhost:3000',
-      'https://wwww.ognare.com.br',
+      'https://www.ognare.com.br',
       'https://ognare.com.br',
       appTest ?? '',
     ],
