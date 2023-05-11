@@ -38,7 +38,12 @@ app.use(
   cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    origin: ['http://localhost:3000', 'https://ognare.com.br', appTest ?? ''],
+    origin: [
+      'http://localhost:3000',
+      'https://wwww.ognare.com.br',
+      'https://ognare.com.br',
+      appTest ?? '',
+    ],
     credentials: true,
   }),
 )
