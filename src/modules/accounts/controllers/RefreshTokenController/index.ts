@@ -13,14 +13,14 @@ export class RefreshTokenController {
 
     res.cookie('@og-refresh-token', refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      httpOnly: true,
+      httpOnly: false,
       path: '/',
       sameSite: true,
     })
 
     res.cookie('@og-token', accessToken, {
       maxAge: 1000 * 60 * 10, // 10 min
-      httpOnly: true,
+      httpOnly: false,
       path: '/',
       sameSite: true,
     })
