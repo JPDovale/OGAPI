@@ -13,6 +13,7 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string(),
 
   SENDINBLUE_API_KEY: z.string(),
+
   TEST_APP_URL: z.string().url().nullable().optional(),
   FORGOT_MAIL_URL: z
     .string()
