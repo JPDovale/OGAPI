@@ -32,6 +32,7 @@ export class GetInfosUseCase {
         new_notifications: user.new_notifications,
         username: user.username,
         notifications: user.notifications,
+        subscription: user.subscription,
       },
     }
   }

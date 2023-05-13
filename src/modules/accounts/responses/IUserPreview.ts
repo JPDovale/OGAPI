@@ -1,3 +1,5 @@
+import { type ISubscription } from '@modules/products/infra/repositories/entities/ISubscription'
+
 import { type INotification } from '../infra/repositories/entities/INotification'
 
 export interface IUserPreview {
@@ -7,4 +9,5 @@ export interface IUserPreview {
   notifications?: INotification[]
   new_notifications: number
   username: string
+  subscription?: ISubscription | null
 }
