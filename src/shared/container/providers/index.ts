@@ -1,12 +1,14 @@
 import { container } from 'tsyringe'
 
+import { env } from '@env/index'
+
 import { type ICacheProvider } from './CacheProvider/ICacheProvider'
 import { RedisCacheProvider } from './CacheProvider/implementations/RedisCacheProvider'
 import { type IDateProvider } from './DateProvider/IDateProvider'
 import { DayJsDateProvider } from './DateProvider/implementations/DayJsDateProvider'
 import { type IMailProvider } from './MailProvider/IMailProvider'
 import { EtherealMailProvider } from './MailProvider/implementations/EtherealMailProvider'
-import { MailGunProvider } from './MailProvider/implementations/MailGunProvider'
+import { SendinBlueProvider } from './MailProvider/implementations/SendinBlueProvider'
 import { NotifyUsersProvider } from './NotifyUsersProvider/implementations/NotifyUsersProvider'
 import { type INotifyUsersProvider } from './NotifyUsersProvider/INotifyUsersProvider'
 import { FirebaseStorageProvider } from './StorageProvider/implementations/FirebaseStorageProvider'
@@ -31,7 +33,7 @@ container.registerInstance<IMailProvider>(
 
 container.registerInstance<IMailProvider>(
   'MailGunProvider',
-  new MailGunProvider(),
+  env.IS_DEV ? new EtherealMailProvider() : new SendinBlueProvider(),
 )
 
 container.registerSingleton<ICacheProvider>('CacheProvider', RedisCacheProvider)

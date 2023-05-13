@@ -150,6 +150,13 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
     })
   }
 
+  async removeProjectOfCache(projectId: string): Promise<void> {
+    await this.cacheProvider.delete({
+      key: 'project',
+      objectId: projectId,
+    })
+  }
+
   async create(
     data: Prisma.ProjectUncheckedCreateInput,
   ): Promise<IProject | null> {

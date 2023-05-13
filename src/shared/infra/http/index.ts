@@ -27,6 +27,8 @@ import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 import docs from '../docs/swagger.json'
 import { RateLimiter } from './middlewares/limiter'
 
+import bodyParser from 'body-parser'
+
 const app = express()
 const appName = env.APP_NAME
 const appPort = env.APP_PORT
@@ -48,7 +50,13 @@ app.use(
   }),
 )
 
-app.use(express.json())
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/products/stripe/webhooks') {
+    next()
+  } else {
+    bodyParser.json()(req, res, next)
+  }
+})
 
 if (env.NODE_ENV !== 'dev') {
   app.use(rateLimit.rete)

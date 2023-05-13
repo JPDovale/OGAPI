@@ -5,6 +5,14 @@ export interface ISendMail {
   path: string
 }
 
+export interface IRegisterInMailMarketing {
+  email: string
+  attributes: {
+    NOME: string
+  }
+}
+
 export interface IMailProvider {
   sendMail: ({ to, subject, variables, path }: ISendMail) => Promise<void>
+  registerInMailMarketing: (contact: IRegisterInMailMarketing) => Promise<void>
 }

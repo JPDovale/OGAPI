@@ -37,8 +37,12 @@ export class CreateProjectUseCase {
 
     const numberOfProjectsThisUser = user._count?.projects ?? 0
 
-    if (numberOfProjectsThisUser >= 2 && !user.last_payment_date && !user.admin)
+    if (
+      numberOfProjectsThisUser >= 1 &&
+      user.subscription?.payment_status !== 'active'
+    ) {
       throw makeErrorLimitFreeInEnd()
+    }
 
     const newProject = await this.projectsRepository.create({
       name,
@@ -57,6 +61,7 @@ export class CreateProjectUseCase {
       },
     })
 
+    await this.usersRepository.removeCacheOfUser(userId)
     if (!newProject) throw makeErrorProjectNotCreated()
   }
 }

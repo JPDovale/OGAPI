@@ -14,4 +14,6 @@ export abstract class IUsersRepository {
   abstract updateUser(userToUpdate: IUpdateUserDTO): Promise<IUser | null>
   abstract findManyById(ids: string[]): Promise<IUser[]>
   abstract listAllIds(): Promise<Array<{ id: string }>>
+  abstract findByCustomerId(customerId: string): Promise<IUser | null>
+  abstract removeCacheOfUser(userId: string): Promise<void>
 }

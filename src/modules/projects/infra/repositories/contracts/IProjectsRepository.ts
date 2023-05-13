@@ -14,4 +14,5 @@ export abstract class IProjectsRepository {
   abstract listAll(): Promise<IProject[]>
   abstract listProjectsOfOneUser(userId: string): Promise<IPreviewProject[]>
   abstract listPersonsIds(projectId: string): Promise<string[]>
+  abstract removeProjectOfCache(projectId: string): Promise<void>
 }

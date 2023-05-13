@@ -36,6 +36,13 @@ export class UsersPrismaRepository implements IUsersRepository {
     })
   }
 
+  async removeCacheOfUser(userId: string): Promise<void> {
+    await this.cacheProvider.delete({
+      key: 'user',
+      objectId: userId,
+    })
+  }
+
   async createMany(dataManyUsers: ICreateManyUsersDTO): Promise<void> {
     await prisma.user.createMany({
       data: dataManyUsers,
@@ -59,6 +66,7 @@ export class UsersPrismaRepository implements IUsersRepository {
       },
       include: {
         notifications: true,
+        subscription: true,
         _count: {
           select: {
             projects: true,
@@ -92,6 +100,7 @@ export class UsersPrismaRepository implements IUsersRepository {
       data,
       include: {
         notifications: true,
+        subscription: true,
         _count: {
           select: {
             projects: true,
@@ -122,6 +131,7 @@ export class UsersPrismaRepository implements IUsersRepository {
       },
       include: {
         notifications: true,
+        subscription: true,
         _count: {
           select: {
             projects: true,
@@ -167,6 +177,7 @@ export class UsersPrismaRepository implements IUsersRepository {
       data,
       include: {
         notifications: true,
+        subscription: true,
         _count: {
           select: {
             projects: true,
@@ -195,5 +206,18 @@ export class UsersPrismaRepository implements IUsersRepository {
     })
 
     return users
+  }
+
+  async findByCustomerId(customerId: string): Promise<IUser | null> {
+    const user = prisma.user.findUnique({
+      where: {
+        id_customer: customerId,
+      },
+      include: {
+        subscription: true,
+      },
+    })
+
+    return await user
   }
 }

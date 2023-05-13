@@ -54,11 +54,15 @@ export class CreateBookUseCase {
       userId,
       projectId,
       verifyPermissionTo: 'edit',
+      clearCache: true,
     })
 
     const numbersOfBooksInProject = project._count?.books ?? 0
 
-    if (numbersOfBooksInProject >= 3 && !user.last_payment_date && !user.admin)
+    if (
+      numbersOfBooksInProject >= 1 &&
+      user.subscription?.payment_status !== 'active'
+    )
       throw makeErrorLimitFreeInEnd()
 
     const newBook = await this.booksRepository.create({

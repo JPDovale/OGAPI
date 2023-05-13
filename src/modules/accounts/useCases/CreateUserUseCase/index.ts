@@ -6,6 +6,7 @@ import { env } from '@env/index'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
+import { IMailProvider } from '@shared/container/providers/MailProvider/IMailProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserAlreadyExistes } from '@shared/errors/users/makeErrorUserAlreadyExistes'
 import { makeErrorUserNotCreated } from '@shared/errors/users/makeErrorUserNotCreated'
@@ -32,6 +33,9 @@ export class CreateUserUseCase {
 
     @inject(InjectableDependencies.Repositories.ProjectsRepository)
     private readonly projectsRepository: IProjectsRepository,
+
+    @inject(InjectableDependencies.Providers.MailGunProvider)
+    private readonly mailProvider: IMailProvider,
   ) {}
 
   async execute(request: IRequest): Promise<IResponse> {
@@ -70,6 +74,13 @@ export class CreateUserUseCase {
         permission: 'view',
       })
     }
+
+    await this.mailProvider.registerInMailMarketing({
+      email: newUser.email,
+      attributes: {
+        NOME: newUser.name,
+      },
+    })
 
     return { user: newUser }
   }
