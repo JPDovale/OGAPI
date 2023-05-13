@@ -1,6 +1,6 @@
 {
   "name": "ogapi",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "engines": {
@@ -17,7 +17,9 @@
     "test:coverage": "vitest run --coverage",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "changeset": "changeset",
+    "version": "changeset version"
   },
   "keywords": [],
   "author": "",
@@ -58,6 +60,7 @@
     "typescript": "4.9.5"
   },
   "dependencies": {
+    "@changesets/cli": "2.26.1",
     "@prisma/client": "4.12.0",
     "@sentry/node": "7.43.0",
     "@sentry/tracing": "7.43.0",
