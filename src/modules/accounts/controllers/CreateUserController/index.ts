@@ -40,6 +40,22 @@ export class CreateUserController {
       password,
     })
 
-    return res.status(201).json({ refreshToken, token, user: userInfos })
+    res.cookie('@og-refresh-token', refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      path: '/',
+      sameSite: 'none',
+      secure: true,
+    })
+
+    res.cookie('@og-token', token, {
+      maxAge: 1000 * 60 * 10, // 10 min
+      httpOnly: true,
+      path: '/',
+      sameSite: 'none',
+      secure: true,
+    })
+
+    return res.status(200).json({ user: userInfos })
   }
 }

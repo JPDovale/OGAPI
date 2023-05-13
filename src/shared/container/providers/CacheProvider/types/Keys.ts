@@ -17,6 +17,8 @@ export enum KeysRedis {
   person = 'person-',
 
   boxes = 'boxes-',
+
+  products = 'products',
 }
 
 export type IKeysRedis = keyof typeof KeysRedis

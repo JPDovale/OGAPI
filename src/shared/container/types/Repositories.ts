@@ -28,10 +28,5 @@ export enum Repositories {
 
   TimelinesRepository = 'TimelinesRepository',
 
-  // temporary
-  UserMongoRepository = 'UserMongoRepository',
-  ProjectMongoRepository = 'ProjectMongoRepository',
-  PersonMongoRepository = 'PersonMongoRepository',
-  BookMongoRepository = 'BookMongoRepository',
-  BoxMongoRepository = 'BoxMongoRepository',
+  SubscriptionsRepository = 'SubscriptionsRepository',
 }

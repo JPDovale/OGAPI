@@ -14,6 +14,7 @@ import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProje
 import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
 import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { makeErrorLimitFreeOfAnotherUserInEnd } from '@shared/errors/useFull/makeErrorLimitFreeOfAnotherUserInEnd'
 import { makeInternalError } from '@shared/errors/useFull/makeInternalError'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
@@ -67,6 +68,14 @@ export class ShareProjectUseCase {
     const userToAddProject = await this.usersRepository.findByEmail(email)
     if (!userToAddProject) throw makeErrorUserNotFound()
 
+    const projectsOfUserToAddAlreadyIn =
+      await this.projectsRepository.listProjectsOfOneUser(userId)
+
+    const projectsOfUSerToAddOfAnotherUsers =
+      projectsOfUserToAddAlreadyIn.filter(
+        (project) => project.user?.id !== userId,
+      )
+
     const project = await this.projectsRepository.findById(projectId)
     if (!project) throw makeErrorProjectNotFound()
 
@@ -86,8 +95,17 @@ export class ShareProjectUseCase {
       ...usersWithPermissionToView,
     ]
 
-    if (usersInProject.length >= 5 && !user.last_payment_date && !user.admin)
+    if (
+      usersInProject.length >= 1 &&
+      user.subscription?.payment_status !== 'active'
+    )
       throw makeErrorLimitFreeInEnd()
+
+    if (
+      projectsOfUSerToAddOfAnotherUsers.length >= 3 &&
+      userToAddProject.subscription?.payment_status !== 'active'
+    )
+      throw makeErrorLimitFreeOfAnotherUserInEnd()
 
     const isAlreadySharedWithUser = usersInProject.find(
       (u) => u.email === email,
@@ -117,6 +135,8 @@ export class ShareProjectUseCase {
       content: `${user.name} acabou de compartilhar o projeto "${project.name}" com você. Acesse os projetos compartilhados para ver.`,
       userToNotifyId: userToAddProject.id,
     })
+
+    await this.usersRepository.removeCacheOfUser(userId)
 
     return { project: updatedProject }
   }

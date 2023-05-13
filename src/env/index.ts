@@ -7,6 +7,10 @@ import 'dotenv/config'
 const envSchema = z.object({
   IS_DEV: z.coerce.boolean().default(false),
   NODE_ENV: z.enum(['dev', 'test', 'production']).default('production'),
+  STRIPE_API_KEY: z.string(),
+  STRIPE_SUCCESS_URL: z.string().url(),
+  STRIPE_CANCEL_URL: z.string().url(),
+  STRIPE_WEBHOOK_SECRET: z.string(),
 
   SENDINBLUE_API_KEY: z.string(),
 
@@ -47,7 +51,6 @@ const envSchema = z.object({
 
   REDIS_HOST: z.string(),
   REDIS_PORT: z.coerce.number(),
-  REDIS_PASS: z.string(),
 
   ID_PROJECT_WELCOME: z.string(),
 })

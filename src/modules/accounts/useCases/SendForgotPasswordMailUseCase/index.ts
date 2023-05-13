@@ -1,6 +1,6 @@
+import { randomUUID } from 'node:crypto'
 import path from 'path'
 import { inject, injectable } from 'tsyringe'
-import { v4 as uuidV4 } from 'uuid'
 
 import { env } from '@env/index'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
@@ -56,8 +56,8 @@ export class SendForgotPasswordMailUseCase {
 
     if (!user) throw makeErrorUserNotFound()
 
-    const token = uuidV4()
-    const expiresDate = this.dateProvider.addHours(1)
+    const token = randomUUID()
+    const expiresDate = this.dateProvider.addHours(1).toString()
 
     await this.refreshTokenRepository.create({
       refresh_token: token,

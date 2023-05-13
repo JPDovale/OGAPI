@@ -25,6 +25,7 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     projectId,
     userId,
     verifyPermissionTo,
+    clearCache = false,
   }: IRequestVerify): Promise<IResponseVerify> {
     const user = await this.usersRepository.findById(userId)
     if (!user) throw makeErrorUserNotFound()
@@ -91,6 +92,13 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     const response: IResponseVerify = {
       project,
       user,
+    }
+
+    if (clearCache) {
+      await Promise.all([
+        this.projectsRepository.removeProjectOfCache(projectId),
+        this.usersRepository.removeCacheOfUser(userId),
+      ])
     }
 
     return response
