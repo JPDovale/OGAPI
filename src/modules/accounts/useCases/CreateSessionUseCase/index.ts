@@ -95,6 +95,7 @@ export class CreateSessionUseCase {
         avatar_url: userExiste.avatar_url,
         notifications: userExiste.notifications ?? [],
         new_notifications: userExiste.new_notifications,
+        subscription: userExiste.subscription,
       },
       refreshToken,
       token,

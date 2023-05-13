@@ -66,7 +66,7 @@ export class SaveImageUseCase {
 
     const numberOfImagesInGallery = archive.gallery?.length ?? 0
 
-    if (numberOfImagesInGallery >= 5 && !user.last_payment_date && !user.admin)
+    if (numberOfImagesInGallery >= 3 && !user.last_payment_date && !user.admin)
       throw makeErrorLimitFreeInEnd()
 
     const url = await this.storageProvider.upload(file, 'boxes/archives/images')

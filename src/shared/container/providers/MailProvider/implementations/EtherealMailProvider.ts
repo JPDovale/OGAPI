@@ -5,7 +5,11 @@ import { injectable } from 'tsyringe'
 
 import { AppError } from '@shared/errors/AppError'
 
-import { type IMailProvider, type ISendMail } from '../IMailProvider'
+import {
+  type IRegisterInMailMarketing,
+  type IMailProvider,
+  type ISendMail,
+} from '../IMailProvider'
 
 @injectable()
 export class EtherealMailProvider implements IMailProvider {
@@ -53,5 +57,11 @@ export class EtherealMailProvider implements IMailProvider {
 
     console.log('Message sent: %s', message.messageId)
     console.log('Preview URL: %s', nodemailer.getTestMessageUrl(message))
+  }
+
+  async registerInMailMarketing(
+    contact: IRegisterInMailMarketing,
+  ): Promise<void> {
+    console.log(contact, 'foi requisitado para salva na lista de contatos')
   }
 }

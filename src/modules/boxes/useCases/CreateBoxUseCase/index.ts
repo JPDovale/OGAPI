@@ -42,7 +42,10 @@ export class CreateBoxUseCase {
 
     const numberBoxesOfUser = user._count?.boxes ?? 0
 
-    if (numberBoxesOfUser >= 1 && !user.last_payment_date && !user.admin)
+    if (
+      numberBoxesOfUser >= 1 &&
+      user.subscription?.payment_status !== 'active'
+    )
       throw makeErrorLimitFreeInEnd()
 
     const box = await this.boxesRepository.create({
@@ -57,6 +60,7 @@ export class CreateBoxUseCase {
     })
 
     if (!box) throw makeErrorBoxNotCreated()
+    await this.usersRepository.removeCacheOfUser(userId)
 
     return { box }
   }

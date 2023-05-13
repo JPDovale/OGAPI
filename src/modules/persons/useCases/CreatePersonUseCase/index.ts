@@ -41,15 +41,15 @@ export class CreatePersonUseCase {
     const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
+      clearCache: true,
       verifyPermissionTo: 'edit',
     })
 
     const numberOfPersonsInProject = project._count?.persons ?? 0
 
     if (
-      numberOfPersonsInProject >= 15 &&
-      !user.last_payment_date &&
-      !user.admin
+      numberOfPersonsInProject >= 10 &&
+      user.subscription?.payment_status !== 'active'
     )
       throw makeErrorLimitFreeInEnd()
 

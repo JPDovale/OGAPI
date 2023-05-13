@@ -11,20 +11,20 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(uuid())
+  id                String   @id @default(uuid())
+  id_customer       String?  @unique
   name              String
   username          String
-  email             String    @unique
+  email             String   @unique
   password          String
-  avatar_url        String?   @db.VarChar(500)
+  avatar_url        String?  @db.VarChar(500)
   avatar_filename   String?
-  sex               String    @default("not-receipted")
-  age               String    @default("not-receipted")
-  admin             Boolean   @default(false)
-  last_payment_date DateTime?
-  is_social_login   Boolean   @default(false)
-  new_notifications Int       @default(0)
-  created_at        DateTime  @default(now())
+  sex               String   @default("not-receipted")
+  age               String   @default("not-receipted")
+  admin             Boolean  @default(false)
+  is_social_login   Boolean  @default(false)
+  new_notifications Int      @default(0)
+  created_at        DateTime @default(now())
 
   refreshTokens RefreshToken[]
 
@@ -45,7 +45,26 @@ model User {
   commentsCreated            Comment[]
   responsesInCommentsCreated ResponseComment[]
 
+  subscription Subscription?
+
   @@map("users")
+}
+
+model Subscription {
+  id                     String @id @unique @default(uuid())
+  subscription_stripe_id String @unique
+  mode                   String @default("subscription")
+  payment_status         String
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt()
+  expires_at DateTime?
+  price_id   String
+
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id String @unique
+
+  @@map("subscriptions")
 }
 
 model Notification {
