@@ -1,8 +1,9 @@
 import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
-import { z } from 'zod'
+import { z, ZodError } from 'zod'
 
 import { CreateProjectUseCase } from '@modules/projects/useCases/CreateProjectUseCase'
+import { validadeInputFeatures } from '@utils/application/validation/projects/validateInputFeatures'
 
 export class CreateProjectController {
   async handle(req: Request, res: Response): Promise<Response> {
@@ -11,6 +12,14 @@ export class CreateProjectController {
       private: z.boolean().optional(),
       type: z.enum(['rpg', 'book', 'gameplay', 'roadMap']),
       password: z.string().max(100).optional(),
+      features: validadeInputFeatures,
+      timeLine: z
+        .object({
+          initialDate: z.number(),
+          timeChrist: z.enum(['A.C.', 'D.C.']),
+        })
+        .optional()
+        .nullable(),
     })
 
     const {
@@ -18,8 +27,14 @@ export class CreateProjectController {
       private: priv,
       type,
       password,
+      features,
+      timeLine,
     } = createProjectBodySchema.parse(req.body)
     const { id } = req.user
+
+    if (features.timeLines && !timeLine) {
+      throw new ZodError([])
+    }
 
     const createProjectUseCase = container.resolve(CreateProjectUseCase)
     await createProjectUseCase.execute({
@@ -28,6 +43,8 @@ export class CreateProjectController {
       private: priv,
       type,
       password,
+      features,
+      timeLine: timeLine ?? undefined,
     })
 
     return res.status(201).end()

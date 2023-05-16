@@ -1,9 +1,13 @@
+import { type IFeaturesProjectUses } from '../infra/repositories/entities/IProject'
+
 export interface IPreviewProject {
   id: string
   image_url: string | null
   name: string
   type: string
   created_at: Date
+  features?: IFeaturesProjectUses
+  features_using: string
   user?: {
     avatar_url: string | null
     username: string

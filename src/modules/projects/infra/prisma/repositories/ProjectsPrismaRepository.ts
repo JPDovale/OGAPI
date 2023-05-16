@@ -103,6 +103,19 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
         },
       },
     },
+    timeLines: {
+      select: {
+        created_at: true,
+        is_alternative: true,
+        description: true,
+        title: true,
+        _count: {
+          select: {
+            timeEvents: true,
+          },
+        },
+      },
+    },
     user: {
       select: {
         id: true,
@@ -338,6 +351,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
         name: true,
         type: true,
         created_at: true,
+        features_using: true,
         user: {
           select: {
             avatar_url: true,
@@ -379,6 +393,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
           select: {
             books: true,
             persons: true,
+            timeLines: true,
           },
         },
       },

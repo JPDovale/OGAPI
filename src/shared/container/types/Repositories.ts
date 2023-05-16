@@ -26,7 +26,8 @@ export enum Repositories {
   ArchivesRepository = 'ArchivesRepository',
   ImagesRepository = 'ImagesRepository',
 
-  TimelinesRepository = 'TimelinesRepository',
+  TimeLinesRepository = 'TimeLinesRepository',
+  TimeEventsRepository = 'TimeEventsRepository',
 
   SubscriptionsRepository = 'SubscriptionsRepository',
 }
