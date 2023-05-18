@@ -246,4 +246,12 @@ export class BooksPrismaRepository implements IBooksRepository {
   async listAll(): Promise<IBook[]> {
     throw new Error('Method not implemented.')
   }
+
+  async deletePerProjectId(projectId: string): Promise<void> {
+    await prisma.book.deleteMany({
+      where: {
+        project_id: projectId,
+      },
+    })
+  }
 }

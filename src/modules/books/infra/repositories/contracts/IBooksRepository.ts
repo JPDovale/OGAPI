@@ -14,6 +14,7 @@ export abstract class IBooksRepository {
   abstract removeGenreOfBook(genreId: string, bookId: string): Promise<void>
   abstract listCapitules(bookId: string): Promise<ICapitule[]>
   abstract findById(id: string): Promise<IBook | null>
+  abstract deletePerProjectId(projectId: string): Promise<void>
 
   abstract listAll(): Promise<IBook[]>
 }

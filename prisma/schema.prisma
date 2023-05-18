@@ -252,7 +252,7 @@ model Person {
   id                    String   @id @default(uuid())
   name                  String
   last_name             String
-  age                   Int
+  age                   Int?
   history               String   @db.MediumText
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
@@ -295,7 +295,8 @@ model Person {
   timeLine     TimeLine? @relation(fields: [time_line_id], references: [id])
   time_line_id String?   @unique
 
-  timeEvents TimeEvent[]
+  timeEvents    TimeEvent[]
+  timeEventBorn TimeEventBorn?
 
   @@map("persons")
 }
@@ -608,13 +609,13 @@ model Scene {
   happened_minute           Int     @default(0)
   happened_second           Int     @default(0)
 
-  persons Person[]
+  persons    Person[]
+  timeEvents TimeEvent[]
 
   capitule    Capitule @relation(fields: [capitule_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   capitule_id String
 
-  comments   Comment[]
-  timeEvents TimeEvent[]
+  comments Comment[]
 
   @@map("scenes")
 }
@@ -717,8 +718,23 @@ model TimeEvent {
   timeLine     TimeLine @relation(fields: [time_line_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   time_line_id String
 
-  persons Person[]
-  scenes  Scene[]
+  persons  Person[]
+  scene    Scene?   @relation(fields: [scene_id], references: [id])
+  scene_id String?
+
+  timeEventBorn TimeEventBorn?
 
   @@map("time_events")
+}
+
+model TimeEventBorn {
+  id Int @id @default(autoincrement())
+
+  timeEvent     TimeEvent @relation(fields: [time_event_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  time_event_id String    @unique
+
+  person    Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person_id String @unique
+
+  @@map("time_events_born")
 }

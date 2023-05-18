@@ -19,13 +19,6 @@ const defaultInclude: Prisma.TimeLineInclude = {
           last_name: true,
         },
       },
-      scenes: {
-        select: {
-          id: true,
-          complete: true,
-          objective: true,
-        },
-      },
     },
   },
 }
@@ -57,6 +50,24 @@ export class TimeLinesPrismaRepository implements ITimeLinesRepository {
     const timeLine = await prisma.timeLine.create({
       data,
       include: defaultInclude,
+    })
+
+    return timeLine
+  }
+
+  async deletePerProjectId(projectId: string): Promise<void> {
+    await prisma.timeLine.deleteMany({
+      where: {
+        project_id: projectId,
+      },
+    })
+  }
+
+  async findById(timeLineId: string): Promise<ITimeLine | null> {
+    const timeLine = await prisma.timeLine.findUnique({
+      where: {
+        id: timeLineId,
+      },
     })
 
     return timeLine

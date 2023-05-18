@@ -11,6 +11,15 @@ import { type IPersonsRepository } from '../../repositories/contracts/IPersonsRe
 import { type IPerson } from '../../repositories/entities/IPerson'
 
 const defaultInclude: Prisma.PersonInclude = {
+  timeEventBorn: {
+    include: {
+      timeEvent: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  },
   couples: {
     include: {
       coupleWithPerson: true,
@@ -372,6 +381,14 @@ export class PersonsPrismaRepository implements IPersonsRepository {
 
     await Promise.all(promises).catch((err) => {
       throw err
+    })
+  }
+
+  async deletePerProjectId(projectId: string): Promise<void> {
+    await prisma.person.deleteMany({
+      where: {
+        project_id: projectId,
+      },
     })
   }
 }

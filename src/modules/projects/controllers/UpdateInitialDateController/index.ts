@@ -15,8 +15,6 @@ export class UpdateInitialDateController {
       timeChrist: z.enum(['A.C.', 'D.C.']),
     })
 
-    console.log(req.body)
-
     const { id } = req.user
     const { projectId } = updateInitialDateParamsSchema.parse(req.params)
     const { initialDate, timeChrist } = updateInitialDateBodySchema.parse(

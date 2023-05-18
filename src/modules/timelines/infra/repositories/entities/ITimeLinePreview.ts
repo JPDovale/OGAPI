@@ -1,4 +1,5 @@
 export interface ITimeLinePreview {
+  id: string
   created_at: Date
   is_alternative: boolean
   description: string

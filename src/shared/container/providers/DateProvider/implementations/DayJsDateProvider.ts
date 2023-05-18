@@ -131,4 +131,8 @@ export class DayJsDateProvider implements IDateProvider {
   removeYears(date: number, years: number): number {
     return dayjs(date).utc().subtract(years, 'year').valueOf()
   }
+
+  addYears(date: number, years: number): number {
+    return dayjs(date).utc().add(years, 'years').valueOf()
+  }
 }

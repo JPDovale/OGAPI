@@ -17,4 +17,5 @@ export abstract class IDateProvider {
   abstract getTimestamp(date: IGetTimestamp): number
   abstract getDateByTimestamp(timestamp: number): IGetDateByTimestampResponse
   abstract removeYears(date: number, years: number): number
+  abstract addYears(date: number, years: number): number
 }

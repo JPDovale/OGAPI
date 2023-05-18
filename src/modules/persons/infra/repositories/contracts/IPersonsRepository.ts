@@ -8,6 +8,7 @@ export abstract class IPersonsRepository {
   abstract findById(personId: string): Promise<IPerson | null>
   abstract updatePerson(data: IUpdatePersonDTO): Promise<IPerson | null>
   abstract delete(personId: string): Promise<void>
+  abstract deletePerProjectId(projectId: string): Promise<void>
 
   // TEMPORARY
   abstract listAll(): Promise<IPerson[]>

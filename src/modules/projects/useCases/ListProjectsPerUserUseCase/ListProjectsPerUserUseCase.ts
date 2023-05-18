@@ -1,9 +1,8 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
-import { type IPreviewProject } from '@modules/projects/responses/IPreviewProject'
+import { type IPreviewProject } from '@modules/projects/responses/types/IPreviewProject'
 import InjectableDependencies from '@shared/container/types'
-import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
   userId: string
@@ -24,13 +23,8 @@ export class ListProjectsPerUserUseCase {
     const projectsThisUser =
       await this.projectsRepository.listProjectsOfOneUser(userId)
 
-    const projects: IPreviewProject[] = projectsThisUser.map((project) => ({
-      ...project,
-      features: getFeatures(project?.features_using),
-    }))
-
     return {
-      projects,
+      projects: projectsThisUser,
     }
   }
 }

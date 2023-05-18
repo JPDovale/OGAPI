@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { type IUpdateProjectDTO } from '@modules/projects/dtos/IUpdateProjectDTO'
-import { type IPreviewProject } from '@modules/projects/responses/IPreviewProject'
+import { type IPreviewProject } from '@modules/projects/responses/types/IPreviewProject'
 import { type Prisma } from '@prisma/client'
 import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import InjectableDependencies from '@shared/container/types'
@@ -83,6 +83,8 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
         name: true,
         last_name: true,
         age: true,
+        born_date_timestamp: true,
+        born_date: true,
         created_at: true,
         image_url: true,
         updated_at: true,
@@ -104,11 +106,20 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
       },
     },
     timeLines: {
-      select: {
-        created_at: true,
-        is_alternative: true,
-        description: true,
-        title: true,
+      include: {
+        timeEvents: {
+          include: {
+            timeEventBorn: {
+              include: {
+                person: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         _count: {
           select: {
             timeEvents: true,
@@ -352,11 +363,15 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
         type: true,
         created_at: true,
         features_using: true,
+        initial_date: true,
+        initial_date_timestamp: true,
         user: {
           select: {
             avatar_url: true,
             username: true,
             id: true,
+            name: true,
+            email: true,
           },
         },
         users_with_access_comment: {
@@ -365,6 +380,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
               select: {
                 avatar_url: true,
                 id: true,
+                username: true,
               },
             },
           },
@@ -375,6 +391,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
               select: {
                 avatar_url: true,
                 id: true,
+                username: true,
               },
             },
           },
@@ -385,6 +402,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
               select: {
                 avatar_url: true,
                 id: true,
+                username: true,
               },
             },
           },
