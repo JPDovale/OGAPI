@@ -11,6 +11,7 @@ const envSchema = z.object({
   STRIPE_SUCCESS_URL: z.string().url(),
   STRIPE_CANCEL_URL: z.string().url(),
   STRIPE_WEBHOOK_SECRET: z.string(),
+  DISABLE_CACHE: z.coerce.boolean().default(false),
 
   SENDINBLUE_API_KEY: z.string(),
 

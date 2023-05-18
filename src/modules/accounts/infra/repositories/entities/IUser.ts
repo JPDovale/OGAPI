@@ -11,5 +11,10 @@ export interface IUser extends User {
     notifications?: number
     boxes?: number
     books?: number
+    projectUsersComment?: number
+    projectUsersEdit?: number
+    projectUsersView?: number
   }
 }
+
+export interface IUserUnchecked extends Partial<IUser> {}

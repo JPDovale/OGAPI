@@ -3,6 +3,8 @@ export interface IPersonPreview {
   name: string
   last_name: string
   age: number
+  born_date_timestamp: string
+  born_date: string
   created_at: Date
   updated_at: Date
   image_url: string

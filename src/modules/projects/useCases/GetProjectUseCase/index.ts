@@ -1,10 +1,11 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
-import { type IProject } from '@modules/projects/infra/repositories/entities/IProject'
+import { type IClientProject } from '@modules/projects/infra/repositories/entities/IProject'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
+import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
   userId: string
@@ -12,7 +13,7 @@ interface IRequest {
 }
 
 interface IResponse {
-  project: IProject
+  project: IClientProject
 }
 
 @injectable()
@@ -32,8 +33,13 @@ export class GetProjectUseCase {
       verifyPermissionTo: 'view',
     })
 
-    const project = await this.projectsRepository.findById(projectId)
-    if (!project) throw makeErrorProjectNotFound()
+    const projectReceived = await this.projectsRepository.findById(projectId)
+    if (!projectReceived) throw makeErrorProjectNotFound()
+
+    const project: IClientProject = {
+      ...projectReceived,
+      features: getFeatures(projectReceived.features_using),
+    }
 
     return { project }
   }

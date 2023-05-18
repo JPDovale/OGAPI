@@ -3,9 +3,11 @@ import { inject, injectable } from 'tsyringe'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
 import InjectableDependencies from '@shared/container/types'
+import { makeErrorFeatureNotAddedOnProject } from '@shared/errors/projects/makeErrorFeatureNotAddedOnProject'
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
 import { makeErrorUserDoesPermissionToProject } from '@shared/errors/projects/makeErrorUserDoesPermissionToProject'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 import { type IVerifyPermissionsService } from '../IVerifyPermissions'
 import { type IRequestVerify } from '../types/IRequestVerify'
@@ -26,6 +28,7 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     userId,
     verifyPermissionTo,
     clearCache = false,
+    verifyFeatureInProject = [],
   }: IRequestVerify): Promise<IResponseVerify> {
     const user = await this.usersRepository.findById(userId)
     if (!user) throw makeErrorUserNotFound()
@@ -36,6 +39,15 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     const usersWithPermissionToEdit = project.users_with_access_edit
     const usersWithPermissionToView = project.users_with_access_view
     const usersWithPermissionToComment = project.users_with_access_comment
+    const features = getFeatures(project.features_using)
+
+    verifyFeatureInProject.map((featureToVerify) => {
+      const featureIn = features[featureToVerify]
+
+      if (!featureIn) throw makeErrorFeatureNotAddedOnProject()
+
+      return ''
+    })
 
     if (project.user?.id !== userId) {
       switch (verifyPermissionTo) {

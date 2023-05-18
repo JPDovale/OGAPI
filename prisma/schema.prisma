@@ -42,6 +42,8 @@ model User {
 
   boxes Box[]
 
+  timeLines TimeLine[]
+
   commentsCreated            Comment[]
   responsesInCommentsCreated ResponseComment[]
 
@@ -61,7 +63,7 @@ model Subscription {
   expires_at DateTime?
   price_id   String
 
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user_id String @unique
 
   @@map("subscriptions")
@@ -132,29 +134,33 @@ model ProjectUsersComment {
 }
 
 model Project {
-  id              String   @id @default(uuid())
-  name            String
-  private         Boolean  @default(false)
-  password        String?
-  type            String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  image_url       String?  @db.VarChar(500)
-  image_filename  String?
-  one_phrase      String?  @db.VarChar(300)
-  premise         String?  @db.Text
-  storyteller     String?
-  literary_genre  String?
-  subgenre        String?
-  ambient         String?  @db.Text
-  count_time      String?  @db.VarChar(1000)
-  historical_fact String?  @db.Text
-  details         String?  @db.Text
-  summary         String?  @db.MediumText
-  url_text        String?  @db.VarChar(600)
-  structure_act_1 String?  @db.MediumText
-  structure_act_2 String?  @db.MediumText
-  structure_act_3 String?  @db.MediumText
+  id                       String   @id @default(uuid())
+  name                     String
+  private                  Boolean  @default(false)
+  password                 String?
+  type                     String
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+  initial_date_timestamp   String   @default("0")
+  initial_date             String   @default("non-set")
+  initial_date_time_christ String   @default("D.C.")
+  features_using           String   @default("book|plot|planet|nation|person|city|race|religion|power|family|inst|time-lines|language")
+  image_url                String?  @db.VarChar(500)
+  image_filename           String?
+  one_phrase               String?  @db.VarChar(300)
+  premise                  String?  @db.Text
+  storyteller              String?
+  literary_genre           String?
+  subgenre                 String?
+  ambient                  String?  @db.Text
+  count_time               String?  @db.VarChar(1000)
+  historical_fact          String?  @db.Text
+  details                  String?  @db.Text
+  summary                  String?  @db.MediumText
+  url_text                 String?  @db.VarChar(600)
+  structure_act_1          String?  @db.MediumText
+  structure_act_2          String?  @db.MediumText
+  structure_act_3          String?  @db.MediumText
 
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user_id String
@@ -168,6 +174,8 @@ model Project {
   books Book[]
 
   link_ideias Archive[]
+
+  timeLines TimeLine[]
 
   comments Comment[]
 
@@ -241,15 +249,24 @@ model ResponseComment {
 }
 
 model Person {
-  id             String   @id @default(uuid())
-  name           String
-  last_name      String
-  age            Int
-  history        String   @db.MediumText
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  image_filename String?
-  image_url      String?  @db.VarChar(500)
+  id                    String   @id @default(uuid())
+  name                  String
+  last_name             String
+  age                   Int?
+  history               String   @db.MediumText
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  image_filename        String?
+  image_url             String?  @db.VarChar(500)
+  born_date_timestamp   String   @default("0")
+  born_year             String   @default("non-set")
+  born_year_time_christ String   @default("non-set")
+  born_month            String   @default("non-set")
+  born_date             String   @default("non-set")
+  born_day              Int      @default(0)
+  born_hour             Int      @default(0)
+  born_minute           Int      @default(0)
+  born_second           Int      @default(0)
 
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user_id String
@@ -275,7 +292,13 @@ model Person {
 
   link_ideias Archive[]
 
-  @@map("parsons")
+  timeLine     TimeLine? @relation(fields: [time_line_id], references: [id])
+  time_line_id String?   @unique
+
+  timeEvents    TimeEvent[]
+  timeEventBorn TimeEventBorn?
+
+  @@map("persons")
 }
 
 model Objective {
@@ -568,16 +591,26 @@ model Capitule {
 }
 
 model Scene {
-  id              String  @id @default(uuid())
-  sequence        Int
-  complete        Boolean @default(false)
-  objective       String  @db.VarChar(600)
-  written_words   Int     @default(0)
-  structure_act_1 String  @db.MediumText
-  structure_act_2 String  @db.MediumText
-  structure_act_3 String  @db.MediumText
+  id                        String  @id @default(uuid())
+  sequence                  Int
+  complete                  Boolean @default(false)
+  objective                 String  @db.VarChar(600)
+  written_words             Int     @default(0)
+  structure_act_1           String  @db.MediumText
+  structure_act_2           String  @db.MediumText
+  structure_act_3           String  @db.MediumText
+  happened_date_timestamp   String  @default("0")
+  happened_year             String  @default("non-set")
+  happened_year_time_christ String  @default("non-set")
+  happened_month            String  @default("non-set")
+  happened_date             String  @default("non-set")
+  happened_day              Int     @default(0)
+  happened_hour             Int     @default(0)
+  happened_minute           Int     @default(0)
+  happened_second           Int     @default(0)
 
-  persons Person[]
+  persons    Person[]
+  timeEvents TimeEvent[]
 
   capitule    Capitule @relation(fields: [capitule_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   capitule_id String
@@ -644,4 +677,64 @@ model Image {
   archive_id String?
 
   @@map("images")
+}
+
+model TimeLine {
+  id             String   @id @unique @default(uuid())
+  title          String?
+  description    String?  @db.VarChar(600)
+  is_alternative Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String
+
+  person     Person?
+  timeEvents TimeEvent[]
+
+  @@map("time_lines")
+}
+
+model TimeEvent {
+  id                        String   @id @unique @default(uuid())
+  title                     String
+  description               String
+  happened_date_timestamp   String
+  happened_year             String
+  happened_year_time_christ String
+  happened_month            String
+  happened_date             String
+  happened_day              Int
+  happened_hour             Int
+  happened_minute           Int
+  happened_second           Int
+  importance                Int      @default(5)
+  created_at                DateTime @default(now())
+  updated_at                DateTime @updatedAt
+
+  timeLine     TimeLine @relation(fields: [time_line_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  time_line_id String
+
+  persons  Person[]
+  scene    Scene?   @relation(fields: [scene_id], references: [id])
+  scene_id String?
+
+  timeEventBorn TimeEventBorn?
+
+  @@map("time_events")
+}
+
+model TimeEventBorn {
+  id Int @id @default(autoincrement())
+
+  timeEvent     TimeEvent @relation(fields: [time_event_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  time_event_id String    @unique
+
+  person    Person @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person_id String @unique
+
+  @@map("time_events_born")
 }

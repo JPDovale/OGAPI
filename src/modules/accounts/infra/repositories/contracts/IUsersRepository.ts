@@ -2,11 +2,12 @@ import { type ICreateManyUsersDTO } from '@modules/accounts/dtos/ICreateManyUser
 import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { type IUpdateUserDTO } from '@modules/accounts/dtos/IUpdateUserDTO'
 
-import { type IUser } from '../entities/IUser'
+import { type IUserUnchecked, type IUser } from '../entities/IUser'
+import { type IListUsers } from '../types/IListUsers'
 
 export abstract class IUsersRepository {
   abstract findByEmail(email: string): Promise<IUser | null>
-  abstract list(): Promise<IUser[]>
+  abstract list(config: IListUsers): Promise<IUserUnchecked[]>
   abstract create(dataUserObj: ICreateUserDTO): Promise<IUser | null>
   abstract createMany(dataManyUsers: ICreateManyUsersDTO): Promise<void>
   abstract findById(userId: string): Promise<IUser | null>

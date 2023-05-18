@@ -17,7 +17,7 @@ const listUsersController = new ListUsersController()
 userRoutesGet.get('/', ensureAuthenticated.verify, getInfosController.handle)
 
 userRoutesGet.get(
-  '/all',
+  '/many',
   ensureAuthenticated.verify,
   verifyIsAdmin,
   listUsersController.handle,
