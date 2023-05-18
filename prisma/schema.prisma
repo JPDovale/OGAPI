@@ -298,7 +298,7 @@ model Person {
   timeEvents    TimeEvent[]
   timeEventBorn TimeEventBorn?
 
-  @@map("persons")
+  @@map("parsons")
 }
 
 model Objective {
