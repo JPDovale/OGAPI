@@ -2,10 +2,15 @@ import { inject, injectable } from 'tsyringe'
 
 import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { type IPerson } from '@modules/persons/infra/repositories/entities/IPerson'
+import { ITimeEventsRepository } from '@modules/timelines/infra/repositories/contracts/ITimeEventsRepository'
+import { type ITimeLinePreview } from '@modules/timelines/infra/repositories/entities/ITimeLinePreview'
+import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotCreated } from '@shared/errors/persons/makeErrorPersonNotCreated'
+import { makeErrorTimeLineNeedConfigurations } from '@shared/errors/timelines/makeErrorNeedConfigurations'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
   userId: string
@@ -13,7 +18,12 @@ interface IRequest {
   name: string
   lastName: string
   history: string
-  age: number
+  age: number | null
+  bornMonth: number
+  bornDay: number
+  bornHour: number
+  bornMinute: number
+  bornSecond: number
 }
 
 interface IResponse {
@@ -28,6 +38,12 @@ export class CreatePersonUseCase {
 
     @inject(InjectableDependencies.Services.VerifyPermissions)
     private readonly verifyPermissions: IVerifyPermissionsService,
+
+    @inject(InjectableDependencies.Providers.DateProvider)
+    private readonly dateProvider: IDateProvider,
+
+    @inject(InjectableDependencies.Repositories.TimeEventsRepository)
+    private readonly timeEventsRepository: ITimeEventsRepository,
   ) {}
 
   async execute({
@@ -37,12 +53,18 @@ export class CreatePersonUseCase {
     history,
     lastName,
     name,
+    bornDay,
+    bornHour,
+    bornMinute,
+    bornMonth,
+    bornSecond,
   }: IRequest): Promise<IResponse> {
     const { project, user } = await this.verifyPermissions.verify({
       userId,
       projectId,
       clearCache: true,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
 
     const numberOfPersonsInProject = project._count?.persons ?? 0
@@ -53,6 +75,39 @@ export class CreatePersonUseCase {
     )
       throw makeErrorLimitFreeInEnd()
 
+    const { year } = this.dateProvider.getDateByTimestamp(
+      Number(project.initial_date_timestamp),
+    )
+
+    const personBornYear = year.value - (age ?? 0)
+
+    const personBornDateTimestamp = this.dateProvider.getTimestamp({
+      year: personBornYear,
+      month: bornMonth,
+      day: bornDay,
+      hour: bornHour,
+      minute: bornMinute,
+      second: bornSecond,
+      timeChrist: personBornYear.toString().includes('-') ? 0 : 1,
+    })
+
+    const personBornDate = this.dateProvider.getDateByTimestamp(
+      personBornDateTimestamp,
+    )
+
+    const featuresInProject = getFeatures(project.features_using)
+    let mainTimeLine: ITimeLinePreview | undefined
+
+    if (featuresInProject.timeLines && age !== null) {
+      const mainTimeLineProject = project.timeLines?.find(
+        (timeLine) => !timeLine.is_alternative,
+      )
+
+      if (!mainTimeLineProject) throw makeErrorTimeLineNeedConfigurations()
+
+      mainTimeLine = mainTimeLineProject
+    }
+
     const person = await this.personsRepository.create({
       age,
       history,
@@ -60,9 +115,48 @@ export class CreatePersonUseCase {
       name,
       project_id: project.id,
       user_id: user.id,
+      born_date: personBornDate.fullDate,
+      born_date_timestamp: personBornDateTimestamp.toString(),
+      born_year: personBornDate.year.label,
+      born_year_time_christ: personBornDate.fullDate.includes('-')
+        ? 'A.C.'
+        : 'D.C.',
+      born_month: personBornDate.month.label,
+      born_day: personBornDate.day.value,
+      born_hour: personBornDate.hour.value,
+      born_minute: personBornDate.minute.value,
+      born_second: personBornDate.second.value,
     })
 
     if (!person) throw makeErrorPersonNotCreated()
+
+    if (mainTimeLine) {
+      await this.timeEventsRepository.create({
+        title: `Nasce ${name} ${lastName}`,
+        description: `Nesse dia ${name} ${lastName} nascia`,
+        happened_date: personBornDate.fullDate,
+        happened_date_timestamp: personBornDateTimestamp.toString(),
+        happened_year: personBornDate.year.label,
+        happened_year_time_christ: personBornDate.fullDate.includes('-')
+          ? 'A.C.'
+          : 'D.C.',
+        happened_month: personBornDate.month.label,
+        happened_day: personBornDate.day.value,
+        happened_hour: personBornDate.hour.value,
+        happened_minute: personBornDate.minute.value,
+        happened_second: personBornDate.second.value,
+        time_line_id: mainTimeLine.id,
+        timeEventBorn: {
+          create: {
+            person: {
+              connect: {
+                id: person.id,
+              },
+            },
+          },
+        },
+      })
+    }
 
     return { person }
   }

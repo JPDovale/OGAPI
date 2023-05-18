@@ -9,7 +9,11 @@ import InjectableDependencies from '@shared/container/types'
 import { prisma } from '@shared/infra/database/createConnection'
 
 import { type IUsersRepository } from '../../repositories/contracts/IUsersRepository'
-import { type IUser } from '../../repositories/entities/IUser'
+import {
+  type IUserUnchecked,
+  type IUser,
+} from '../../repositories/entities/IUser'
+import { type IListUsers } from '../../repositories/types/IListUsers'
 
 @injectable()
 export class UsersPrismaRepository implements IUsersRepository {
@@ -87,9 +91,31 @@ export class UsersPrismaRepository implements IUsersRepository {
     return user
   }
 
-  async list(): Promise<User[]> {
+  async list({ page }: IListUsers): Promise<IUserUnchecked[]> {
+    const perPage = 20
+    const skip = (page - 1) * 20
+
     const users = await prisma.user.findMany({
-      include: { notifications: true, refreshTokens: true },
+      select: {
+        id: true,
+        email: true,
+        admin: true,
+        name: true,
+        avatar_url: true,
+        subscription: true,
+        _count: {
+          select: {
+            projects: true,
+            projectUsersComment: true,
+            projectUsersEdit: true,
+            projectUsersView: true,
+            notifications: true,
+          },
+        },
+      },
+
+      skip,
+      take: perPage,
     })
 
     return users

@@ -6,5 +6,7 @@ export interface IVerifyPermissionsService {
     projectId,
     userId,
     verifyPermissionTo,
+    verifyFeatureInProject,
+    clearCache,
   }: IRequestVerify) => Promise<IResponseVerify>
 }

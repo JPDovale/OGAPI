@@ -1,6 +1,7 @@
 import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 
+import { ParserProjectsPreview } from '@modules/projects/responses/parsers/ParserProjectsPreview'
 import { ListProjectsPerUserUseCase } from '@modules/projects/useCases/ListProjectsPerUserUseCase/ListProjectsPerUserUseCase'
 
 export class ListProjectsPerUserController {
@@ -14,6 +15,9 @@ export class ListProjectsPerUserController {
       userId: id,
     })
 
-    return res.status(200).json({ projects })
+    const parserProjectsPreview = container.resolve(ParserProjectsPreview)
+    const projectsPartied = parserProjectsPreview.parse(projects)
+
+    return res.status(200).json({ projects: projectsPartied })
   }
 }

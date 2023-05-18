@@ -50,6 +50,10 @@ import { CommentsPrismaRepository } from '@modules/projects/infra/prisma/reposit
 import { ProjectsPrismaRepository } from '@modules/projects/infra/prisma/repositories/ProjectsPrismaRepository'
 import { type ICommentsRepository } from '@modules/projects/infra/repositories/contracts/ICommentsRepository'
 import { type IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
+import { TimeEventsPrismaRepository } from '@modules/timelines/infra/prisma/repositories/TimeEventsPrismaRepository'
+import { TimeLinesPrismaRepository } from '@modules/timelines/infra/prisma/repositories/TimeLinesPrismaRepository'
+import { type ITimeEventsRepository } from '@modules/timelines/infra/repositories/contracts/ITimeEventsRepository'
+import { type ITimeLinesRepository } from '@modules/timelines/infra/repositories/contracts/ITimeLinesRepository'
 
 import { Repositories } from './types/Repositories'
 
@@ -167,4 +171,17 @@ container.registerSingleton<IImagesRepository>(
 container.registerSingleton<ISubscriptionsRepository>(
   Repositories.SubscriptionsRepository,
   SubscriptionsPrismaRepository,
+)
+
+// =========================================================================
+// ++++++++++++++++++++++++++++++TIME-LINES+++++++++++++++++++++++++++++++++
+// =========================================================================
+container.registerSingleton<ITimeLinesRepository>(
+  Repositories.TimeLinesRepository,
+  TimeLinesPrismaRepository,
+)
+
+container.registerSingleton<ITimeEventsRepository>(
+  Repositories.TimeEventsRepository,
+  TimeEventsPrismaRepository,
 )

@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
-import { type IPreviewProject } from '@modules/projects/responses/IPreviewProject'
+import { type IPreviewProject } from '@modules/projects/responses/types/IPreviewProject'
 import InjectableDependencies from '@shared/container/types'
 
 interface IRequest {
