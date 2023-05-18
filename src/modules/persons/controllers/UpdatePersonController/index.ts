@@ -11,17 +11,30 @@ export class UpdatePersonController {
     })
 
     const updatePersonBodySchema = z.object({
-      name: z.string().min(1).max(60).optional(),
-      lastName: z.string().min(1).max(60).optional(),
-      history: z.string().min(1).max(10000).optional(),
-      age: z.number().max(1000000).optional(),
+      name: z.string().max(60).optional(),
+      lastName: z.string().max(60).optional(),
+      history: z.string().max(10000).optional(),
+      age: z.coerce.number().max(1000000).optional().nullable(),
+      bornMonth: z.coerce.number().max(12).optional(),
+      bornDay: z.coerce.number().max(31).optional(),
+      bornHour: z.coerce.number().max(24).optional(),
+      bornMinute: z.coerce.number().max(60).optional(),
+      bornSecond: z.coerce.number().max(60).optional(),
     })
 
     const { id } = req.user
     const { personId } = updatePersonParamsSchema.parse(req.params)
-    const { age, history, lastName, name } = updatePersonBodySchema.parse(
-      req.body,
-    )
+    const {
+      age,
+      history,
+      lastName,
+      name,
+      bornDay,
+      bornHour,
+      bornMinute,
+      bornMonth,
+      bornSecond,
+    } = updatePersonBodySchema.parse(req.body)
 
     const updatePersonUseCase = container.resolve(UpdatePersonUseCase)
     const { person } = await updatePersonUseCase.execute({
@@ -31,6 +44,11 @@ export class UpdatePersonController {
       history,
       lastName,
       name,
+      bornDay,
+      bornHour,
+      bornMinute,
+      bornMonth: bornMonth ? bornMonth - 1 : undefined, // month is received like  1 -> 12 in name months respective, but when logical is Applied the months transformed to format 0 -> 12 in respective names
+      bornSecond,
     })
 
     return res.status(200).json({ person })

@@ -9,16 +9,21 @@ import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserInvalidCredentialsToLogin } from '@shared/errors/users/makeErrorUserInvalidCredentialsToLogin'
+import { makeUserPreviewResponse } from '@utils/responses/makeUserPreviewResponse'
 
 interface IRequest {
   email: string
   password: string
+  verifyIsAdmin?: boolean
 }
 
 interface IResponse {
   user: IUserPreview
   refreshToken: string
   token: string
+  infos: {
+    isAdmin: boolean
+  }
 }
 
 @injectable()
@@ -34,7 +39,11 @@ export class CreateSessionUseCase {
     private readonly dateProvider: IDateProvider,
   ) {}
 
-  async execute({ email, password }: IRequest): Promise<IResponse> {
+  async execute({
+    email,
+    password,
+    verifyIsAdmin = false,
+  }: IRequest): Promise<IResponse> {
     const {
       expiresInToken,
       secretToken,
@@ -48,6 +57,17 @@ export class CreateSessionUseCase {
 
     const passwordCorrect = compareSync(password, userExiste.password)
     if (!passwordCorrect) throw makeErrorUserInvalidCredentialsToLogin()
+
+    if (verifyIsAdmin && !userExiste.admin) {
+      return {
+        user: makeUserPreviewResponse(userExiste),
+        refreshToken: '',
+        token: '',
+        infos: {
+          isAdmin: false,
+        },
+      }
+    }
 
     const token = sign(
       {
@@ -88,17 +108,12 @@ export class CreateSessionUseCase {
     })
 
     return {
-      user: {
-        id: userExiste.id,
-        username: userExiste.username,
-        email: userExiste.email,
-        avatar_url: userExiste.avatar_url,
-        notifications: userExiste.notifications ?? [],
-        new_notifications: userExiste.new_notifications,
-        subscription: userExiste.subscription,
-      },
+      user: makeUserPreviewResponse(userExiste),
       refreshToken,
       token,
+      infos: {
+        isAdmin: verifyIsAdmin ? userExiste.admin : false,
+      },
     }
   }
 }

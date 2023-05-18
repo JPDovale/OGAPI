@@ -1,6 +1,7 @@
 import { inject, injectable } from 'tsyringe'
 
 import { redisClient } from '@config/redis'
+import { env } from '@env/index'
 import InjectableDependencies from '@shared/container/types'
 
 import { IDateProvider } from '../../DateProvider/IDateProvider'
@@ -23,6 +24,13 @@ export class RedisCacheProvider implements ICacheProvider {
     value: T,
     validateInSeconds?: number,
   ): Promise<void> {
+    if (env.DISABLE_CACHE) {
+      this.refresh().catch((err) => {
+        throw err
+      })
+      return
+    }
+
     const cacheEndDate = this.dateProvider.addSeconds(
       validateInSeconds ?? 60 * 30,
     ) // 30 min
@@ -43,6 +51,7 @@ export class RedisCacheProvider implements ICacheProvider {
     key: IKeysRedis
     objectId: string
   }): Promise<T | null> {
+    if (env.DISABLE_CACHE) return null
     const value = await redisClient.get(KeysRedis[key.key] + key.objectId)
 
     if (!value) return null
@@ -69,6 +78,12 @@ export class RedisCacheProvider implements ICacheProvider {
   async delete(
     key: { key: IKeysRedis; objectId: string } | KeysUnchecked,
   ): Promise<void> {
+    if (env.DISABLE_CACHE) {
+      this.refresh().catch((err) => {
+        throw err
+      })
+      return
+    }
     if (typeof key === 'object') {
       if (key.objectId === '*') {
         const keys = await redisClient.keys(KeysRedis[key.key] + key.objectId)
@@ -82,6 +97,12 @@ export class RedisCacheProvider implements ICacheProvider {
   }
 
   async deleteMany(keys: KeysUnchecked[]): Promise<void> {
+    if (env.DISABLE_CACHE) {
+      this.refresh().catch((err) => {
+        throw err
+      })
+      return
+    }
     await redisClient.del(...keys)
   }
 }

@@ -1,4 +1,5 @@
-import { type Person } from '@prisma/client'
+import { type ITimeEvent } from '@modules/timelines/infra/repositories/entities/ITimeEvent'
+import { type TimeEventBorn, type Person } from '@prisma/client'
 
 import { type IAppearance } from './IAppearance'
 import { type ICouple } from './ICouple'
@@ -12,6 +13,10 @@ import { type ITrauma } from './ITrauma'
 import { type IValue } from './IValue'
 import { type IWishe } from './IWishe'
 
+export interface ITimeEventBorn extends TimeEventBorn {
+  timeEvent?: ITimeEvent | null
+}
+
 export interface IPerson extends Person {
   appearances?: IAppearance[]
   objectives?: IObjective[]
@@ -24,4 +29,5 @@ export interface IPerson extends Person {
   values?: IValue[]
   wishes?: IWishe[]
   traumas?: ITrauma[]
+  timeEventBorn?: ITimeEventBorn | null
 }

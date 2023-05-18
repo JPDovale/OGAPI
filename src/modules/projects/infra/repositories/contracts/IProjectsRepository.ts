@@ -1,6 +1,6 @@
 import { type ICreateProjectDTO } from '@modules/projects/dtos/ICreateProjectDTO'
 import { type IUpdateProjectDTO } from '@modules/projects/dtos/IUpdateProjectDTO'
-import { type IPreviewProject } from '@modules/projects/responses/IPreviewProject'
+import { type IPreviewProject } from '@modules/projects/responses/types/IPreviewProject'
 
 import { type IProject } from '../entities/IProject'
 import { type IAddUsersInProject } from '../types/IAddUsersInProject'
