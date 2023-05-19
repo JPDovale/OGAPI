@@ -316,6 +316,7 @@ export class PersonsPrismaRepository implements IPersonsRepository {
           key: 'project',
           objectId: person.project_id,
         }),
+
       ]).catch((err) => {
         throw err
       })
