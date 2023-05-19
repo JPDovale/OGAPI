@@ -60,10 +60,12 @@ export class DayJsDateProvider implements IDateProvider {
     const dateZero = dayjs('0000-01-01T00:00:00.001Z').utc()
     let finalDateTimestamp = 0
 
+    const partiedYear = Math.abs(year)
+
     if (timeChrist === 0) {
       const newDateBeforeChrist = dayjs(dateZero)
         .utc()
-        .subtract(year, 'year')
+        .subtract(partiedYear, 'year')
         .set('month', month)
         .set('date', day)
         .set('hour', hour)
@@ -77,7 +79,7 @@ export class DayJsDateProvider implements IDateProvider {
 
     if (timeChrist === 1) {
       const newDateAfterChrist = dayjs(dateZero)
-        .add(year, 'year')
+        .add(partiedYear, 'year')
         .set('month', month)
         .set('date', day)
         .set('hour', hour)
