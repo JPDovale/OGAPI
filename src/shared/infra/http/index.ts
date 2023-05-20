@@ -22,7 +22,6 @@ import * as Sentry from '@sentry/node'
 import * as Tracing from '@sentry/tracing'
 import { AppError } from '@shared/errors/AppError'
 import { router } from '@shared/infra/http/routes'
-import { getConnectionMongoDb } from '@shared/infra/mongoose/dataSource'
 
 import docs from '../docs/swagger.json'
 import { RateLimiter } from './middlewares/limiter'
@@ -80,14 +79,6 @@ if (env.NODE_ENV !== 'dev') {
 } else {
   app.use(morgan('dev'))
 }
-
-getConnectionMongoDb()
-  .then(() => {
-    if (env.NODE_ENV === 'dev') console.log('Database connected')
-  })
-  .catch((err) => {
-    throw err
-  })
 
 app.use(
   '/docs',

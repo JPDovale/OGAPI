@@ -11,6 +11,8 @@ import { type ITimeLine } from '../../repositories/entities/ITimeLine'
 const defaultInclude: Prisma.TimeLineInclude = {
   timeEvents: {
     include: {
+      timeEventBorn: true,
+      timeEventToDo: true,
       persons: {
         select: {
           id: true,
@@ -68,8 +70,21 @@ export class TimeLinesPrismaRepository implements ITimeLinesRepository {
       where: {
         id: timeLineId,
       },
+      include: defaultInclude,
     })
 
     return timeLine
+  }
+
+  async findToDosPerUserId(userId: string): Promise<ITimeLine[]> {
+    const timeLinesToDo = await prisma.timeLine.findMany({
+      where: {
+        user_id: userId,
+        type: 'to_do',
+      },
+      include: defaultInclude,
+    })
+
+    return timeLinesToDo
   }
 }
