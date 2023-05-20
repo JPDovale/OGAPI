@@ -48,15 +48,21 @@ export class DayJsDateProvider implements IDateProvider {
     return dayjs(date).add(days, 'days').toDate()
   }
 
-  getTimestamp({
-    timeChrist,
-    day = 1,
-    hour = 0,
-    minute = 0,
-    month = 0,
-    second = 0,
-    year = 0,
-  }: IGetTimestamp): number {
+  getTimestamp(dateReceived: IGetTimestamp | Date): number {
+    if (dateReceived instanceof Date) {
+      return dayjs(dateReceived).utc().valueOf()
+    }
+
+    const {
+      timeChrist,
+      day = 1,
+      hour = 0,
+      minute = 0,
+      month = 0,
+      second = 0,
+      year = 0,
+    } = dateReceived
+
     const dateZero = dayjs('0000-01-01T00:00:00.001Z').utc()
     let finalDateTimestamp = 0
 
