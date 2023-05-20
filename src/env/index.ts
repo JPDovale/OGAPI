@@ -52,8 +52,6 @@ const envSchema = z.object({
 
   REDIS_HOST: z.string(),
   REDIS_PORT: z.coerce.number(),
-
-  ID_PROJECT_WELCOME: z.string(),
 })
 
 const _env = envSchema.safeParse(process.env)
