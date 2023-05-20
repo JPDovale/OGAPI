@@ -229,6 +229,9 @@ model Comment {
   scene       Scene?    @relation(fields: [scene_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   scene_id    String?
 
+  timeEvent     TimeEvent? @relation(fields: [time_event_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  time_event_id String?
+
   @@map("comments")
 }
 
@@ -680,14 +683,17 @@ model Image {
 }
 
 model TimeLine {
-  id             String   @id @unique @default(uuid())
+  id             String    @id @unique @default(uuid())
   title          String?
-  description    String?  @db.VarChar(600)
-  is_alternative Boolean  @default(true)
-  created_at     DateTime @default(now())
+  description    String?   @db.VarChar(600)
+  is_alternative Boolean   @default(true)
+  created_at     DateTime  @default(now())
+  type           String    @default("plan")
+  start_date     DateTime?
+  end_date       DateTime?
 
-  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  project_id String
+  project    Project? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String?
 
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user_id String
@@ -719,10 +725,13 @@ model TimeEvent {
   time_line_id String
 
   persons  Person[]
-  scene    Scene?   @relation(fields: [scene_id], references: [id])
+  comments Comment[]
+
+  scene    Scene?  @relation(fields: [scene_id], references: [id])
   scene_id String?
 
   timeEventBorn TimeEventBorn?
+  timeEventToDo TimeEventToDo?
 
   @@map("time_events")
 }
@@ -737,4 +746,14 @@ model TimeEventBorn {
   person_id String @unique
 
   @@map("time_events_born")
+}
+
+model TimeEventToDo {
+  id           Int       @id @default(autoincrement())
+  completed_at DateTime?
+
+  timeEvent     TimeEvent @relation(fields: [time_event_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  time_event_id String    @unique
+
+  @@map("time_events_to_do")
 }

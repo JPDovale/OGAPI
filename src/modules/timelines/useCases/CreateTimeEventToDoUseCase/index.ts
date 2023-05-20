@@ -1,30 +1,26 @@
 import { inject, injectable } from 'tsyringe'
 
+import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { ITimeEventsRepository } from '@modules/timelines/infra/repositories/contracts/ITimeEventsRepository'
 import { ITimeLinesRepository } from '@modules/timelines/infra/repositories/contracts/ITimeLinesRepository'
 import { type ITimeEvent } from '@modules/timelines/infra/repositories/entities/ITimeEvent'
-import { type ITimeLine } from '@modules/timelines/infra/repositories/entities/ITimeLine'
-import { type ITimeLinePreview } from '@modules/timelines/infra/repositories/entities/ITimeLinePreview'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
-import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorTimeEventNotCreated } from '@shared/errors/timelines/makeErrorTimeEventNotCreated'
 import { makeErrorTimeLineNotFound } from '@shared/errors/timelines/makeErrorTimeLineNotFound'
+import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 
 interface IRequest {
   userId: string
-  projectId: string
-  timeLineId?: string
+  timeLineId: string
   title: string
   description: string
-  importance: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10'
   happenedHour: number
   happenedMinute: number
   happenedSecond: number
   happenedYear: number
   happenedMonth: number
   happenedDay: number
-  timeChrist: 'A.C.' | 'D.C.'
 }
 
 interface IResponse {
@@ -32,10 +28,10 @@ interface IResponse {
 }
 
 @injectable()
-export class CreateTimeEventUseCase {
+export class CreateTimeEventToDoUseCase {
   constructor(
-    @inject(InjectableDependencies.Services.VerifyPermissions)
-    private readonly verifyPermissionsService: IVerifyPermissionsService,
+    @inject(InjectableDependencies.Repositories.UsersRepository)
+    private readonly usersRepository: IUsersRepository,
 
     @inject(InjectableDependencies.Repositories.TimeLinesRepository)
     private readonly timeLinesRepository: ITimeLinesRepository,
@@ -55,36 +51,16 @@ export class CreateTimeEventUseCase {
     happenedMonth,
     happenedSecond,
     happenedYear,
-    importance,
-    projectId,
-    timeChrist,
     title,
     userId,
     timeLineId,
   }: IRequest): Promise<IResponse> {
-    const { project } = await this.verifyPermissionsService.verify({
-      projectId,
-      userId,
-      verifyPermissionTo: 'edit',
-      clearCache: true,
-      verifyFeatureInProject: ['timeLines'],
-    })
+    const user = await this.usersRepository.findById(userId)
+    if (!user) throw makeErrorUserNotFound()
 
-    let timeLineToAddTimeEvent: ITimeLine | ITimeLinePreview | null
-
-    if (!timeLineId) {
-      const mainTimeLineProject = project.timeLines?.find(
-        (timeLine) => !timeLine.is_alternative,
-      )
-
-      timeLineToAddTimeEvent = mainTimeLineProject ?? null
-    } else {
-      const timeLine = await this.timeLinesRepository.findById(timeLineId)
-
-      timeLineToAddTimeEvent = timeLine
-    }
-
-    if (!timeLineToAddTimeEvent) throw makeErrorTimeLineNotFound()
+    const timeLine = await this.timeLinesRepository.findById(timeLineId)
+    if (!timeLine || timeLine.type !== 'to_do')
+      throw makeErrorTimeLineNotFound()
 
     const eventHappenedDateTimestamp = this.dateProvider.getTimestamp({
       year: happenedYear,
@@ -93,8 +69,28 @@ export class CreateTimeEventUseCase {
       hour: happenedHour,
       minute: happenedMinute,
       second: happenedSecond,
-      timeChrist: timeChrist === 'A.C.' ? 0 : 1,
+      timeChrist: 1,
     })
+
+    const dateStartOfTimeLineTimestamp = this.dateProvider.getTimestamp(
+      timeLine.start_date!,
+    )
+    const dateEndTimeLineTimestamp = this.dateProvider.getTimestamp(
+      timeLine.end_date!,
+    )
+
+    const dateIsAfterStartDateTimeLine = this.dateProvider.isBefore({
+      startDate: new Date(dateStartOfTimeLineTimestamp),
+      endDate: new Date(eventHappenedDateTimestamp),
+    })
+
+    const dateIsBeforeEndDateTimeLine = this.dateProvider.isBefore({
+      startDate: new Date(eventHappenedDateTimestamp),
+      endDate: new Date(dateEndTimeLineTimestamp),
+    })
+
+    if (!dateIsAfterStartDateTimeLine || !dateIsBeforeEndDateTimeLine)
+      throw makeErrorTimeEventNotCreated()
 
     const eventHappenedDate = this.dateProvider.getDateByTimestamp(
       eventHappenedDateTimestamp,
@@ -112,13 +108,10 @@ export class CreateTimeEventUseCase {
       happened_hour: eventHappenedDate.hour.value,
       happened_minute: eventHappenedDate.minute.value,
       happened_second: eventHappenedDate.second.value,
-      time_line_id: timeLineToAddTimeEvent.id,
-      importance: Number(importance),
+      time_line_id: timeLine.id,
+      importance: 7,
       title,
       description,
-      TimeEventToDo: {
-        create: {},
-      },
     })
 
     if (!timeEvent) throw makeErrorTimeEventNotCreated()
