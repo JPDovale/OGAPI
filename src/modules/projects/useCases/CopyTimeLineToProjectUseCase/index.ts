@@ -79,7 +79,7 @@ export class CopyTimeLineToProjectUseCase {
           title: timeEvent.title,
           importance: timeEvent.importance,
           time_line_id: timeLineCopied.id,
-          TimeEventToDo: {
+          timeEventToDo: {
             create: {},
           },
         }),
