@@ -5,6 +5,7 @@
 ### Patch Changes
 
 - add new time lines
+- fix problems on logic
 
 ## 0.3.0
 
