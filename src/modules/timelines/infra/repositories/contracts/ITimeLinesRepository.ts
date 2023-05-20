@@ -7,4 +7,5 @@ export abstract class ITimeLinesRepository {
   abstract findById(timeLineId: string): Promise<ITimeLine | null>
   abstract create(data: ICreateTimeLineDTO): Promise<ITimeLine | null>
   abstract deletePerProjectId(projectId: string): Promise<void>
+  abstract findToDosPerUserId(userId: string): Promise<ITimeLine[]>
 }

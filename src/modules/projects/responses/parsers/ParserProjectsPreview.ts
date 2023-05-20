@@ -24,7 +24,6 @@ export class ParserProjectsPreview {
           Number(project.initial_date_timestamp),
         )
 
-        console.log(project.initial_date)
         const timeChristInitialDateProject =
           initialDateProject.fullDate.includes('-')
             ? 'Antes de Cristo'

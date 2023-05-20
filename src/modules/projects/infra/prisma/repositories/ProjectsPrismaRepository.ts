@@ -118,6 +118,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
                 },
               },
             },
+            timeEventToDo: true,
           },
         },
         _count: {

@@ -14,7 +14,7 @@ export abstract class IDateProvider {
   abstract removeHours(hours: number, date: Date): Date
   abstract isBefore({ startDate, endDate }: IIsBefore): boolean
   abstract addDaysInDate(date: Date, days: number): Date
-  abstract getTimestamp(date: IGetTimestamp): number
+  abstract getTimestamp(date: IGetTimestamp | Date): number
   abstract getDateByTimestamp(timestamp: number): IGetDateByTimestampResponse
   abstract removeYears(date: number, years: number): number
   abstract addYears(date: number, years: number): number
