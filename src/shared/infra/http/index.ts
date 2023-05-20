@@ -40,7 +40,6 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     origin: [
-      'http://localhost:3000',
       'https://www.ognare.com.br',
       'https://ognare.com.br',
       appTest ?? '',
