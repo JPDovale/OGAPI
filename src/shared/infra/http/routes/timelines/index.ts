@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { EnsureAuthenticatedMiddleware } from '../../middlewares/ensureAuthenticated'
+import { timeLinesRoutesDelete } from './DELETE.routes'
 import { timeLinesRoutesGet } from './GET.routes'
 import { timeLinesRoutesPatch } from './PATCH.routes'
 import { timeLinesRoutesPost } from './POST.routes'
@@ -13,3 +14,4 @@ timeLinesRoutes.use(ensureAuthenticatedMiddleware.verify)
 timeLinesRoutes.use('/', timeLinesRoutesPost)
 timeLinesRoutes.use('/', timeLinesRoutesGet)
 timeLinesRoutes.use('/', timeLinesRoutesPatch)
+timeLinesRoutes.use('/', timeLinesRoutesDelete)
