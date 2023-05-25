@@ -22,8 +22,12 @@ export class NotifyAllUsersController {
     const { content, title } = notifyAllUsersBodySchema.parse(req.body)
 
     const notifyAllUsersUseCase = container.resolve(NotifyAllUsersUseCase)
-    await notifyAllUsersUseCase.execute({ title, content })
+    const response = await notifyAllUsersUseCase.execute({ title, content })
 
-    return res.status(204).end()
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }
