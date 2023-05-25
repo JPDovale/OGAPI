@@ -15,10 +15,16 @@ export class PasswordUpdateController {
     const { oldPassword, password } = passwordUpdateBodySchema.parse(req.body)
 
     const updatePasswordUseCase = container.resolve(PasswordUpdateUseCase)
-    await updatePasswordUseCase.execute({ id, oldPassword, password })
+    const response = await updatePasswordUseCase.execute({
+      id,
+      oldPassword,
+      password,
+    })
 
-    return res
-      .status(200)
-      .json({ successMessage: 'Senha alterada com sucesso' })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

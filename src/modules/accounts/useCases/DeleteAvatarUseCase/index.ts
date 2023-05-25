@@ -1,18 +1,19 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
 }
 
 interface IResponse {
-  user: IUserInfosResponse
+  user: IUser
 }
 
 @injectable()
@@ -25,10 +26,14 @@ export class DeleteAvatarUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute({ userId }: IRequest): Promise<IResponse> {
+  async execute({ userId }: IRequest): Promise<IResolve<IResponse>> {
     const user = await this.usersRepository.findById(userId)
-
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     if (user.avatar_filename) {
       await this.storageProvider.delete(user.avatar_filename, 'avatar')
@@ -41,24 +46,18 @@ export class DeleteAvatarUseCase {
         avatar_url: null,
       },
     })
-
-    if (!updatedUser) throw makeErrorUserNotUpdate()
-
-    const userResponse = {
-      age: updatedUser.age,
-      avatar_url: updatedUser.avatar_url,
-      avatar_filename: updatedUser.avatar_filename,
-      created_at: updatedUser.created_at,
-      is_social_login: updatedUser.is_social_login,
-      email: updatedUser.email,
-      id: updatedUser.id,
-      name: updatedUser.name,
-      notifications: updatedUser.notifications ?? [],
-      sex: updatedUser.sex,
-      username: updatedUser.username,
-      new_notifications: updatedUser.new_notifications,
+    if (!updatedUser) {
+      return {
+        ok: false,
+        error: makeErrorUserNotUpdate(),
+      }
     }
 
-    return { user: userResponse }
+    return {
+      ok: true,
+      data: {
+        user: updatedUser,
+      },
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { type ISubscription } from '@modules/products/infra/repositories/entities/ISubscription'
 
-import { type INotification } from '../infra/repositories/entities/INotification'
+import { type INotification } from '../../infra/repositories/entities/INotification'
 
 export interface IUserPreview {
   email: string

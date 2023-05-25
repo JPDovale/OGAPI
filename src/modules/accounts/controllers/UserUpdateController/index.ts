@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
 import { UserUpdateUseCase } from '@modules/accounts/useCases/UserUpdateUseCase'
 import { AppError } from '@shared/errors/AppError'
 
@@ -28,7 +29,7 @@ export class UserUpdateController {
       })
 
     const userUpdateUseCase = container.resolve(UserUpdateUseCase)
-    const { user } = await userUpdateUseCase.execute({
+    const response = await userUpdateUseCase.execute({
       username,
       name,
       email,
@@ -36,7 +37,12 @@ export class UserUpdateController {
       sex,
       userId: id,
     })
+    const responsePartied = parserUserResponse(response)
 
-    return res.status(200).json({ user })
+    if (response.error) {
+      return res.status(response.error.statusCode).send(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }

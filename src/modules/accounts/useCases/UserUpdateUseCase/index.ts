@@ -1,11 +1,12 @@
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserAlreadyExistes } from '@shared/errors/users/makeErrorUserAlreadyExistes'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   username?: string
@@ -17,7 +18,7 @@ interface IRequest {
 }
 
 interface IResponse {
-  user: IUserInfosResponse
+  user: IUser
 }
 
 @injectable()
@@ -34,45 +35,48 @@ export class UserUpdateUseCase {
     sex,
     userId,
     username,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const user = await this.usersRepository.findById(userId)
-
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     if (email && email !== user.email) {
       const userAlreadyExiste = await this.usersRepository.findByEmail(email)
-
-      if (userAlreadyExiste) throw makeErrorUserAlreadyExistes()
+      if (userAlreadyExiste) {
+        return {
+          ok: false,
+          error: makeErrorUserAlreadyExistes(),
+        }
+      }
     }
 
     const updatedUser = await this.usersRepository.updateUser({
       userId,
       data: {
-        username,
-        name,
-        email,
-        age,
-        sex,
+        username: username ?? user.username,
+        name: name ?? user.name,
+        email: email ?? user.email,
+        age: age ?? user.age,
+        sex: sex ?? user.sex,
       },
     })
 
-    if (!updatedUser) throw makeErrorUserNotUpdate()
-
-    const response: IUserInfosResponse = {
-      age: updatedUser.age,
-      email: updatedUser.email,
-      avatar_filename: updatedUser.avatar_filename,
-      is_social_login: updatedUser.is_social_login,
-      avatar_url: user.avatar_filename,
-      created_at: user.created_at,
-      sex: updatedUser.sex,
-      username: updatedUser.username,
-      id: updatedUser.id,
-      notifications: updatedUser.notifications ?? [],
-      name: updatedUser.name,
-      new_notifications: updatedUser.new_notifications,
+    if (!updatedUser) {
+      return {
+        ok: false,
+        error: makeErrorUserNotUpdate(),
+      }
     }
 
-    return { user: response }
+    return {
+      ok: true,
+      data: {
+        user: updatedUser,
+      },
+    }
   }
 }

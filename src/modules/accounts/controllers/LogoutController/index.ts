@@ -8,11 +8,15 @@ export class LogoutController {
     const { id } = req.user
 
     const logoutUseCase = container.resolve(LogoutUseCase)
-    await logoutUseCase.execute({ userId: id })
+    const response = await logoutUseCase.execute({ userId: id })
+
+    if (response.error) {
+      res.status(response.error.statusCode).json(response)
+    }
 
     res.cookie('@og-refresh-token', '')
     res.cookie('@og-token', '')
 
-    return res.status(200).end()
+    return res.status(200).json(response)
   }
 }
