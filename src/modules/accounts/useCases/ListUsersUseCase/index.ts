@@ -3,6 +3,7 @@ import { inject, injectable } from 'tsyringe'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { type IUserUnchecked } from '@modules/accounts/infra/repositories/entities/IUser'
 import InjectableDependencies from '@shared/container/types'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   page?: number
@@ -19,11 +20,15 @@ export class ListUsersUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute(req?: IRequest): Promise<IResponse> {
+  async execute(req?: IRequest): Promise<IResolve<IResponse>> {
     const page = req?.page ?? 1
-
     const users = await this.usersRepository.list({ page })
 
-    return { users }
+    return {
+      ok: true,
+      data: {
+        users,
+      },
+    }
   }
 }

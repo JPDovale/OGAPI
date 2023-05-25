@@ -7,6 +7,7 @@ import { IDateProvider } from '@shared/container/providers/DateProvider/IDatePro
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserInvalidRecoveryPasswordToken } from '@shared/errors/users/makeErrorUserInvalidRecoveryPasswordToken'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   password: string
@@ -26,32 +27,49 @@ export class RecoveryPasswordUseCase {
     private readonly dateProvider: IDateProvider,
   ) {}
 
-  async execute({ password, token }: IRequest): Promise<void> {
+  async execute({ password, token }: IRequest): Promise<IResolve> {
     const userToken = await this.refreshTokenRepository.findByRefreshToken({
       refreshToken: token,
     })
 
-    if (!userToken) throw makeErrorUserInvalidRecoveryPasswordToken()
+    if (!userToken) {
+      return {
+        ok: false,
+        error: makeErrorUserInvalidRecoveryPasswordToken(),
+      }
+    }
 
     const endDateOfPasswordRecoveryRequest = new Date(userToken.expires_date)
-
     const isExpired = this.dateProvider.isBefore({
       startDate: endDateOfPasswordRecoveryRequest,
       endDate: new Date(),
     })
 
-    if (isExpired) throw makeErrorUserInvalidRecoveryPasswordToken()
+    if (isExpired) {
+      return {
+        ok: false,
+        error: makeErrorUserInvalidRecoveryPasswordToken(),
+      }
+    }
 
     const passwordHash = hashSync(password, 8)
 
     const user = await this.usersRepository.findById(userToken.user_id)
-
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     await this.usersRepository.updateUser({
       userId: user.id,
       data: { password: passwordHash },
     })
     await this.refreshTokenRepository.deleteById(userToken.id)
+
+    return {
+      ok: true,
+    }
   }
 }

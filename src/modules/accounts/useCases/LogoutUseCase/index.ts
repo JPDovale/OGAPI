@@ -4,6 +4,7 @@ import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/co
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -19,10 +20,19 @@ export class LogoutUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute({ userId }: IRequest): Promise<void> {
+  async execute({ userId }: IRequest): Promise<IResolve> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     await this.refreshTokenRepository.deletePerUserId(userId)
+
+    return {
+      ok: true,
+    }
   }
 }

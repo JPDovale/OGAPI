@@ -14,12 +14,12 @@ export class RecoveryPasswordController {
     const { password, token } = recoveryPasswordBodySchema.parse(req.body)
 
     const recoveryPasswordUseCase = container.resolve(RecoveryPasswordUseCase)
-    await recoveryPasswordUseCase.execute({ password, token })
+    const response = await recoveryPasswordUseCase.execute({ password, token })
 
-    return res.status(200).json({
-      successTitle: 'Senha alterada.',
-      successMessage:
-        'Você pode continuar sua jornada daqui, nobre viajante. Sempre que se perder pode contar com a gente.',
-    })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

@@ -15,11 +15,12 @@ export class SendForgotPasswordMailController {
     const sendForgotPasswordMailUseCase = container.resolve(
       SendForgotPasswordMailUseCase,
     )
-    await sendForgotPasswordMailUseCase.execute({ email })
+    const response = await sendForgotPasswordMailUseCase.execute({ email })
 
-    return res.status(200).json({
-      successTitle: 'Email enviado.',
-      successMessage: 'Um email de recuperação de senha foi enviado para você.',
-    })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

@@ -1,6 +1,7 @@
 import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 
+import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
 import { DeleteAvatarUseCase } from '@modules/accounts/useCases/DeleteAvatarUseCase'
 
 export class DeleteAvatarController {
@@ -8,8 +9,14 @@ export class DeleteAvatarController {
     const { id } = req.user
 
     const deleteAvatarUseCase = container.resolve(DeleteAvatarUseCase)
-    const { user } = await deleteAvatarUseCase.execute({ userId: id })
+    const response = await deleteAvatarUseCase.execute({ userId: id })
 
-    return res.status(200).json({ user })
+    const responsePartied = parserUserResponse(response)
+
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }

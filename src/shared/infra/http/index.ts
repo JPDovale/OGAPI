@@ -97,8 +97,8 @@ if (env.NODE_ENV !== 'dev') {
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
-      errorTitle: err.title,
-      errorMessage: err.message,
+      ok: false,
+      error: err,
     })
   }
 
@@ -106,16 +106,24 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     if (env.NODE_ENV === 'dev') console.log(err)
 
     return res.status(400).json({
-      errorTitle: 'Informações inválidas',
-      errorMessage: 'Verifique as informações fornecidas e tente novamente',
+      ok: false,
+      error: {
+        title: 'Informações inválidas',
+        message: 'Verifique as informações fornecidas e tente novamente',
+        statusCode: 400,
+      },
     })
   }
 
   if (err instanceof MulterError && err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
-      errorTitle: 'Imagem maior que 2 mb',
-      errorMessage:
-        'O limite de tamanho de imagens aceito é 2 mb nos planos free.',
+      ok: false,
+      error: {
+        title: 'Imagem maior que 2 mb',
+        message:
+          'O limite de tamanho de imagens aceito é 2 mb nos planos free.',
+        statusCode: 400,
+      },
     })
   }
 
@@ -123,8 +131,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     if (env.NODE_ENV === 'dev') console.log(err)
 
     res.status(500).json({
-      errorTitle: 'Internal error',
-      errorMessage: 'Internal error',
+      ok: false,
+      error: {
+        title: 'Internal error',
+        message: 'Internal error',
+        statusCode: 500,
+      },
     })
   }
 })

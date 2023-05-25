@@ -1,4 +1,4 @@
-import { type INotification } from '../infra/repositories/entities/INotification'
+import { type INotification } from '../../infra/repositories/entities/INotification'
 
 export interface IUserInfosResponse {
   id: string
