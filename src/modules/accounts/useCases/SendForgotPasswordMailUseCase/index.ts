@@ -9,6 +9,7 @@ import { IDateProvider } from '@shared/container/providers/DateProvider/IDatePro
 import { IMailProvider } from '@shared/container/providers/MailProvider/IMailProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   email: string
@@ -30,8 +31,14 @@ export class SendForgotPasswordMailUseCase {
     private readonly mailProvider: IMailProvider,
   ) {}
 
-  async execute({ email }: IRequest): Promise<void> {
+  async execute({ email }: IRequest): Promise<IResolve> {
     const user = await this.usersRepository.findByEmail(email)
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const templatePath = env.IS_DEV
       ? path.resolve(
@@ -54,10 +61,8 @@ export class SendForgotPasswordMailUseCase {
           'forgotPassword.hbs',
         )
 
-    if (!user) throw makeErrorUserNotFound()
-
     const token = randomUUID()
-    const expiresDate = this.dateProvider.addHours(1).toString()
+    const expiresDate = this.dateProvider.addHours(1)
 
     await this.refreshTokenRepository.create({
       refresh_token: token,
@@ -76,5 +81,9 @@ export class SendForgotPasswordMailUseCase {
       path: templatePath,
       variables,
     })
+
+    return {
+      ok: true,
+    }
   }
 }

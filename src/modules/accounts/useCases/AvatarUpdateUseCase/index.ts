@@ -2,12 +2,14 @@ import fs from 'fs'
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserInfosResponse } from '@modules/accounts/responses/IUserInfosResponse'
+import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
+import { makeInternalError } from '@shared/errors/useFull/makeInternalError'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 import { makeErrorUserNotUpdate } from '@shared/errors/users/makeErrorUserNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   file: Express.Multer.File | undefined
@@ -15,7 +17,7 @@ interface IRequest {
 }
 
 interface IResponse {
-  user: IUserInfosResponse
+  user: IUser
 }
 
 @injectable()
@@ -28,22 +30,30 @@ export class AvatarUpdateUseCase {
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute({ file, userId }: IRequest): Promise<IResponse> {
+  async execute({ file, userId }: IRequest): Promise<IResolve<IResponse>> {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) throw makeErrorUserNotFound()
-    if (!file) throw makeErrorFileNotUploaded()
+    if (!file) {
+      return {
+        ok: false,
+        error: makeErrorFileNotUploaded(),
+      }
+    }
 
     if (user.avatar_filename) {
       try {
         await this.storageProvider.delete(user.avatar_filename, 'avatar')
       } catch (err) {
         console.log(err)
+        return {
+          ok: false,
+          error: makeInternalError(),
+        }
       }
     }
 
     const url = await this.storageProvider.upload(file, 'avatar')
-
     const updatedUser = await this.usersRepository.updateUser({
       userId,
       data: {
@@ -52,27 +62,20 @@ export class AvatarUpdateUseCase {
       },
     })
 
-    if (!updatedUser) throw makeErrorUserNotUpdate()
-
-    const response: IUserInfosResponse = {
-      age: updatedUser.age,
-      email: updatedUser.email,
-      sex: updatedUser.sex,
-      username: updatedUser.username,
-      avatar_filename: updatedUser.avatar_filename,
-      avatar_url: updatedUser.avatar_url,
-      created_at: updatedUser.created_at,
-      id: updatedUser.id,
-      notifications: updatedUser.notifications ?? [],
-      name: updatedUser.name,
-      is_social_login: updatedUser.is_social_login,
-      new_notifications: updatedUser.new_notifications,
+    if (!updatedUser) {
+      return {
+        ok: false,
+        error: makeErrorUserNotUpdate(),
+      }
     }
 
     fs.rmSync(file.path)
 
     return {
-      user: response,
+      ok: true,
+      data: {
+        user: updatedUser,
+      },
     }
   }
 }

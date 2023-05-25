@@ -8,10 +8,13 @@ export class RefreshTokenController {
     const token = req.cookies['@og-refresh-token']
 
     const refreshTokenUseCase = container.resolve(RefreshTokenUseCase)
-    const { refreshToken, token: accessToken } =
-      await refreshTokenUseCase.execute({ token })
+    const response = await refreshTokenUseCase.execute({ token })
 
-    res.cookie('@og-refresh-token', refreshToken, {
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    res.cookie('@og-refresh-token', response.data?.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       httpOnly: true,
       path: '/',
@@ -19,7 +22,7 @@ export class RefreshTokenController {
       secure: true,
     })
 
-    res.cookie('@og-token', accessToken, {
+    res.cookie('@og-token', response.data?.token, {
       maxAge: 1000 * 60 * 10, // 10 min
       httpOnly: true,
       path: '/',
@@ -27,6 +30,8 @@ export class RefreshTokenController {
       secure: true,
     })
 
-    return res.status(204).end()
+    return res.status(200).json({
+      ok: response.ok,
+    })
   }
 }

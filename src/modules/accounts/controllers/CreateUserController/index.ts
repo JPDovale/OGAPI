@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
 import { CreateSessionUseCase } from '@modules/accounts/useCases/CreateSessionUseCase'
 import { CreateUserUseCase } from '@modules/accounts/useCases/CreateUserUseCase'
 
@@ -22,7 +23,7 @@ export class CreateUserController {
     const createUserUseCase = container.resolve(CreateUserUseCase)
     const createSessionUseCase = container.resolve(CreateSessionUseCase)
 
-    const { user } = await createUserUseCase.execute({
+    const responseUserCreated = await createUserUseCase.execute({
       name,
       age,
       email,
@@ -31,24 +32,42 @@ export class CreateUserController {
       username,
     })
 
-    const {
-      refreshToken,
-      token,
-      user: userInfos,
-    } = await createSessionUseCase.execute({
-      email: user.email,
+    const responseUserCreatedPartied = parserUserResponse(responseUserCreated)
+
+    if (responseUserCreated.error) {
+      return res
+        .status(responseUserCreated.error.statusCode)
+        .json(responseUserCreatedPartied)
+    }
+
+    const responseUserCreatedSession = await createSessionUseCase.execute({
+      email: responseUserCreated.data!.user.email,
       password,
     })
 
-    res.cookie('@og-refresh-token', refreshToken, {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      httpOnly: true,
-      path: '/',
-      sameSite: 'none',
-      secure: true,
-    })
+    const responseUserCreatedSessionPartied = parserUserResponse(
+      responseUserCreatedSession,
+    )
 
-    res.cookie('@og-token', token, {
+    if (responseUserCreatedSession.error) {
+      return res
+        .status(responseUserCreatedSession.error.statusCode)
+        .json(responseUserCreatedSessionPartied)
+    }
+
+    res.cookie(
+      '@og-refresh-token',
+      responseUserCreatedSession.data?.refreshToken,
+      {
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        httpOnly: true,
+        path: '/',
+        sameSite: 'none',
+        secure: true,
+      },
+    )
+
+    res.cookie('@og-token', responseUserCreatedSession.data?.token, {
       maxAge: 1000 * 60 * 10, // 10 min
       httpOnly: true,
       path: '/',
@@ -56,6 +75,6 @@ export class CreateUserController {
       secure: true,
     })
 
-    return res.status(200).json({ user: userInfos })
+    return res.status(200).json(responseUserCreatedSessionPartied)
   }
 }

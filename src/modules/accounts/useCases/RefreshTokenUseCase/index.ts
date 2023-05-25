@@ -7,9 +7,9 @@ import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/co
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
-import { makeErrorRefreshTokenInvalid } from '@shared/errors/refreshToken/makeErrorRefreshTokenInvalid'
 import { makeErrorSessionExpires } from '@shared/errors/users/makeErrorSessionExpires'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IPayload {
   sub: string
@@ -40,8 +40,13 @@ export class RefreshTokenUseCase {
     private readonly userRepository: IUsersRepository,
   ) {}
 
-  async execute({ token }: IRequest): Promise<IResponse> {
-    if (!token) throw makeErrorSessionExpires()
+  async execute({ token }: IRequest): Promise<IResolve<IResponse>> {
+    if (!token) {
+      return {
+        ok: false,
+        error: makeErrorSessionExpires(),
+      }
+    }
 
     let userId = ''
 
@@ -49,24 +54,19 @@ export class RefreshTokenUseCase {
       const { sub } = verify(token, session.secretRefreshToken) as IPayload
 
       userId = sub
-    } catch (err) {
-      throw makeErrorSessionExpires()
+    } catch {
+      return {
+        ok: false,
+        error: makeErrorSessionExpires(),
+      }
     }
 
     const userExiste = await this.userRepository.findById(userId)
-    if (!userExiste) throw makeErrorUserNotFound()
-
-    const userEssentialInfos = {
-      admin: userExiste.admin,
-      email: userExiste.email,
-      id: userExiste.id,
-      name: userExiste.name,
-      username: userExiste.username,
-      _count: {
-        books: userExiste._count?.books ?? 0,
-        projects: userExiste._count?.projects ?? 0,
-      },
-      last_payment_date: userExiste.last_payment_date,
+    if (!userExiste) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
     }
 
     const userToken =
@@ -74,25 +74,32 @@ export class RefreshTokenUseCase {
         userId,
         token,
       )
-    if (!userToken) throw makeErrorRefreshTokenInvalid()
+    if (!userToken) {
+      return {
+        ok: false,
+        error: makeErrorSessionExpires(),
+      }
+    }
 
     const tokenIsValid = this.dateProvider.isBefore({
       startDate: new Date(),
       endDate: userToken.expires_date,
     })
 
-    if (!tokenIsValid) {
-      await this.refreshTokenRepository.deleteById(userToken.id)
-      throw makeErrorSessionExpires()
-    }
-
     await this.refreshTokenRepository.deleteById(userToken.id)
+
+    if (!tokenIsValid) {
+      return {
+        ok: false,
+        error: makeErrorSessionExpires(),
+      }
+    }
 
     const refreshToken = sign(
       {
-        admin: userEssentialInfos.admin,
-        name: userEssentialInfos.name,
-        email: userEssentialInfos.email,
+        admin: userExiste.admin,
+        name: userExiste.name,
+        email: userExiste.email,
       },
       session.secretRefreshToken,
       {
@@ -113,17 +120,23 @@ export class RefreshTokenUseCase {
 
     const newToken = sign(
       {
-        admin: userEssentialInfos.admin,
-        name: userEssentialInfos.name,
-        email: userEssentialInfos.email,
+        admin: userExiste.admin,
+        name: userExiste.name,
+        email: userExiste.email,
       },
       session.secretToken,
       {
-        subject: userEssentialInfos.id,
+        subject: userExiste.id,
         expiresIn: session.expiresInToken,
       },
     )
 
-    return { refreshToken, token: newToken }
+    return {
+      ok: true,
+      data: {
+        refreshToken,
+        token: newToken,
+      },
+    }
   }
 }

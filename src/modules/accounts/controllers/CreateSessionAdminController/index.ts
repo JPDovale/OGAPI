@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
 import { CreateSessionUseCase } from '@modules/accounts/useCases/CreateSessionUseCase'
 
 export class CreateSessionAdminController {
@@ -14,21 +15,19 @@ export class CreateSessionAdminController {
     const { email, password } = createSessionAdminBodySchema.parse(req.body)
 
     const createSessionUseCase = container.resolve(CreateSessionUseCase)
-    const { refreshToken, token, user, infos } =
-      await createSessionUseCase.execute({
-        email,
-        password,
-        verifyIsAdmin: true,
-      })
+    const response = await createSessionUseCase.execute({
+      email,
+      password,
+      verifyIsAdmin: true,
+    })
 
-    if (!infos.isAdmin) {
-      return res.status(401).json({
-        errorMessage: 'Unauthorized',
-        errorTitle: 'Unauthorized',
-      })
+    const responsePartied = parserUserResponse(response)
+
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
     }
 
-    res.cookie('@og-refresh-token', refreshToken, {
+    res.cookie('@og-refresh-token', response.data?.refreshToken, {
       maxAge: 1000 * 60 * 60 * 3, // 3 hours
       httpOnly: true,
       path: '/',
@@ -36,7 +35,7 @@ export class CreateSessionAdminController {
       secure: true,
     })
 
-    res.cookie('@og-token', token, {
+    res.cookie('@og-token', response.data?.token, {
       maxAge: 1000 * 60 * 10, // 10 min
       httpOnly: true,
       path: '/',
@@ -44,6 +43,6 @@ export class CreateSessionAdminController {
       secure: true,
     })
 
-    return res.status(201).json({ user })
+    return res.status(201).json(responsePartied)
   }
 }
