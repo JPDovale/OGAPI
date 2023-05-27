@@ -31,7 +31,6 @@ import bodyParser from 'body-parser'
 const app = express()
 const appName = env.APP_NAME
 const appPort = env.APP_PORT
-const appTest = env.TEST_APP_URL
 
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
 
@@ -43,12 +42,8 @@ app.use(
       'Access-Control-Allow-Origin',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    origin: [
-      'https://www.ognare.com.br',
-      'https://ognare.com.br',
-      appTest ?? '',
-    ],
     credentials: true,
+    optionsSuccessStatus: 200,
   }),
 )
 
