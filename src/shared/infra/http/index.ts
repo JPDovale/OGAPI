@@ -57,7 +57,7 @@ app.use(
       'https://www.ognare.com.br',
       'https://ognare.com.br',
       'http://localhost',
-      'http://localhost:3030',
+      'http://localhost:3000',
     ],
     preflightContinue: false,
     credentials: true,
