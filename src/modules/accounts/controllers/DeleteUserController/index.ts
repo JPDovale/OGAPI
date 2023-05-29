@@ -14,9 +14,12 @@ export class DeleteUserController {
     const { id } = deleteUserParamsSchema.parse(req.params)
 
     const deleteUserUseCase = container.resolve(DeleteUserUseCase)
+    const response = await deleteUserUseCase.execute({ userId: id ?? user.id })
 
-    await deleteUserUseCase.execute({ userId: id ?? user.id })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
 
-    return res.status(202).json({ successMessage: 'User deleted' })
+    return res.status(202).json(response)
   }
 }

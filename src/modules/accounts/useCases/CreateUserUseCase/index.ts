@@ -1,5 +1,4 @@
 import { hashSync } from 'bcryptjs'
-import dotenv from 'dotenv'
 import { inject, injectable } from 'tsyringe'
 
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
@@ -8,7 +7,7 @@ import { IMailProvider } from '@shared/container/providers/MailProvider/IMailPro
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserAlreadyExistes } from '@shared/errors/users/makeErrorUserAlreadyExistes'
 import { makeErrorUserNotCreated } from '@shared/errors/users/makeErrorUserNotCreated'
-dotenv.config()
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   name: string
@@ -33,14 +32,18 @@ export class CreateUserUseCase {
     private readonly mailProvider: IMailProvider,
   ) {}
 
-  async execute(request: IRequest): Promise<IResponse> {
+  async execute(request: IRequest): Promise<IResolve<IResponse>> {
     const { age, email, name, password, sex, username } = request
 
     const userAlreadyExiste = await this.usersRepository.findByEmail(email)
-    if (userAlreadyExiste) throw makeErrorUserAlreadyExistes()
+    if (userAlreadyExiste) {
+      return {
+        ok: false,
+        error: makeErrorUserAlreadyExistes(),
+      }
+    }
 
     const passwordHash = hashSync(password, 8)
-
     const newUser = await this.usersRepository.create({
       name,
       email,
@@ -50,7 +53,12 @@ export class CreateUserUseCase {
       username: username ?? name,
     })
 
-    if (!newUser) throw makeErrorUserNotCreated()
+    if (!newUser) {
+      return {
+        ok: false,
+        error: makeErrorUserNotCreated(),
+      }
+    }
 
     await this.mailProvider.registerInMailMarketing({
       email: newUser.email,
@@ -59,6 +67,11 @@ export class CreateUserUseCase {
       },
     })
 
-    return { user: newUser }
+    return {
+      ok: true,
+      data: {
+        user: newUser,
+      },
+    }
   }
 }

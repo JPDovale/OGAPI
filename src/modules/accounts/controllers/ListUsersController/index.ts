@@ -13,8 +13,8 @@ export class ListUsersController {
     const { page } = listUsersQuerySchema.parse(req.query)
 
     const listUsersUseCase = container.resolve(ListUsersUseCase)
-    const { users } = await listUsersUseCase.execute({ page })
+    const response = await listUsersUseCase.execute({ page })
 
-    return res.status(200).json({ users })
+    return res.status(200).json(response)
   }
 }

@@ -4,6 +4,7 @@ import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts
 import { IStorageProvider } from '@shared/container/providers/StorageProvider/IStorageProvider'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -19,15 +20,22 @@ export class DeleteUserUseCase {
     private readonly storageProvider: IStorageProvider,
   ) {}
 
-  async execute({ userId }: IRequest): Promise<void> {
+  async execute({ userId }: IRequest): Promise<IResolve> {
     const user = await this.usersRepository.findById(userId)
-
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     await this.usersRepository.delete(userId)
-
     if (user.avatar_filename) {
       await this.storageProvider.delete(user.avatar_filename, 'avatar')
+    }
+
+    return {
+      ok: true,
     }
   }
 }
