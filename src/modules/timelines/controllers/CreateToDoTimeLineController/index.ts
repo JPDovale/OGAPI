@@ -2,7 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
-import { CreateToDoTimeLineUseCase } from '@modules/timelines/useCases/CreateToDoTimeLineUseCase '
+import { CreateToDoTimeLineUseCase } from '@modules/timelines/useCases/CreateToDoTimeLineUseCase'
 
 export class CreateToDoTimeLineController {
   async handle(req: Request, res: Response): Promise<Response> {
