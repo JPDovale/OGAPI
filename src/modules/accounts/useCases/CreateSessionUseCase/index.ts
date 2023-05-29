@@ -5,11 +5,12 @@ import { inject, injectable } from 'tsyringe'
 import session from '@config/session'
 import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
-import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
+import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import InjectableDependencies from '@shared/container/types'
+import { makeErrorAccessDenied } from '@shared/errors/useFull/makeErrorAccessDenied'
 import { makeErrorUserInvalidCredentialsToLogin } from '@shared/errors/users/makeErrorUserInvalidCredentialsToLogin'
-import { makeUserPreviewResponse } from '@utils/responses/makeUserPreviewResponse'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   email: string
@@ -18,7 +19,7 @@ interface IRequest {
 }
 
 interface IResponse {
-  user: IUserPreview
+  user: IUser
   refreshToken: string
   token: string
   infos: {
@@ -43,7 +44,7 @@ export class CreateSessionUseCase {
     email,
     password,
     verifyIsAdmin = false,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const {
       expiresInToken,
       secretToken,
@@ -53,19 +54,25 @@ export class CreateSessionUseCase {
     } = session
 
     const userExiste = await this.userRepository.findByEmail(email)
-    if (!userExiste) throw makeErrorUserInvalidCredentialsToLogin()
+    if (!userExiste) {
+      return {
+        ok: false,
+        error: makeErrorUserInvalidCredentialsToLogin(),
+      }
+    }
 
     const passwordCorrect = compareSync(password, userExiste.password)
-    if (!passwordCorrect) throw makeErrorUserInvalidCredentialsToLogin()
+    if (!passwordCorrect) {
+      return {
+        ok: false,
+        error: makeErrorUserInvalidCredentialsToLogin(),
+      }
+    }
 
     if (verifyIsAdmin && !userExiste.admin) {
       return {
-        user: makeUserPreviewResponse(userExiste),
-        refreshToken: '',
-        token: '',
-        infos: {
-          isAdmin: false,
-        },
+        ok: false,
+        error: makeErrorAccessDenied(),
       }
     }
 
@@ -108,11 +115,14 @@ export class CreateSessionUseCase {
     })
 
     return {
-      user: makeUserPreviewResponse(userExiste),
-      refreshToken,
-      token,
-      infos: {
-        isAdmin: verifyIsAdmin ? userExiste.admin : false,
+      ok: true,
+      data: {
+        user: userExiste,
+        refreshToken,
+        token,
+        infos: {
+          isAdmin: verifyIsAdmin ? userExiste.admin : false,
+        },
       },
     }
   }

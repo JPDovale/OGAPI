@@ -1,5 +1,11 @@
 # ogapi
 
+## 0.4.0
+
+### Minor Changes
+
+- updating return types
+
 ## 0.3.2
 
 ### Patch Changes
@@ -11,6 +17,7 @@
 ### Patch Changes
 
 - add new time lines
+- fix problems on logic
 
 ## 0.3.0
 

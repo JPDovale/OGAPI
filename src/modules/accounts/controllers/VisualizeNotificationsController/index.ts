@@ -1,6 +1,7 @@
 import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 
+import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
 import { VisualizeNotificationsUseCase } from '@modules/accounts/useCases/VisualizeNotificationsUseCase'
 
 export class VisualizeNotificationsController {
@@ -10,8 +11,13 @@ export class VisualizeNotificationsController {
     const visualizeNotificationsUseCase = container.resolve(
       VisualizeNotificationsUseCase,
     )
-    const { user } = await visualizeNotificationsUseCase.execute({ userId: id })
+    const response = await visualizeNotificationsUseCase.execute({ userId: id })
+    const responsePartied = parserUserResponse(response)
 
-    return res.status(200).json({ user })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }
