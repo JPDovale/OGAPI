@@ -17,12 +17,16 @@ export class CopyTimeLineToProjectController {
     const copyTimeLineToProjectUseCase = container.resolve(
       CopyTimeLineToProjectUseCase,
     )
-    await copyTimeLineToProjectUseCase.execute({
+    const response = await copyTimeLineToProjectUseCase.execute({
       userId: id,
       projectId,
       timeLineId,
     })
 
-    return res.status(201).end()
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(201).json(response)
   }
 }

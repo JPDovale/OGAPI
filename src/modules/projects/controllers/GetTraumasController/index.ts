@@ -14,11 +14,15 @@ export class GetTraumasController {
     const { projectId } = GetTraumasControllerParamsSchema.parse(req.params)
 
     const getTraumasUseCase = container.resolve(GetTraumasUseCase)
-    const { traumas } = await getTraumasUseCase.execute({
+    const response = await getTraumasUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ traumas })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

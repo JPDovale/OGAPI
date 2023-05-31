@@ -9,6 +9,7 @@ import { makeErrorProjectQuitAlreadyDone } from '@shared/errors/projects/makeErr
 import { makeErrorProjectQuitNotExecuted } from '@shared/errors/projects/makeErrorProjectQuitNotExecuted'
 import { makeErrorProjectQuitPerCreator } from '@shared/errors/projects/makeErrorProjectQuitPerCreator'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -34,14 +35,29 @@ export class QuitProjectUseCase {
     private readonly notifyUsersProvider: INotifyUsersProvider,
   ) {}
 
-  async execute({ userId, projectId }: IRequest): Promise<void> {
+  async execute({ userId, projectId }: IRequest): Promise<IResolve> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const project = await this.projectsRepository.findById(projectId)
-    if (!project) throw makeErrorProjectNotFound()
+    if (!project) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotFound(),
+      }
+    }
 
-    if (userId === project.user_id) throw makeErrorProjectQuitPerCreator()
+    if (userId === project.user_id) {
+      return {
+        ok: false,
+        error: makeErrorProjectQuitPerCreator(),
+      }
+    }
 
     const usersWithPermissionToComment =
       project.users_with_access_comment?.users ?? []
@@ -75,7 +91,12 @@ export class QuitProjectUseCase {
       (access) => access.userHasPermissionInProject,
     )
 
-    if (!userHaveAccessIn) throw makeErrorProjectQuitAlreadyDone()
+    if (!userHaveAccessIn) {
+      return {
+        ok: false,
+        error: makeErrorProjectQuitAlreadyDone(),
+      }
+    }
 
     // this select part of map of users with access based in type of permission this user and make filter to remove then of project
     const usersWithAccess = mapUsersInProject[userHaveAccessIn.indexOfMap]
@@ -89,7 +110,12 @@ export class QuitProjectUseCase {
       permission: userHaveAccessIn.accessTo,
     })
 
-    if (!updatedProject) throw makeErrorProjectQuitNotExecuted()
+    if (!updatedProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectQuitNotExecuted(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project: updatedProject,
@@ -97,5 +123,9 @@ export class QuitProjectUseCase {
       title: `${user.username} saiu do projeto.`,
       content: `${user.username} acabou de sair do projeto ${project.name}`,
     })
+
+    return {
+      ok: true,
+    }
   }
 }

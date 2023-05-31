@@ -14,11 +14,15 @@ export class GetDreamsController {
     const { projectId } = GetDreamsControllerParamsSchema.parse(req.params)
 
     const getDreamsUseCase = container.resolve(GetDreamsUseCase)
-    const { dreams } = await getDreamsUseCase.execute({
+    const response = await getDreamsUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ dreams })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

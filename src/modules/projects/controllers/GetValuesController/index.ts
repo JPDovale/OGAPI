@@ -14,11 +14,15 @@ export class GetValuesController {
     const { projectId } = GetValuesControllerParamsSchema.parse(req.params)
 
     const getValuesUseCase = container.resolve(GetValuesUseCase)
-    const { values } = await getValuesUseCase.execute({
+    const response = await getValuesUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ values })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

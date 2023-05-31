@@ -1,5 +1,5 @@
 import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
-import { type IUserPreview } from '@modules/accounts/responses/IUserPreview'
+import { type IUserPreview } from '@modules/accounts/responses/types/IUserPreview'
 
 export function makeUserPreviewResponse(user: IUser): IUserPreview {
   return {

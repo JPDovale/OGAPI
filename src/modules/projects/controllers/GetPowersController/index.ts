@@ -14,11 +14,15 @@ export class GetPowersController {
     const { projectId } = GetPowersControllerParamsSchema.parse(req.params)
 
     const getPowersUseCase = container.resolve(GetPowersUseCase)
-    const { powers } = await getPowersUseCase.execute({
+    const response = await getPowersUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ powers })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

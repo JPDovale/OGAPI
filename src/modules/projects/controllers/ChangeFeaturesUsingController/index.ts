@@ -22,12 +22,16 @@ export class ChangeFeaturesUsingController {
     const changeFeaturesUsingUseCase = container.resolve(
       ChangeFeaturesUsingUseCase,
     )
-    await changeFeaturesUsingUseCase.execute({
+    const response = await changeFeaturesUsingUseCase.execute({
       userId: id,
       projectId,
       features,
     })
 
-    return res.status(204).end()
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

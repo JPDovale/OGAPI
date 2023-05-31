@@ -14,11 +14,15 @@ export class GetAppearancesController {
     const { projectId } = GetAppearancesControllerParamsSchema.parse(req.params)
 
     const getAppearancesUseCase = container.resolve(GetAppearancesUseCase)
-    const { appearances } = await getAppearancesUseCase.execute({
+    const response = await getAppearancesUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ appearances })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

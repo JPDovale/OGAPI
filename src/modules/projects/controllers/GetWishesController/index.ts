@@ -14,11 +14,15 @@ export class GetWishesController {
     const { projectId } = GetWishesControllerParamsSchema.parse(req.params)
 
     const getWishesUseCase = container.resolve(GetWishesUseCase)
-    const { wishes } = await getWishesUseCase.execute({
+    const response = await getWishesUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ wishes })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

@@ -14,11 +14,15 @@ export class GetFearsController {
     const { projectId } = GetFearsControllerParamsSchema.parse(req.params)
 
     const getFearsUseCase = container.resolve(GetFearsUseCase)
-    const { fears } = await getFearsUseCase.execute({
+    const response = await getFearsUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ fears })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

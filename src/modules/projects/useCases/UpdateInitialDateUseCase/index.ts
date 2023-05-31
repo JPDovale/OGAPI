@@ -10,6 +10,7 @@ import { IDateProvider } from '@shared/container/providers/DateProvider/IDatePro
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorTimeLineNotCreated } from '@shared/errors/timelines/makeErrorTimeLineNotCreated'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -17,8 +18,6 @@ interface IRequest {
   initialDate: number
   timeChrist: 'A.C.' | 'D.C.'
 }
-
-type IResponse = Promise<void>
 
 @injectable()
 export class UpdateInitialDateUseCase {
@@ -47,13 +46,22 @@ export class UpdateInitialDateUseCase {
     timeChrist,
     projectId,
     userId,
-  }: IRequest): IResponse {
-    const { project } = await this.verifyPermissions.verify({
+  }: IRequest): Promise<IResolve> {
+    const verification = await this.verifyPermissions.verify({
       projectId,
       userId,
       verifyPermissionTo: 'edit',
       verifyFeatureInProject: ['timeLines'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project } = verification.data!
 
     const mainTimeLineProject =
       await this.timeLinesRepository.findMainOfProject(projectId)
@@ -217,6 +225,10 @@ export class UpdateInitialDateUseCase {
           }),
         )
       })
+    }
+
+    return {
+      ok: true,
     }
   }
 }

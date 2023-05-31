@@ -14,11 +14,15 @@ export class GetObjectivesController {
     const { projectId } = GetObjectivesControllerParamsSchema.parse(req.params)
 
     const getObjectivesUseCase = container.resolve(GetObjectivesUseCase)
-    const { objectives } = await getObjectivesUseCase.execute({
+    const response = await getObjectivesUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ objectives })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }
