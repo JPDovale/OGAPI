@@ -26,14 +26,14 @@ container.registerSingleton<INotifyUsersProvider>(
   NotifyUsersProvider,
 )
 
-container.registerInstance<IMailProvider>(
-  'EtherealMailProvider',
-  new EtherealMailProvider(),
-)
+// container.registerInstance<IMailProvider>(
+//   'EtherealMailProvider',
+//   new EtherealMailProvider(),
+// )
 
 container.registerInstance<IMailProvider>(
   'MailGunProvider',
-  env.IS_DEV ? new EtherealMailProvider() : new SendinBlueProvider(),
+  !env.IS_DEV ? new EtherealMailProvider() : new SendinBlueProvider(),
 )
 
 container.registerSingleton<ICacheProvider>('CacheProvider', RedisCacheProvider)

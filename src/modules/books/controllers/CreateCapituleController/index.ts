@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserCapituleResponse } from '@modules/books/responses/parsers/ParserCapituleResponse'
 import { CreateCapituleUseCase } from '@modules/books/useCases/CreateCapituleUseCase'
 
 export class CreateCapituleController {
@@ -41,7 +42,7 @@ export class CreateCapituleController {
     )
 
     const createCapituleUseCase = container.resolve(CreateCapituleUseCase)
-    const { capitule } = await createCapituleUseCase.execute({
+    const response = await createCapituleUseCase.execute({
       bookId,
       name,
       objective,
@@ -52,7 +53,11 @@ export class CreateCapituleController {
       },
       userId: id,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ capitule })
+    const parserCapituleResponse = container.resolve(ParserCapituleResponse)
+    const responsePartied = parserCapituleResponse.parser(response)
+
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

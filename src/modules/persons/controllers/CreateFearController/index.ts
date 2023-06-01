@@ -25,13 +25,14 @@ export class CreateFearController {
 
     const createFearUseCase = container.resolve(CreateFearUseCase)
 
-    const { fear } = await createFearUseCase.execute({
+    const response = await createFearUseCase.execute({
       userId: id,
       personId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ fear })
+    return res.status(responseStatusCode).json(response)
   }
 }

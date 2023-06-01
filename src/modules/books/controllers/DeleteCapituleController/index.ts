@@ -15,12 +15,14 @@ export class DeleteCapituleController {
     const { bookId, capituleId } = deleteCapituleParamsSchema.parse(req.params)
 
     const deleteCapituleUseCase = container.resolve(DeleteCapituleUseCase)
-    const { capitules, writtenWords } = await deleteCapituleUseCase.execute({
+    const response = await deleteCapituleUseCase.execute({
       userId: id,
       bookId,
       capituleId,
     })
 
-    return res.status(200).json({ capitules, writtenWords })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

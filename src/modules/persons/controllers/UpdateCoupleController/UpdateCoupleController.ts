@@ -28,7 +28,7 @@ export class UpdateCoupleController {
     )
 
     const updateCoupleUseCase = container.resolve(UpdateCoupleUseCase)
-    const { couple } = await updateCoupleUseCase.execute({
+    const response = await updateCoupleUseCase.execute({
       userId: id,
       personId,
       coupleId,
@@ -36,7 +36,8 @@ export class UpdateCoupleController {
       title,
       untilEnd,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ couple })
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -4,7 +4,6 @@ import { z } from 'zod'
 
 import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
 import { UserUpdateUseCase } from '@modules/accounts/useCases/UserUpdateUseCase'
-import { AppError } from '@shared/errors/AppError'
 
 export class UserUpdateController {
   async handle(req: Request, res: Response): Promise<Response> {
@@ -21,13 +20,6 @@ export class UserUpdateController {
       req.body,
     )
 
-    if (!username && !name && !email && !age && !sex)
-      throw new AppError({
-        title: 'Ausência de informações',
-        message: 'Nenhuma informação recebida para efetuar a alteração',
-        statusCode: 409,
-      })
-
     const userUpdateUseCase = container.resolve(UserUpdateUseCase)
     const response = await userUpdateUseCase.execute({
       username,
@@ -38,11 +30,8 @@ export class UserUpdateController {
       userId: id,
     })
     const responsePartied = parserUserResponse(response)
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    if (response.error) {
-      return res.status(response.error.statusCode).send(responsePartied)
-    }
-
-    return res.status(200).json(responsePartied)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

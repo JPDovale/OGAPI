@@ -15,6 +15,8 @@ export class ListUsersController {
     const listUsersUseCase = container.resolve(ListUsersUseCase)
     const response = await listUsersUseCase.execute({ page })
 
-    return res.status(200).json(response)
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserPersonResponse } from '@modules/persons/responses/parsers/ParserPersonResponse'
 import { GetAppearancesUseCase } from '@modules/projects/useCases/GetAppearancesUseCase'
 
 export class GetAppearancesController {
@@ -18,11 +19,21 @@ export class GetAppearancesController {
       userId: id,
       projectId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(response)
+    const parserPersonsResponse = container.resolve(ParserPersonResponse)
+    const appearancesPartied = parserPersonsResponse.parserAppearances(
+      response.data?.appearances ?? [],
+    )
+
+    const responsePartied = {
+      ok: response.ok,
+      error: response.error,
+      data: {
+        appearances: appearancesPartied,
+      },
     }
 
-    return res.status(200).json(response)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

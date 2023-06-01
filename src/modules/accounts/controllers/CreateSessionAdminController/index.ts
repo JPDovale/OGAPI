@@ -23,9 +23,7 @@ export class CreateSessionAdminController {
 
     const responsePartied = parserUserResponse(response)
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(responsePartied)
-    }
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
     res.cookie('@og-refresh-token', response.data?.refreshToken, {
       maxAge: 1000 * 60 * 60 * 3, // 3 hours
@@ -43,6 +41,6 @@ export class CreateSessionAdminController {
       secure: true,
     })
 
-    return res.status(201).json(responsePartied)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

@@ -5,6 +5,7 @@ import { IPersonsRepository } from '@modules/persons/infra/repositories/contract
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   personId: string
@@ -25,16 +26,33 @@ export class DeleteCoupleUseCase {
     private readonly couplesRepository: ICouplesRepository,
   ) {}
 
-  async execute({ userId, personId, coupleId }: IRequest): Promise<void> {
+  async execute({ userId, personId, coupleId }: IRequest): Promise<IResolve> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
 
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
+
     await this.couplesRepository.delete(coupleId)
+
+    return {
+      ok: true,
+    }
   }
 }

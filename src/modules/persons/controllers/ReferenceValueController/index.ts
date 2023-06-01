@@ -17,12 +17,13 @@ export class ReferenceValueController {
     )
 
     const referenceValueUseCase = container.resolve(ReferenceValueUseCase)
-    await referenceValueUseCase.execute({
+    const response = await referenceValueUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

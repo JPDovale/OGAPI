@@ -15,12 +15,13 @@ export class DeleteFearController {
     const { personId, fearId } = deleteFearParamsSchema.parse(req.params)
 
     const deleteFearUseCase = container.resolve(DeleteFearUseCase)
-    await deleteFearUseCase.execute({
+    const response = await deleteFearUseCase.execute({
       userId: id,
       personId,
       fearId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -9,10 +9,7 @@ export class RefreshTokenController {
 
     const refreshTokenUseCase = container.resolve(RefreshTokenUseCase)
     const response = await refreshTokenUseCase.execute({ token })
-
-    if (response.error) {
-      return res.status(response.error.statusCode).json(response)
-    }
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
     res.cookie('@og-refresh-token', response.data?.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
@@ -30,7 +27,7 @@ export class RefreshTokenController {
       secure: true,
     })
 
-    return res.status(200).json({
+    return res.status(responseStatusCode).json({
       ok: response.ok,
     })
   }

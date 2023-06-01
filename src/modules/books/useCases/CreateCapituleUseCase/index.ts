@@ -8,6 +8,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   bookId: string
@@ -47,15 +48,30 @@ export class CreateCapituleUseCase {
     objective,
     structure,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    const { project, user } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const numberOfCapitules = book.capitules?.length ?? 0
 
@@ -69,7 +85,12 @@ export class CreateCapituleUseCase {
       structure_act_3: structure?.act3,
     })
 
-    if (!capitule) throw makeErrorBookNotUpdate()
+    if (!capitule) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
@@ -84,6 +105,11 @@ export class CreateCapituleUseCase {
       } -> capítulos' para ver mais informações.`,
     })
 
-    return { capitule }
+    return {
+      ok: true,
+      data: {
+        capitule,
+      },
+    }
   }
 }

@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserBookResponse } from '@modules/books/responses/parsers/ParserBookResponse'
 import { UpdateBookUseCase } from '@modules/books/useCases/UpdateBookUseCase'
 
 export class UpdateBookController {
@@ -24,7 +25,7 @@ export class UpdateBookController {
       updateBookBodySchema.parse(req.body)
 
     const updateBookUseCase = container.resolve(UpdateBookUseCase)
-    const updatedBook = await updateBookUseCase.execute({
+    const response = await updateBookUseCase.execute({
       userId: id,
       literaryGenere,
       title,
@@ -33,7 +34,11 @@ export class UpdateBookController {
       isbn,
       bookId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ book: updatedBook })
+    const parserBookResponse = container.resolve(ParserBookResponse)
+    const responsePartied = parserBookResponse.parser(response)
+
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

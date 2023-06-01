@@ -7,6 +7,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorImageNotFound } from '@shared/errors/useFull/makeErrorImageNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -29,17 +30,37 @@ export class RemoveFrontCoverUseCase {
     private readonly storageProvider: IStorageProvider,
   ) {}
 
-  async execute({ bookId, userId }: IRequest): Promise<void> {
+  async execute({ bookId, userId }: IRequest): Promise<IResolve> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    const { user, project } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
-    if (!book.front_cover_filename) throw makeErrorImageNotFound()
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
+
+    if (!book.front_cover_filename) {
+      return {
+        ok: false,
+        error: makeErrorImageNotFound(),
+      }
+    }
 
     await this.booksRepository.update({
       bookId,
@@ -60,5 +81,9 @@ export class RemoveFrontCoverUseCase {
     })
 
     await this.storageProvider.delete(book.front_cover_filename, 'books/images')
+
+    return {
+      ok: true,
+    }
   }
 }

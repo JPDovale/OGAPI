@@ -14,11 +14,13 @@ export class RemoveFrontCoverController {
     const { bookId } = removeFrontCoverParamsSchema.parse(req.params)
 
     const removeFrontCoverUseCase = container.resolve(RemoveFrontCoverUseCase)
-    await removeFrontCoverUseCase.execute({
+    const response = await removeFrontCoverUseCase.execute({
       bookId,
       userId: id,
     })
 
-    return res.status(204).end()
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -15,12 +15,13 @@ export class DeleteTraumaController {
     const { personId, traumaId } = deleteTraumaParamsSchema.parse(req.params)
 
     const deleteTraumaUseCase = container.resolve(DeleteTraumaUseCase)
-    await deleteTraumaUseCase.execute({
+    const response = await deleteTraumaUseCase.execute({
       userId: id,
       personId,
       traumaId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

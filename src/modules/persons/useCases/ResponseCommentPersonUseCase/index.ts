@@ -7,6 +7,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorCommentNotCreated } from '@shared/errors/projects/makeErrorCommentNotCreated'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -37,15 +38,28 @@ export class ResponseCommentPersonUseCase {
     content,
     personId,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'comment',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const { response } = await this.commentsRepository.createResponse(
       {
@@ -60,10 +74,18 @@ export class ResponseCommentPersonUseCase {
       },
     )
 
-    if (!response) throw makeErrorCommentNotCreated()
+    if (!response) {
+      return {
+        ok: false,
+        error: makeErrorCommentNotCreated(),
+      }
+    }
 
     return {
-      response,
+      ok: true,
+      data: {
+        response,
+      },
     }
   }
 }

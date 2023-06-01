@@ -29,7 +29,7 @@ export class UpdateObjectiveController {
       updateObjectiveBodySchema.parse(req.body)
 
     const updateObjectiveUseCase = container.resolve(UpdateObjectiveUseCase)
-    const { objective } = await updateObjectiveUseCase.execute({
+    const response = await updateObjectiveUseCase.execute({
       userId: id,
       personId,
       objectiveId,
@@ -37,7 +37,8 @@ export class UpdateObjectiveController {
       itBeRealized,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ objective })
+    return res.status(responseStatusCode).json(response)
   }
 }

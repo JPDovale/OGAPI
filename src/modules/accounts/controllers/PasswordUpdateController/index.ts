@@ -20,11 +20,8 @@ export class PasswordUpdateController {
       oldPassword,
       password,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(response)
-    }
-
-    return res.status(200).json(response)
+    return res.status(responseStatusCode).json(response)
   }
 }

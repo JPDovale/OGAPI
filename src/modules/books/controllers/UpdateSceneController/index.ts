@@ -44,7 +44,7 @@ export class UpdateSceneController {
       updateSceneBodySchema.parse(req.body)
 
     const updateSceneUseCase = container.resolve(UpdateSceneUseCase)
-    const { bookWrittenWords, scene } = await updateSceneUseCase.execute({
+    const response = await updateSceneUseCase.execute({
       userId: id,
       bookId,
       capituleId,
@@ -56,6 +56,8 @@ export class UpdateSceneController {
       writtenWords,
     })
 
-    return res.status(200).json({ bookWrittenWords, scene })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

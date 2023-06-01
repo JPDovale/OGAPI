@@ -8,6 +8,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -36,16 +37,40 @@ export class UpdateFrontCoverBookUseCase {
     private readonly storageProvider: IStorageProvider,
   ) {}
 
-  async execute({ bookId, file, userId }: IRequest): Promise<IResponse> {
+  async execute({
+    bookId,
+    file,
+    userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
-    if (!file) throw makeErrorFileNotUploaded()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
+    if (!file) {
+      return {
+        ok: false,
+        error: makeErrorFileNotUploaded(),
+      }
+    }
 
-    const { user, project } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     if (book.front_cover_filename) {
       await this.storageProvider.delete(
@@ -77,8 +102,11 @@ export class UpdateFrontCoverBookUseCase {
     fs.rmSync(file.path)
 
     return {
-      frontCoveFilename: file.filename,
-      frontCoverUrl: url,
+      ok: true,
+      data: {
+        frontCoveFilename: file.filename,
+        frontCoverUrl: url,
+      },
     }
   }
 }

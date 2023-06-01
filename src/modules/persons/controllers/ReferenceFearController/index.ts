@@ -17,12 +17,13 @@ export class ReferenceFearController {
     )
 
     const referenceFerUseCase = container.resolve(ReferenceFearUseCase)
-    await referenceFerUseCase.execute({
+    const response = await referenceFerUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -19,12 +19,14 @@ export class AddGenreController {
     const { genre } = addGenreBodySchema.parse(req.body)
 
     const addGenreUseCase = container.resolve(AddGenreUseCase)
-    await addGenreUseCase.execute({
+    const response = await addGenreUseCase.execute({
       userId: id,
       genre,
       bookId,
     })
 
-    return res.status(201).end()
+    const responseStatusCode = response.error ? response.error.statusCode : 201
+
+    return res.status(responseStatusCode).json(response)
   }
 }

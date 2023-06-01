@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserPersonResponse } from '@modules/persons/responses/parsers/ParserPersonResponse'
 import { GetObjectivesUseCase } from '@modules/projects/useCases/GetObjectivesUseCase'
 
 export class GetObjectivesController {
@@ -18,11 +19,20 @@ export class GetObjectivesController {
       userId: id,
       projectId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(response)
+    const parserPersonsResponse = container.resolve(ParserPersonResponse)
+    const objectivesPartied = parserPersonsResponse.parserObjectives(
+      response.data?.objectives ?? [],
+    )
+
+    const responsePartied = {
+      ok: response.ok,
+      error: response.error,
+      data: {
+        objectives: objectivesPartied,
+      },
     }
-
-    return res.status(200).json(response)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

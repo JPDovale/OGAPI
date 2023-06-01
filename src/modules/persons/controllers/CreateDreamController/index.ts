@@ -24,13 +24,14 @@ export class CreateDreamController {
     const { title, description } = createDreamBodySchema.parse(req.body)
 
     const createDreamUseCase = container.resolve(CreateDreamUseCase)
-    const { dream } = await createDreamUseCase.execute({
+    const response = await createDreamUseCase.execute({
       userId: id,
       personId,
       title,
       description,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ dream })
+    return res.status(responseStatusCode).json(response)
   }
 }

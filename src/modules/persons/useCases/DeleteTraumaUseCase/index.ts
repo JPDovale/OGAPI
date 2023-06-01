@@ -6,6 +6,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -26,22 +27,39 @@ export class DeleteTraumaUseCase {
     private readonly traumasRepository: ITraumasRepository,
   ) {}
 
-  async execute({ personId, traumaId, userId }: IRequest): Promise<void> {
+  async execute({ personId, traumaId, userId }: IRequest): Promise<IResolve> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const traumaToRemovePerson = await this.traumasRepository.findById(traumaId)
 
-    if (!traumaToRemovePerson)
-      throw makeErrorNotFound({
-        whatsNotFound: 'Trauma',
-      })
+    if (!traumaToRemovePerson) {
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Trauma',
+        }),
+      }
+    }
 
     const numbersOfPersonInTrauma = traumaToRemovePerson.persons?.length ?? 0
 
@@ -52,6 +70,10 @@ export class DeleteTraumaUseCase {
         objectId: traumaId,
         personId,
       })
+    }
+
+    return {
+      ok: true,
     }
   }
 }

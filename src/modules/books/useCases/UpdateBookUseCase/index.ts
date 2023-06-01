@@ -7,6 +7,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -43,15 +44,30 @@ export class UpdateBookUseCase {
     literaryGenere,
     title,
     subtitle,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    const { project, user } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const updatedBook = await this.booksRepository.update({
       bookId,
@@ -64,7 +80,12 @@ export class UpdateBookUseCase {
       },
     })
 
-    if (!updatedBook) throw makeErrorBookNotUpdate()
+    if (!updatedBook) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
@@ -77,6 +98,11 @@ export class UpdateBookUseCase {
       } para ver mais informações.`,
     })
 
-    return { book: updatedBook }
+    return {
+      ok: true,
+      data: {
+        book: updatedBook,
+      },
+    }
   }
 }

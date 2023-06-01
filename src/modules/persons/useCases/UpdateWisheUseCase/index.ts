@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -40,22 +41,38 @@ export class UpdateWisheUseCase {
     wisheId,
     description,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const wisheToUpdate = await this.wishesRepository.findById(wisheId)
 
     if (!wisheToUpdate) {
-      throw makeErrorNotFound({
-        whatsNotFound: 'Desejo',
-      })
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Desejo',
+        }),
+      }
     }
 
     const updatedWishe = await this.wishesRepository.update({
@@ -66,8 +83,18 @@ export class UpdateWisheUseCase {
       },
     })
 
-    if (!updatedWishe) throw makeErrorPersonNotUpdate()
+    if (!updatedWishe) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { wishe: updatedWishe }
+    return {
+      ok: true,
+      data: {
+        wishe: updatedWishe,
+      },
+    }
   }
 }

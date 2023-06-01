@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -43,24 +44,40 @@ export class CreatePersonalityUseCase {
     description,
     consequences,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
-
-    await this.verifyPermissions.verify({
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const personalityExistesToThiPerson = person.personalities?.find(
       (personality) =>
         personality.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
-    if (personalityExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'uma característica de personalidade',
-      })
+    if (personalityExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'uma característica de personalidade',
+        }),
+      }
+    }
 
     const personality = await this.personalitiesRepository.create(
       {
@@ -80,8 +97,18 @@ export class CreatePersonalityUseCase {
       personId,
     )
 
-    if (!personality) throw makeErrorPersonNotUpdate()
+    if (!personality) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { personality }
+    return {
+      ok: true,
+      data: {
+        personality,
+      },
+    }
   }
 }

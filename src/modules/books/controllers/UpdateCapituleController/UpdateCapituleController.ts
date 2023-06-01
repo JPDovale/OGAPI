@@ -42,7 +42,7 @@ export class UpdateCapituleController {
     )
 
     const updateCapituleUseCase = container.resolve(UpdateCapituleUseCase)
-    const { capitule } = await updateCapituleUseCase.execute({
+    const response = await updateCapituleUseCase.execute({
       userId: id,
       bookId,
       capituleId,
@@ -55,6 +55,8 @@ export class UpdateCapituleController {
       },
     })
 
-    return res.status(200).json({ capitule })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

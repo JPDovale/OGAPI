@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -43,24 +44,41 @@ export class CreateValueUseCase {
     description,
     title,
     exceptions,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const valueExistesToThiPerson = person.values?.find(
       (value) =>
         value.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
-    if (valueExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'um valor',
-      })
+    if (valueExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'um valor',
+        }),
+      }
+    }
 
     const value = await this.valuesRepository.create(
       {
@@ -80,8 +98,18 @@ export class CreateValueUseCase {
       personId,
     )
 
-    if (!value) throw makeErrorPersonNotUpdate()
+    if (!value) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { value }
+    return {
+      ok: true,
+      data: {
+        value,
+      },
+    }
   }
 }
