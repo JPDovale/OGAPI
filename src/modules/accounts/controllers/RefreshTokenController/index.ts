@@ -8,7 +8,10 @@ export class RefreshTokenController {
     const token = req.cookies['@og-refresh-token']
 
     const refreshTokenUseCase = container.resolve(RefreshTokenUseCase)
-    const response = await refreshTokenUseCase.execute({ token })
+    const response = await refreshTokenUseCase.execute({
+      token,
+      onApplication: String(req.headers['on-application'] ?? '@og-Web'),
+    })
     const responseStatusCode = response.error ? response.error.statusCode : 200
 
     res.cookie('@og-refresh-token', response.data?.refreshToken, {

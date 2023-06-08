@@ -51,6 +51,7 @@ app.use(
       'Pragma',
       'Cache-Control',
       'Access-Control-Allow-Origin',
+      'On-Application',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     origin: [
