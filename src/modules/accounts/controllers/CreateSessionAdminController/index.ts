@@ -19,6 +19,7 @@ export class CreateSessionAdminController {
       email,
       password,
       verifyIsAdmin: true,
+      onApplication: String(req.headers['on-application'] ?? '@og-Web'),
     })
 
     const responsePartied = parserUserResponse(response)

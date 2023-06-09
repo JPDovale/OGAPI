@@ -16,6 +16,7 @@ interface IRequest {
   email: string
   password: string
   verifyIsAdmin?: boolean
+  onApplication: string
 }
 
 interface IResponse {
@@ -44,6 +45,7 @@ export class CreateSessionUseCase {
     email,
     password,
     verifyIsAdmin = false,
+    onApplication,
   }: IRequest): Promise<IResolve<IResponse>> {
     const {
       expiresInToken,
@@ -106,12 +108,16 @@ export class CreateSessionUseCase {
       Number(expiresRefreshTokenDays),
     )
 
-    await this.refreshTokenRepository.deletePerUserId(userExiste.id)
+    await this.refreshTokenRepository.deletePerUserAndApplication(
+      userExiste.id,
+      onApplication,
+    )
 
     await this.refreshTokenRepository.create({
       expires_date: expiresDate,
       refresh_token: refreshToken,
       user_id: userExiste.id,
+      application: onApplication,
     })
 
     return {

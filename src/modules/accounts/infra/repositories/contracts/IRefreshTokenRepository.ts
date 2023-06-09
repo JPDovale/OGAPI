@@ -20,6 +20,11 @@ export abstract class IRefreshTokenRepository {
 
   abstract deletePerUserId(userId: string): Promise<void>
 
+  abstract deletePerUserAndApplication(
+    userId: string,
+    application: string,
+  ): Promise<void>
+
   abstract findByUserId(userId: string): Promise<IRefreshToken[]>
 
   abstract findByRefreshToken(
