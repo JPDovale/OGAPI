@@ -5,6 +5,7 @@ import { type IPersonality } from '@modules/persons/infra/repositories/entities/
 import { IProjectsRepository } from '@modules/projects/infra/repositories/contracts/IProjectsRepository'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -28,12 +29,19 @@ export class GetPersonalitiesUseCase {
     private readonly projectsRepository: IProjectsRepository,
   ) {}
 
-  async execute({ projectId, userId }: IRequest): Promise<IResponse> {
-    await this.verifyPermissions.verify({
+  async execute({ projectId, userId }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       projectId,
       userId,
       verifyPermissionTo: 'view',
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const personIds = await this.projectsRepository.listPersonsIds(projectId)
     const personalities = await this.personalitiesRepository.listPerPersons(
@@ -41,7 +49,10 @@ export class GetPersonalitiesUseCase {
     )
 
     return {
-      personalities,
+      ok: true,
+      data: {
+        personalities,
+      },
     }
   }
 }

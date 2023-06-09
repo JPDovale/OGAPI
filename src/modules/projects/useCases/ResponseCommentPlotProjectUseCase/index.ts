@@ -6,6 +6,7 @@ import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersPro
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorCommentNotCreated } from '@shared/errors/projects/makeErrorCommentNotCreated'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -36,12 +37,21 @@ export class ResponseCommentPlotProjectUseCase {
     projectId,
     response,
     userId,
-  }: IRequest): Promise<IResponse> {
-    const { project, user } = await this.verifyPermissions.verify({
-      userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       projectId,
-      verifyPermissionTo: 'comment',
+      userId,
+      verifyPermissionTo: 'view',
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const { comment, response: newResponse } =
       await this.commentsRepository.createResponse({
@@ -50,7 +60,12 @@ export class ResponseCommentPlotProjectUseCase {
         comment_id: commentId,
       })
 
-    if (!comment || !newResponse) throw makeErrorCommentNotCreated()
+    if (!comment || !newResponse) {
+      return {
+        ok: false,
+        error: makeErrorCommentNotCreated(),
+      }
+    }
 
     if (newResponse.user_id !== comment.user_id) {
       await this.notifyUsersProvider.notifyUsersInOneProject({
@@ -68,6 +83,11 @@ export class ResponseCommentPlotProjectUseCase {
       })
     }
 
-    return { comment }
+    return {
+      ok: true,
+      data: {
+        comment,
+      },
+    }
   }
 }

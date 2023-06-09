@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   bookId: string
@@ -46,19 +47,42 @@ export class UpdateCapituleUseCase {
     name,
     objective,
     structure,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
-    if (!book.capitules) throw makeErrorCapituleNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
+    if (!book.capitules) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
     const capituleToUpdate = await this.capitulesRepository.findById(capituleId)
-    if (!capituleToUpdate) throw makeErrorCapituleNotFound()
+    if (!capituleToUpdate) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
     const capitule = await this.capitulesRepository.update({
       capituleId,
@@ -71,8 +95,18 @@ export class UpdateCapituleUseCase {
       },
     })
 
-    if (!capitule) throw makeErrorBookNotUpdate()
+    if (!capitule) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
-    return { capitule }
+    return {
+      ok: true,
+      data: {
+        capitule,
+      },
+    }
   }
 }

@@ -8,6 +8,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorTimeLineNotCreated } from '@shared/errors/timelines/makeErrorTimeLineNotCreated'
 import { makeErrorTimeLineNotFound } from '@shared/errors/timelines/makeErrorTimeLineNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -36,19 +37,32 @@ export class CopyTimeLineToProjectUseCase {
     projectId,
     timeLineId,
     userId,
-  }: IRequest): Promise<IResponse> {
-    const { project } = await this.verifyPermissionsService.verify({
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissionsService.verify({
       userId,
       projectId,
       verifyPermissionTo: 'edit',
       verifyFeatureInProject: ['timeLines'],
       clearCache: true,
     })
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project } = verification.data!
 
     const timeLineToCopyOnProject = await this.timeLinesRepositor.findById(
       timeLineId,
     )
-    if (!timeLineToCopyOnProject) throw makeErrorTimeLineNotFound()
+    if (!timeLineToCopyOnProject) {
+      return {
+        ok: false,
+        error: makeErrorTimeLineNotFound(),
+      }
+    }
 
     const timeLineCopied = await this.timeLinesRepositor.create({
       user_id: project.user_id,
@@ -60,7 +74,12 @@ export class CopyTimeLineToProjectUseCase {
       title: timeLineToCopyOnProject.title,
       type: timeLineToCopyOnProject.type,
     })
-    if (!timeLineCopied) throw makeErrorTimeLineNotCreated()
+    if (!timeLineCopied) {
+      return {
+        ok: false,
+        error: makeErrorTimeLineNotCreated(),
+      }
+    }
 
     const eventsToCreate: Array<Promise<ITimeEvent | null>> = []
     timeLineToCopyOnProject.timeEvents?.map((timeEvent) =>
@@ -89,7 +108,10 @@ export class CopyTimeLineToProjectUseCase {
     await Promise.all(eventsToCreate)
 
     return {
-      timeLine: timeLineCopied,
+      ok: true,
+      data: {
+        timeLine: timeLineCopied,
+      },
     }
   }
 }

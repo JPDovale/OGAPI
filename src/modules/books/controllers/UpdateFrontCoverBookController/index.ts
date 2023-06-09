@@ -17,13 +17,14 @@ export class UpdateFrontCoverBookController {
     const updateFrontCoverBookUseCase = container.resolve(
       UpdateFrontCoverBookUseCase,
     )
-    const { frontCoveFilename, frontCoverUrl } =
-      await updateFrontCoverBookUseCase.execute({
-        userId: id,
-        bookId,
-        file,
-      })
+    const response = await updateFrontCoverBookUseCase.execute({
+      userId: id,
+      bookId,
+      file,
+    })
 
-    return res.status(200).json({ frontCoveFilename, frontCoverUrl })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -9,4 +9,7 @@ export interface ICapitule extends Capitule {
   book?: {
     project_id: string
   }
+  _count?: {
+    scenes: number
+  }
 }

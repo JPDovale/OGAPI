@@ -24,13 +24,14 @@ export class CreatePowerController {
     const { title, description } = createPowerBodySchema.parse(req.body)
 
     const createPowersUseCase = container.resolve(CreatePowerUseCase)
-    const { power } = await createPowersUseCase.execute({
+    const response = await createPowersUseCase.execute({
       userId: id,
       personId,
       title,
       description,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ power })
+    return res.status(responseStatusCode).json(response)
   }
 }

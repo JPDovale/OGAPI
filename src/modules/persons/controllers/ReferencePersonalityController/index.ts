@@ -19,12 +19,13 @@ export class ReferencePersonalityController {
     const referencePersonalityUseCase = container.resolve(
       ReferencePersonalityUseCase,
     )
-    await referencePersonalityUseCase.execute({
+    const response = await referencePersonalityUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -21,7 +21,7 @@ export class ReorderScenesController {
     const { sequenceFrom, sequenceTo } = reorderScenesBodySchema.parse(req.body)
 
     const reorderScenesUseCase = container.resolve(ReorderScenesUseCase)
-    const { scenes } = await reorderScenesUseCase.execute({
+    const response = await reorderScenesUseCase.execute({
       userId: id,
       capituleId,
       bookId,
@@ -29,6 +29,8 @@ export class ReorderScenesController {
       sequenceTo,
     })
 
-    return res.status(200).json({ scenes })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

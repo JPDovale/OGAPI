@@ -17,12 +17,13 @@ export class DeleteObjectiveController {
     )
 
     const deleteObjectiveUseCase = container.resolve(DeleteObjectiveUseCase)
-    await deleteObjectiveUseCase.execute({
+    const response = await deleteObjectiveUseCase.execute({
       userId: id,
       personId,
       objectiveId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

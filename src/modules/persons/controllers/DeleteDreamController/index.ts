@@ -15,12 +15,13 @@ export class DeleteDreamController {
     const { personId, dreamId } = deleteDreamParamsSchema.parse(req.params)
 
     const deleteDreamUseCase = container.resolve(DeleteDreamUseCase)
-    await deleteDreamUseCase.execute({
+    const response = await deleteDreamUseCase.execute({
       userId: id,
       personId,
       dreamId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -17,12 +17,13 @@ export class ReferencePowerController {
     )
 
     const referencePowerUseCase = container.resolve(ReferencePowerUseCase)
-    await referencePowerUseCase.execute({
+    const response = await referencePowerUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

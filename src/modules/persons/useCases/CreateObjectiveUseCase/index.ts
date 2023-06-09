@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -44,24 +45,41 @@ export class CreateObjectiveUseCase {
     itBeRealized,
     supporters,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const objectiveExistesToThiPerson = person.objectives?.find(
       (objective) =>
         objective.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
-    if (objectiveExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'um objetivo',
-      })
+    if (objectiveExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'um objetivo',
+        }),
+      }
+    }
 
     const objective = await this.objectivesRepository.create(
       {
@@ -91,8 +109,18 @@ export class CreateObjectiveUseCase {
       personId,
     )
 
-    if (!objective) throw makeErrorPersonNotUpdate()
+    if (!objective) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { objective }
+    return {
+      ok: true,
+      data: {
+        objective,
+      },
+    }
   }
 }

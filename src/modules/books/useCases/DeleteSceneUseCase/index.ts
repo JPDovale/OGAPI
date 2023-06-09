@@ -13,6 +13,7 @@ import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpd
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
 import { makeErrorSceneNotFound } from '@shared/errors/books/makeErrorSceneNotFound'
 import { makeInternalError } from '@shared/errors/useFull/makeInternalError'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   bookId: string
@@ -48,25 +49,53 @@ export class DeleteSceneUseCase {
     bookId,
     capituleId,
     sceneId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
-    if (!book.capitules) throw makeInternalError()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
+    if (!book.capitules) {
+      return {
+        ok: false,
+        error: makeInternalError(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
     const capituleToUpdate = await this.capitulesRepository.findById(capituleId)
-    if (!capituleToUpdate) throw makeErrorCapituleNotFound()
+    if (!capituleToUpdate) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
     const sceneToDelete = await this.scenesRepository.findById(sceneId)
     const filteredScenes =
       capituleToUpdate.scenes?.filter((scene) => scene.id !== sceneId) ?? []
 
-    if (!sceneToDelete) throw makeErrorSceneNotFound()
+    if (!sceneToDelete) {
+      return {
+        ok: false,
+        error: makeErrorSceneNotFound(),
+      }
+    }
 
     const updatedScenes: IUpdateManyScenesDTO = filteredScenes.map((scene) => {
       if (scene.sequence < sceneToDelete.sequence) return null
@@ -108,7 +137,12 @@ export class DeleteSceneUseCase {
         },
       })
 
-      if (!updatedCapitule) throw makeErrorBookNotUpdate()
+      if (!updatedCapitule) {
+        return {
+          ok: false,
+          error: makeErrorBookNotUpdate(),
+        }
+      }
 
       capitule = updatedCapitule
     }
@@ -139,9 +173,12 @@ export class DeleteSceneUseCase {
     }
 
     return {
-      scenes: filteredScenes,
-      bookWrittenWords: wordsInBook,
-      capituleComplete: capitule.complete,
+      ok: true,
+      data: {
+        scenes: filteredScenes,
+        bookWrittenWords: wordsInBook,
+        capituleComplete: capitule.complete,
+      },
     }
   }
 }

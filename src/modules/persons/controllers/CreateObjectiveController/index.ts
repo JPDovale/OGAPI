@@ -40,7 +40,7 @@ export class CreateObjectiveController {
       createObjectiveBodySchema.parse(req.body)
 
     const createObjectiveUseCase = container.resolve(CreateObjectiveUseCase)
-    const { objective } = await createObjectiveUseCase.execute({
+    const response = await createObjectiveUseCase.execute({
       userId: id,
       personId,
       title,
@@ -49,7 +49,8 @@ export class CreateObjectiveController {
       supporters,
       avoiders,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ objective })
+    return res.status(responseStatusCode).json(response)
   }
 }

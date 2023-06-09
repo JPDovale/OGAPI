@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserPersonResponse } from '@modules/persons/responses/parsers/ParserPersonResponse'
 import { GetTraumasUseCase } from '@modules/projects/useCases/GetTraumasUseCase'
 
 export class GetTraumasController {
@@ -14,11 +15,24 @@ export class GetTraumasController {
     const { projectId } = GetTraumasControllerParamsSchema.parse(req.params)
 
     const getTraumasUseCase = container.resolve(GetTraumasUseCase)
-    const { traumas } = await getTraumasUseCase.execute({
+    const response = await getTraumasUseCase.execute({
       userId: id,
       projectId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ traumas })
+    const parserPersonsResponse = container.resolve(ParserPersonResponse)
+    const traumasPartied = parserPersonsResponse.parserTraumas(
+      response.data?.traumas ?? [],
+    )
+
+    const responsePartied = {
+      ok: response.ok,
+      error: response.error,
+      data: {
+        traumas: traumasPartied,
+      },
+    }
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

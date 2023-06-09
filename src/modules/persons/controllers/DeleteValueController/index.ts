@@ -15,12 +15,13 @@ export class DeleteValuesController {
     const { personId, valueId } = deleteValueParamsSchema.parse(req.params)
 
     const deleteValuesUseCase = container.resolve(DeleteValueUseCase)
-    await deleteValuesUseCase.execute({
+    const response = await deleteValuesUseCase.execute({
       userId: id,
       personId,
       valueId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

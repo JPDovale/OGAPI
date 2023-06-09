@@ -13,11 +13,8 @@ export class VisualizeNotificationsController {
     )
     const response = await visualizeNotificationsUseCase.execute({ userId: id })
     const responsePartied = parserUserResponse(response)
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(responsePartied)
-    }
-
-    return res.status(200).json(responsePartied)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

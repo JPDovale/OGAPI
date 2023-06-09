@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserProjectResponse } from '@modules/projects/responses/parsers/ParserProjectResponse'
 import { ImageUpdateUseCase } from '@modules/projects/useCases/ImageUpdateUseCase'
 
 export class ImageUpdateController {
@@ -15,12 +16,19 @@ export class ImageUpdateController {
     const { file } = req
 
     const imageUpdateUseCase = container.resolve(ImageUpdateUseCase)
-    const { project } = await imageUpdateUseCase.execute({
+    const response = await imageUpdateUseCase.execute({
       userId: id,
       projectId,
       file,
     })
 
-    return res.status(200).json({ project })
+    const parserProjectResponse = container.resolve(ParserProjectResponse)
+    const responsePartied = parserProjectResponse.parser(response)
+
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }

@@ -25,14 +25,15 @@ export class UpdateWisheController {
     const { title, description } = updateWisheBodySchema.parse(req.body)
 
     const updateWisheUseCase = container.resolve(UpdateWisheUseCase)
-    const { wishe } = await updateWisheUseCase.execute({
+    const response = await updateWisheUseCase.execute({
       userId: id,
       personId,
       wisheId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ wishe })
+    return res.status(responseStatusCode).json(response)
   }
 }

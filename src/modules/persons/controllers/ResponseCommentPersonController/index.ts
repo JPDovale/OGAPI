@@ -27,13 +27,14 @@ export class ResponseCommentPersonController {
     const responseCommentPersonUseCase = container.resolve(
       ResponseCommentPersonUseCase,
     )
-    const { response } = await responseCommentPersonUseCase.execute({
+    const response = await responseCommentPersonUseCase.execute({
       userId: id,
       personId,
       commentId,
       content,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ response })
+    return res.status(responseStatusCode).json(response)
   }
 }

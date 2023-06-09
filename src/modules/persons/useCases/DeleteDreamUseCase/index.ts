@@ -6,6 +6,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -26,22 +27,39 @@ export class DeleteDreamUseCase {
     private readonly dreamsRepository: IDreamsRepository,
   ) {}
 
-  async execute({ dreamId, personId, userId }: IRequest): Promise<void> {
+  async execute({ dreamId, personId, userId }: IRequest): Promise<IResolve> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const dreamToRemovePerson = await this.dreamsRepository.findById(dreamId)
 
-    if (!dreamToRemovePerson)
-      throw makeErrorNotFound({
-        whatsNotFound: 'Sonho',
-      })
+    if (!dreamToRemovePerson) {
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Sonho',
+        }),
+      }
+    }
 
     const numbersOfPersonInDream = dreamToRemovePerson.persons?.length ?? 0
 
@@ -52,6 +70,10 @@ export class DeleteDreamUseCase {
         objectId: dreamId,
         personId,
       })
+    }
+
+    return {
+      ok: true,
     }
   }
 }

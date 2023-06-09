@@ -38,14 +38,15 @@ export class CreateTraumaController {
     )
 
     const createTraumaUseCase = container.resolve(CreateTraumaUseCase)
-    const { trauma } = await createTraumaUseCase.execute({
+    const response = await createTraumaUseCase.execute({
       userId: id,
       personId,
       title,
       description,
       consequences,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ trauma })
+    return res.status(responseStatusCode).json(response)
   }
 }

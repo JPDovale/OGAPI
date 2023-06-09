@@ -18,14 +18,15 @@ export class DeleteSceneController {
     )
 
     const deleteSceneUseCase = container.resolve(DeleteSceneUseCase)
-    const { bookWrittenWords, capituleComplete, scenes } =
-      await deleteSceneUseCase.execute({
-        userId: id,
-        capituleId,
-        bookId,
-        sceneId,
-      })
+    const response = await deleteSceneUseCase.execute({
+      userId: id,
+      capituleId,
+      bookId,
+      sceneId,
+    })
 
-    return res.status(200).json({ bookWrittenWords, capituleComplete, scenes })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

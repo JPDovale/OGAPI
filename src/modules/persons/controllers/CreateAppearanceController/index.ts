@@ -24,13 +24,14 @@ export class CreateAppearanceController {
     const { description, title } = createAppearanceBodySchema.parse(req.body)
 
     const createAppearanceUseCase = container.resolve(CreateAppearanceUseCase)
-    const { appearance } = await createAppearanceUseCase.execute({
+    const response = await createAppearanceUseCase.execute({
       userId: id,
       personId,
       title,
       description,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ appearance })
+    return res.status(responseStatusCode).json(response)
   }
 }

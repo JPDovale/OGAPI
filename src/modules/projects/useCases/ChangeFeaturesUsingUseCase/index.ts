@@ -8,6 +8,7 @@ import { ITimeLinesRepository } from '@modules/timelines/infra/repositories/cont
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import {
   getFeatures,
   getListFeaturesInLine,
@@ -42,12 +43,23 @@ export class ChangeFeaturesUsingUseCase {
     private readonly booksRepository: IBooksRepository,
   ) {}
 
-  async execute({ userId, projectId, features }: IRequest): Promise<IResponse> {
-    await this.verifyPermissions.verify({
+  async execute({
+    userId,
+    projectId,
+    features,
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId,
       verifyPermissionTo: 'edit',
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const newListFeatures = getListFeaturesInLine(features)
 
@@ -58,10 +70,14 @@ export class ChangeFeaturesUsingUseCase {
       },
     })
 
-    if (!projectUpdate) throw makeErrorProjectNotUpdate()
+    if (!projectUpdate) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotUpdate(),
+      }
+    }
 
     const newFeatures = getFeatures(projectUpdate.features_using)
-
     const promises: Array<Promise<void> | false> = [
       !newFeatures.timeLines &&
         this.timeLinesRepository.deletePerProjectId(projectId),
@@ -75,7 +91,10 @@ export class ChangeFeaturesUsingUseCase {
     await Promise.all(promises)
 
     return {
-      features: newFeatures,
+      ok: true,
+      data: {
+        features: newFeatures,
+      },
     }
   }
 }

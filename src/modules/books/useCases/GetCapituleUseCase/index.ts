@@ -5,6 +5,7 @@ import { type ICapitule } from '@modules/books/infra/repositories/entities/ICapi
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -25,18 +26,37 @@ export class GetCapituleUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ capituleId, userId }: IRequest): Promise<IResponse> {
+  async execute({
+    capituleId,
+    userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
     const capitule = await this.capitulesRepository.findById(capituleId)
-    if (!capitule) throw makeErrorCapituleNotFound()
+    if (!capitule) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: capitule.book!.project_id,
       userId,
-      verifyPermissionTo: 'view',
+      verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
     return {
-      capitule,
+      ok: true,
+      data: {
+        capitule,
+      },
     }
   }
 }

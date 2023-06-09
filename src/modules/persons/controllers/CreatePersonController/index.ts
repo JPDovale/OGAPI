@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserPersonResponse } from '@modules/persons/responses/parsers/ParserPersonResponse'
 import { CreatePersonUseCase } from '@modules/persons/useCases/CreatePersonUseCase'
 
 export class CreatePersonController {
@@ -41,7 +42,7 @@ export class CreatePersonController {
     } = createPersonBodySchema.parse(req.body)
 
     const createPersonUseCase = container.resolve(CreatePersonUseCase)
-    const { person } = await createPersonUseCase.execute({
+    const response = await createPersonUseCase.execute({
       userId: id,
       projectId,
       age,
@@ -51,10 +52,14 @@ export class CreatePersonController {
       bornDay,
       bornHour,
       bornMinute,
-      bornMonth: bornMonth - 1, // month is received like  1 -> 12 in name months respective, but when logical is Applied the months transformed to format 0 -> 12 in respective names
+      bornMonth: bornMonth - 1, // month is received like  1 -> 12 in name months respective, but when logical is Applied the months transformed to format 0 -> 11 in respective names
       bornSecond,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ person })
+    const parserPersonResponse = container.resolve(ParserPersonResponse)
+    const responsePartied = parserPersonResponse.parser(response)
+
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

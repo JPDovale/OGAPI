@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserBookResponse } from '@modules/books/responses/parsers/ParserBookResponse'
 import { CreateBookUseCase } from '@modules/books/useCases/CreateBookUseCase'
 
 export class CreateBookController {
@@ -37,7 +38,7 @@ export class CreateBookController {
     } = createBookBodySchema.parse(req.body)
 
     const createBookUseCase = container.resolve(CreateBookUseCase)
-    const { book } = await createBookUseCase.execute({
+    const response = await createBookUseCase.execute({
       userId: id,
       projectId,
       title,
@@ -48,7 +49,11 @@ export class CreateBookController {
       words,
       writtenWords,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(200).json({ book })
+    const parserBookResponse = container.resolve(ParserBookResponse)
+    const responsePartied = parserBookResponse.parser(response)
+
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

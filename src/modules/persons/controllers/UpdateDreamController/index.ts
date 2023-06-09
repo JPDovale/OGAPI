@@ -25,14 +25,15 @@ export class UpdateDreamController {
     const { description, title } = updateDreamBodySchema.parse(req.body)
 
     const updateDreamUseCase = container.resolve(UpdateDreamUseCase)
-    const { dream } = await updateDreamUseCase.execute({
+    const response = await updateDreamUseCase.execute({
       userId: id,
       personId,
       dreamId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ dream })
+    return res.status(responseStatusCode).json(response)
   }
 }

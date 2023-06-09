@@ -1,3 +1,5 @@
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
+
 import { type IRequestVerify } from './types/IRequestVerify'
 import { type IResponseVerify } from './types/IResponseVerify'
 
@@ -8,5 +10,5 @@ export interface IVerifyPermissionsService {
     verifyPermissionTo,
     verifyFeatureInProject,
     clearCache,
-  }: IRequestVerify) => Promise<IResponseVerify>
+  }: IRequestVerify) => Promise<IResolve<IResponseVerify>>
 }

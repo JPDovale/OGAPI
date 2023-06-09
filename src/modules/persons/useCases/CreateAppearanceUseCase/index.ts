@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -38,24 +39,41 @@ export class CreateAppearanceUseCase {
     title,
     personId,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const appearanceExistesToThiPerson = person.appearances?.find(
       (appearance) =>
         appearance.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
-    if (appearanceExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'uma aparência',
-      })
+    if (appearanceExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'uma aparência',
+        }),
+      }
+    }
 
     const newAppearance = await this.appearancesRepository.create(
       {
@@ -70,8 +88,18 @@ export class CreateAppearanceUseCase {
       personId,
     )
 
-    if (!newAppearance) throw makeErrorPersonNotUpdate()
+    if (!newAppearance) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { appearance: newAppearance }
+    return {
+      ok: true,
+      data: {
+        appearance: newAppearance,
+      },
+    }
   }
 }

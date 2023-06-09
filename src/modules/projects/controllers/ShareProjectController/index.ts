@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserProjectResponse } from '@modules/projects/responses/parsers/ParserProjectResponse'
 import { ShareProjectUseCase } from '@modules/projects/useCases/ShareProjectUseCase'
 
 export class ShareProjectController {
@@ -20,13 +21,20 @@ export class ShareProjectController {
     const { email, permission } = shareProjectBodySchema.parse(req.body)
 
     const shareProjectUseCase = container.resolve(ShareProjectUseCase)
-    const { project } = await shareProjectUseCase.execute({
+    const response = await shareProjectUseCase.execute({
       email,
       permission,
       projectId,
       userId: id,
     })
 
-    return res.status(200).json({ project })
+    const parserProjectResponse = container.resolve(ParserProjectResponse)
+    const responsePartied = parserProjectResponse.parser(response)
+
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }

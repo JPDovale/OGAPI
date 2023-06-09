@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -38,25 +39,42 @@ export class CreateDreamUseCase {
     title,
     personId,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const dreamExistesToThiPerson = person.dreams?.find(
       (dream) =>
         dream.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
 
-    if (dreamExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'um sonho',
-      })
+    if (dreamExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'um sonho',
+        }),
+      }
+    }
 
     const dream = await this.dreamsRepository.create(
       {
@@ -71,8 +89,18 @@ export class CreateDreamUseCase {
       personId,
     )
 
-    if (!dream) throw makeErrorPersonNotUpdate()
+    if (!dream) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { dream }
+    return {
+      ok: true,
+      data: {
+        dream,
+      },
+    }
   }
 }

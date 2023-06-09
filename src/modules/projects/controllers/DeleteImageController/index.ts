@@ -14,11 +14,15 @@ export class DeleteImageController {
     const { projectId } = deleteImageParamsSchema.parse(req.params)
 
     const deleteImageUseCase = container.resolve(DeleteImageUseCase)
-    const updatedProject = await deleteImageUseCase.execute({
+    const response = await deleteImageUseCase.execute({
       userId: id,
       projectId,
     })
 
-    return res.status(200).json(updatedProject)
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

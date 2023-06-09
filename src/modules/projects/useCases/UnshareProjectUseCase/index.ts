@@ -10,6 +10,7 @@ import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProje
 import { makeErrorProjectQuitNotExecuted } from '@shared/errors/projects/makeErrorProjectQuitNotExecuted'
 import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userToUnshareEmail: string
@@ -44,20 +45,40 @@ export class UnshareProjectUseCase {
     projectId,
     userToUnshareEmail,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const project = await this.projectsRepository.findById(projectId)
-    if (!project) throw makeErrorProjectNotFound()
+    if (!project) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotFound(),
+      }
+    }
 
     const userToUnshare = await this.usersRepository.findByEmail(
       userToUnshareEmail,
     )
-    if (!userToUnshare) throw makeErrorUserNotFound()
+    if (!userToUnshare) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const userAreCreatorOfProject = project.user_id === userId
-    if (!userAreCreatorOfProject) throw makeErrorDeniedPermission()
+    if (!userAreCreatorOfProject) {
+      return {
+        ok: false,
+        error: makeErrorDeniedPermission(),
+      }
+    }
 
     const usersWithPermissionToComment =
       project.users_with_access_comment?.users ?? []
@@ -91,7 +112,12 @@ export class UnshareProjectUseCase {
       (access) => access.userHasPermissionInProject,
     )
 
-    if (!userHaveAccessIn) throw makeErrorProjectAlreadyUnsharedWhitUser()
+    if (!userHaveAccessIn) {
+      return {
+        ok: false,
+        error: makeErrorProjectAlreadyUnsharedWhitUser(),
+      }
+    }
 
     const usersWithAccess = mapUsersInProject[userHaveAccessIn.indexOfMap]
     const filteredUsersWithAccess = usersWithAccess.filter(
@@ -104,7 +130,12 @@ export class UnshareProjectUseCase {
       permission: userHaveAccessIn.accessTo,
     })
 
-    if (!updatedProject) throw makeErrorProjectQuitNotExecuted()
+    if (!updatedProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectQuitNotExecuted(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyOneUser({
       title: `Você foi removido do projeto ${project.name}`,
@@ -112,6 +143,11 @@ export class UnshareProjectUseCase {
       userToNotifyId: userToUnshare.id,
     })
 
-    return { project: updatedProject }
+    return {
+      ok: true,
+      data: {
+        project: updatedProject,
+      },
+    }
   }
 }

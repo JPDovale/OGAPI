@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserPersonResponse } from '@modules/persons/responses/parsers/ParserPersonResponse'
 import { GetDreamsUseCase } from '@modules/projects/useCases/GetDreamsUseCase'
 
 export class GetDreamsController {
@@ -14,11 +15,24 @@ export class GetDreamsController {
     const { projectId } = GetDreamsControllerParamsSchema.parse(req.params)
 
     const getDreamsUseCase = container.resolve(GetDreamsUseCase)
-    const { dreams } = await getDreamsUseCase.execute({
+    const response = await getDreamsUseCase.execute({
       userId: id,
       projectId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ dreams })
+    const parserPersonsResponse = container.resolve(ParserPersonResponse)
+    const dreamsPartied = parserPersonsResponse.parserDreams(
+      response.data?.dreams ?? [],
+    )
+
+    const responsePartied = {
+      ok: response.ok,
+      error: response.error,
+      data: {
+        dreams: dreamsPartied,
+      },
+    }
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

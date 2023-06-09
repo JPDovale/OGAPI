@@ -17,12 +17,13 @@ export class ReferenceWisheController {
     )
 
     const referenceWisheUseCase = container.resolve(ReferenceWisheUseCase)
-    await referenceWisheUseCase.execute({
+    const response = await referenceWisheUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

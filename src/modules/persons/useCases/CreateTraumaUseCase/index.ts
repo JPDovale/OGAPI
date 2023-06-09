@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -43,24 +44,41 @@ export class CreateTraumaUseCase {
     description,
     title,
     consequences,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const traumaExistesToThiPerson = person.traumas?.find(
       (trauma) =>
         trauma.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
-    if (traumaExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'um trauma',
-      })
+    if (traumaExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'um trauma',
+        }),
+      }
+    }
 
     const trauma = await this.traumasRepository.create(
       {
@@ -80,8 +98,18 @@ export class CreateTraumaUseCase {
       personId,
     )
 
-    if (!trauma) throw makeErrorPersonNotUpdate()
+    if (!trauma) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { trauma }
+    return {
+      ok: true,
+      data: {
+        trauma,
+      },
+    }
   }
 }

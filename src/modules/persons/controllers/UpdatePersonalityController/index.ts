@@ -27,14 +27,15 @@ export class UpdatePersonalityController {
     const { description, title } = updatePersonalityBodySchema.parse(req.body)
 
     const updatePersonalityUseCase = container.resolve(UpdatePersonalityUseCase)
-    const { personality } = await updatePersonalityUseCase.execute({
+    const response = await updatePersonalityUseCase.execute({
       userId: id,
       personId,
       personalityId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ personality })
+    return res.status(responseStatusCode).json(response)
   }
 }
