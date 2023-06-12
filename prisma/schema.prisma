@@ -706,8 +706,8 @@ model TimeLine {
 
 model TimeEvent {
   id                        String   @id @unique @default(uuid())
-  title                     String
-  description               String
+  title                     String   @db.MediumText()
+  description               String   @db.LongText()
   happened_date_timestamp   String
   happened_year             String
   happened_year_time_christ String
