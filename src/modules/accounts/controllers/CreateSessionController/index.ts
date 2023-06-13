@@ -18,6 +18,7 @@ export class CreateSessionController {
     const response = await createSessionUseCase.execute({
       email,
       password,
+      onApplication: '@og-Web',
     })
 
     const responsePartied = parserUserResponse(response)
