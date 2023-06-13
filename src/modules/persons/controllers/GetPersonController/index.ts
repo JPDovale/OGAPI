@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserPersonResponse } from '@modules/persons/responses/parsers/ParserPersonResponse'
 import { GetPersonUseCase } from '@modules/persons/useCases/GetPersonUseCase'
 
 export class GetPersonController {
@@ -14,11 +15,15 @@ export class GetPersonController {
     const { personId } = GetPersonControllerParamsSchema.parse(req.params)
 
     const getPersonUseCase = container.resolve(GetPersonUseCase)
-    const { person } = await getPersonUseCase.execute({
+    const response = await getPersonUseCase.execute({
       personId,
       userId: id,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ person })
+    const parserPersonResponse = container.resolve(ParserPersonResponse)
+    const responsePartied = parserPersonResponse.parser(response)
+
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -38,24 +39,41 @@ export class CreateWisheUseCase {
     userId,
     description,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const wisheExistesToThiPerson = person.wishes?.find(
       (wishe) =>
         wishe.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
-    if (wisheExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'um desejo',
-      })
+    if (wisheExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'um desejo',
+        }),
+      }
+    }
 
     const wishe = await this.wishesRepository.create(
       {
@@ -70,8 +88,18 @@ export class CreateWisheUseCase {
       personId,
     )
 
-    if (!wishe) throw makeErrorPersonNotUpdate()
+    if (!wishe) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { wishe }
+    return {
+      ok: true,
+      data: {
+        wishe,
+      },
+    }
   }
 }

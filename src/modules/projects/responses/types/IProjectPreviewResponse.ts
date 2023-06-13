@@ -18,6 +18,8 @@ export interface IUserInProject {
     alt: string
   }
   id: string
+  username: string
+  email: string
 }
 
 export interface IProjectPreviewResponse {

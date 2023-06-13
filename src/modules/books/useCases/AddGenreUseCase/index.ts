@@ -9,6 +9,7 @@ import { makeErrorBookGenreAlreadyExistes } from '@shared/errors/books/makeError
 import { makeErrorBookMaxGenresAdded } from '@shared/errors/books/makeErrorBookMaxGenresAdded'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -33,23 +34,52 @@ export class AddGenreUseCase {
     private readonly notifyUsersProvider: INotifyUsersProvider,
   ) {}
 
-  async execute({ userId, bookId, genre }: IRequest): Promise<IResponse> {
+  async execute({
+    userId,
+    bookId,
+    genre,
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    const { project, user } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
+
     const numberGenresInBook = book.genres?.length ?? 0
-    if (numberGenresInBook >= 6) throw makeErrorBookMaxGenresAdded()
+    if (numberGenresInBook >= 6) {
+      return {
+        ok: false,
+        error: makeErrorBookMaxGenresAdded(),
+      }
+    }
 
     const genreAlreadyExists = book.genres?.find(
       (g) => g.name.toLowerCase().trim() === genre.toLowerCase().trim(),
     )
-    if (genreAlreadyExists) throw makeErrorBookGenreAlreadyExistes()
+    if (genreAlreadyExists) {
+      return {
+        ok: false,
+        error: makeErrorBookGenreAlreadyExistes(),
+      }
+    }
 
     const newGenre = await this.booksRepository.createGenre({
       name: genre,
@@ -60,7 +90,12 @@ export class AddGenreUseCase {
       },
     })
 
-    if (!newGenre) throw makeErrorBookNotUpdate()
+    if (!newGenre) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
@@ -73,6 +108,11 @@ export class AddGenreUseCase {
       }. Acesse a aba 'Livros -> ${book.title}' para ver mais informações.`,
     })
 
-    return { genre: newGenre }
+    return {
+      ok: true,
+      data: {
+        genre: newGenre,
+      },
+    }
   }
 }

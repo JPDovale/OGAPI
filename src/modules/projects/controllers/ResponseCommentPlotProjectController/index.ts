@@ -26,13 +26,17 @@ export class ResponseCommentPlotProjectController {
     const responseCommentPlotProjectUseCase = container.resolve(
       ResponseCommentPlotProjectUseCase,
     )
-    const updatedProject = await responseCommentPlotProjectUseCase.execute({
+    const responseUseCase = await responseCommentPlotProjectUseCase.execute({
       userId: id,
       projectId,
       commentId,
       response,
     })
 
-    return res.status(201).json(updatedProject)
+    if (responseUseCase.error) {
+      return res.status(responseUseCase.error.statusCode).json(responseUseCase)
+    }
+
+    return res.status(201).json(responseUseCase)
   }
 }

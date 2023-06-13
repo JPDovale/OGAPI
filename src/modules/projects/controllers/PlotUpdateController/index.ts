@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserProjectResponse } from '@modules/projects/responses/parsers/ParserProjectResponse'
 import { PlotUpdateUseCase } from '@modules/projects/useCases/PlotUpdateUseCase'
 
 export class PlotUpdateController {
@@ -36,12 +37,19 @@ export class PlotUpdateController {
     const plot = plotUpdateBodySchema.parse(req.body)
 
     const plotUpdateUseCase = container.resolve(PlotUpdateUseCase)
-    const { project } = await plotUpdateUseCase.execute({
+    const response = await plotUpdateUseCase.execute({
       plot,
       userId: id,
       projectId,
     })
 
-    return res.status(200).json({ project })
+    const parserProjectResponse = container.resolve(ParserProjectResponse)
+    const responsePartied = parserProjectResponse.parser(response)
+
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }

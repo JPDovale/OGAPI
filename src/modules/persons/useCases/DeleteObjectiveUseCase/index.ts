@@ -6,6 +6,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -26,24 +27,45 @@ export class DeleteObjectiveUseCase {
     private readonly objectivesRepository: IObjectivesRepository,
   ) {}
 
-  async execute({ objectiveId, personId, userId }: IRequest): Promise<void> {
+  async execute({
+    objectiveId,
+    personId,
+    userId,
+  }: IRequest): Promise<IResolve> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const objectiveToRemovePerson = await this.objectivesRepository.findById(
       objectiveId,
     )
 
-    if (!objectiveToRemovePerson)
-      throw makeErrorNotFound({
-        whatsNotFound: 'Objetivo',
-      })
+    if (!objectiveToRemovePerson) {
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Objetivo',
+        }),
+      }
+    }
 
     const numbersOfPersonInObjective =
       objectiveToRemovePerson.persons?.length ?? 0
@@ -55,6 +77,10 @@ export class DeleteObjectiveUseCase {
         objectId: objectiveId,
         personId,
       })
+    }
+
+    return {
+      ok: true,
     }
   }
 }

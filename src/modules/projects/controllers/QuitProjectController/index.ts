@@ -14,8 +14,12 @@ export class QuitProjectController {
     const { projectId } = quitProjectParamsSchema.parse(req.params)
 
     const quitProjectUseCase = container.resolve(QuitProjectUseCase)
-    await quitProjectUseCase.execute({ userId: id, projectId })
+    const response = await quitProjectUseCase.execute({ userId: id, projectId })
 
-    return res.status(200).end()
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

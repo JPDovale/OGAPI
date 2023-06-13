@@ -16,10 +16,8 @@ export class DeleteUserController {
     const deleteUserUseCase = container.resolve(DeleteUserUseCase)
     const response = await deleteUserUseCase.execute({ userId: id ?? user.id })
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(response)
-    }
+    const responseStatusCode = response.error ? response.error.statusCode : 202
 
-    return res.status(202).json(response)
+    return res.status(responseStatusCode).json(response)
   }
 }

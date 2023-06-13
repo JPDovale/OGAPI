@@ -25,14 +25,15 @@ export class UpdateTraumaController {
     const { description, title } = updateTraumaBodySchema.parse(req.body)
 
     const updateTraumaUseCase = container.resolve(UpdateTraumaUseCase)
-    const { trauma } = await updateTraumaUseCase.execute({
+    const response = await updateTraumaUseCase.execute({
       userId: id,
       personId,
       traumaId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ trauma })
+    return res.status(responseStatusCode).json(response)
   }
 }

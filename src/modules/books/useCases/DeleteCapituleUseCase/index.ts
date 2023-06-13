@@ -9,6 +9,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   bookId: string
@@ -34,21 +35,43 @@ export class DeleteCapituleUseCase {
     private readonly capitulesRepository: ICapitulesRepository,
   ) {}
 
-  async execute({ bookId, capituleId, userId }: IRequest): Promise<IResponse> {
+  async execute({
+    bookId,
+    capituleId,
+    userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const filteredCapitules =
       book.capitules?.filter((capitule) => capitule.id !== capituleId) ?? []
 
     const capituleToDelete = await this.capitulesRepository.findById(capituleId)
-    if (!capituleToDelete) throw makeErrorCapituleNotFound()
+    if (!capituleToDelete) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
     const writtenWordsInBook = book.written_words - capituleToDelete.words
 
@@ -76,13 +99,21 @@ export class DeleteCapituleUseCase {
       },
     })
 
-    if (!updatedBook) throw makeErrorBookNotUpdate()
+    if (!updatedBook) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     await this.capitulesRepository.delete(capituleId)
 
     return {
-      capitules: book.capitules ?? [],
-      writtenWords: updatedBook.written_words,
+      ok: true,
+      data: {
+        capitules: book.capitules ?? [],
+        writtenWords: updatedBook.written_words,
+      },
     }
   }
 }

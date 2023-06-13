@@ -14,8 +14,9 @@ export class DeletePersonController {
     const { personId } = deletePersonParamsSchema.parse(req.params)
 
     const deletePersonUseCase = container.resolve(DeletePersonUseCase)
-    await deletePersonUseCase.execute({ userId: id, personId })
+    const response = await deletePersonUseCase.execute({ userId: id, personId })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

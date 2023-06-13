@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -40,24 +41,41 @@ export class UpdateAppearanceUseCase {
     userId,
     description,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const appearanceToEdit = await this.appearancesRepository.findById(
       appearanceId,
     )
 
-    if (!appearanceToEdit)
-      throw makeErrorNotFound({
-        whatsNotFound: 'Aparência',
-      })
+    if (!appearanceToEdit) {
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Aparência',
+        }),
+      }
+    }
 
     const appearanceUpdated = await this.appearancesRepository.update({
       appearanceId,
@@ -67,8 +85,18 @@ export class UpdateAppearanceUseCase {
       },
     })
 
-    if (!appearanceUpdated) throw makeErrorPersonNotUpdate()
+    if (!appearanceUpdated) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { appearance: appearanceUpdated }
+    return {
+      ok: true,
+      data: {
+        appearance: appearanceUpdated,
+      },
+    }
   }
 }

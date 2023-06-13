@@ -14,8 +14,12 @@ export class DeleteImagePersonController {
     const { personId } = deleteImagePersonParamsSchema.parse(req.params)
 
     const deleteImagePersonUseCase = container.resolve(DeleteImagePersonUseCase)
-    await deleteImagePersonUseCase.execute({ userId: id, personId })
+    const response = await deleteImagePersonUseCase.execute({
+      userId: id,
+      personId,
+    })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(responseStatusCode)
   }
 }

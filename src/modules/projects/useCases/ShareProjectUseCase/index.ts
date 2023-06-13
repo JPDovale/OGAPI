@@ -17,6 +17,7 @@ import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFr
 import { makeErrorLimitFreeOfAnotherUserInEnd } from '@shared/errors/useFull/makeErrorLimitFreeOfAnotherUserInEnd'
 import { makeInternalError } from '@shared/errors/useFull/makeInternalError'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 type IPermission = 'view' | 'edit' | 'comment'
 
@@ -61,12 +62,22 @@ export class ShareProjectUseCase {
     permission,
     projectId,
     userId,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const userToAddProject = await this.usersRepository.findByEmail(email)
-    if (!userToAddProject) throw makeErrorUserNotFound()
+    if (!userToAddProject) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const projectsOfUserToAddAlreadyIn =
       await this.projectsRepository.listProjectsOfOneUser(userId)
@@ -77,10 +88,20 @@ export class ShareProjectUseCase {
       )
 
     const project = await this.projectsRepository.findById(projectId)
-    if (!project) throw makeErrorProjectNotFound()
+    if (!project) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotFound(),
+      }
+    }
 
     const thisProjectAreFromUser = project.user_id === userId
-    if (!thisProjectAreFromUser) throw makeErrorDeniedPermission()
+    if (!thisProjectAreFromUser) {
+      return {
+        ok: false,
+        error: makeErrorDeniedPermission(),
+      }
+    }
 
     const usersWithPermissionToComment =
       project.users_with_access_comment?.users ?? []
@@ -98,25 +119,43 @@ export class ShareProjectUseCase {
     if (
       usersInProject.length >= 1 &&
       user.subscription?.payment_status !== 'active'
-    )
-      throw makeErrorLimitFreeInEnd()
+    ) {
+      return {
+        ok: false,
+        error: makeErrorLimitFreeInEnd(),
+      }
+    }
 
     if (
       projectsOfUSerToAddOfAnotherUsers.length >= 3 &&
       userToAddProject.subscription?.payment_status !== 'active'
-    )
-      throw makeErrorLimitFreeOfAnotherUserInEnd()
+    ) {
+      return {
+        ok: false,
+        error: makeErrorLimitFreeOfAnotherUserInEnd(),
+      }
+    }
 
     const isAlreadySharedWithUser = usersInProject.find(
       (u) => u.email === email,
     )
-    if (isAlreadySharedWithUser) throw makeErrorProjectAlreadySharedWithUser()
+    if (isAlreadySharedWithUser) {
+      return {
+        ok: false,
+        error: makeErrorProjectAlreadySharedWithUser(),
+      }
+    }
 
     const listToAddUser = project[
       mapperToFindListAccess[permission]
     ] as IProjectUsers
 
-    if (!listToAddUser) throw makeInternalError()
+    if (!listToAddUser) {
+      return {
+        ok: false,
+        error: makeInternalError(),
+      }
+    }
 
     const newListUserWithAccess: IUserInProject[] = [
       ...listToAddUser.users,
@@ -128,7 +167,12 @@ export class ShareProjectUseCase {
       users: newListUserWithAccess,
       permission,
     })
-    if (!updatedProject) throw makeErrorProjectNotUpdate()
+    if (!updatedProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotUpdate(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyOneUser({
       title: 'Projeto compartilhado',
@@ -138,6 +182,11 @@ export class ShareProjectUseCase {
 
     await this.usersRepository.removeCacheOfUser(userId)
 
-    return { project: updatedProject }
+    return {
+      ok: true,
+      data: {
+        project: updatedProject,
+      },
+    }
   }
 }

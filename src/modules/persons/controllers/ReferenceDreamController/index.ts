@@ -17,12 +17,13 @@ export class ReferenceDreamController {
     )
 
     const referenceDreamUseCase = container.resolve(ReferenceDreamUseCase)
-    await referenceDreamUseCase.execute({
+    const response = await referenceDreamUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

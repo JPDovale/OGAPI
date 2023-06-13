@@ -17,12 +17,13 @@ export class ReferenceTraumaController {
     )
 
     const referenceTraumaUseCase = container.resolve(ReferenceTraumaUseCase)
-    await referenceTraumaUseCase.execute({
+    const response = await referenceTraumaUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

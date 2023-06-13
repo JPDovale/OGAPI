@@ -1,6 +1,6 @@
 import { type IBookPreview } from '@modules/books/responses/IBookPreview'
 import { type IPersonPreview } from '@modules/persons/responses/IPersonPreview'
-import { type ITimeLinePreview } from '@modules/timelines/infra/repositories/entities/ITimeLinePreview'
+import { type ITimeLine } from '@modules/timelines/infra/repositories/entities/ITimeLine'
 import { type Project } from '@prisma/client'
 
 import { type IComment } from './IComment'
@@ -13,7 +13,7 @@ export interface IProject extends Project {
   comments?: IComment[]
   books?: IBookPreview[]
   persons?: IPersonPreview[]
-  timeLines?: ITimeLinePreview[]
+  timeLines?: ITimeLine[]
   user?: {
     id: string
     avatar_url: string | null

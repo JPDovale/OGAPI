@@ -85,7 +85,7 @@ model RefreshToken {
   refresh_token String   @db.VarChar(1000)
   access_code   String?
   expires_date  DateTime
-  application   String   @default("OG-web")
+  application   String   @default("@og-Web")
   created_at    DateTime @default(now())
 
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)

@@ -19,12 +19,16 @@ export class UpdateNameController {
     const { name } = updateNameBodySchema.parse(req.body)
 
     const updateNameUseCase = container.resolve(UpdateNameUseCase)
-    const { projectName } = await updateNameUseCase.execute({
+    const response = await updateNameUseCase.execute({
       userId: id,
       projectId,
       name,
     })
 
-    return res.status(200).json({ projectName })
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(200).json(response)
   }
 }

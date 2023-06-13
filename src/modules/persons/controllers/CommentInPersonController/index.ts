@@ -37,14 +37,15 @@ export class CommentInPersonController {
     const commentInPlotProjectUseCase = container.resolve(
       CommentInPersonUseCase,
     )
-    const { comment } = await commentInPlotProjectUseCase.execute({
+    const response = await commentInPlotProjectUseCase.execute({
       userId: id,
       personId,
       commentIn,
       content,
       toId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ comment })
+    return res.status(responseStatusCode).json(response)
   }
 }

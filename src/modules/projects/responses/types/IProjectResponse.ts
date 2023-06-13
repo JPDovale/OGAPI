@@ -1,4 +1,11 @@
+import { type IBookPreviewResponse } from '@modules/books/responses/types/IBookPreviewResponse'
+import { type IPersonPreviewResponse } from '@modules/persons/responses/types/IPersonPreviewResponse'
+import { type IComment } from '@modules/projects/infra/repositories/entities/IComment'
 import { type IFeaturesProjectUses } from '@modules/projects/infra/repositories/entities/IProject'
+import { type IProjectType } from '@modules/projects/infra/repositories/entities/IProjectType'
+import { type ITimeLineResponse } from '@modules/timelines/responses/types/ITimeLineResponse'
+
+import { type IUserInProject } from './IProjectPreviewResponse'
 
 export interface ICreatorProjectResponse {
   id: string
@@ -16,7 +23,7 @@ export interface IProjectResponse {
   name: string
   private: boolean
   password: string | null
-  type: 'book' | 'rpg' | 'roadMap' | 'gameplay'
+  type: IProjectType
   createdAt: Date
   updatedAt: Date
   features: IFeaturesProjectUses
@@ -49,15 +56,23 @@ export interface IProjectResponse {
       act3: string | null
     }
   }
+  users: IUserInProject[]
   collections: {
     book: {
       itensLength: number
+      itens: IBookPreviewResponse[]
     }
     person: {
       itensLength: number
+      itens: IPersonPreviewResponse[]
     }
     timeLine: {
       itensLength: number
+      itens: ITimeLineResponse[]
+    }
+    comments: {
+      itensLength: number
+      itens: IComment[]
     }
   }
 }

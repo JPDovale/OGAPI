@@ -5,6 +5,7 @@ import { type IClientProject } from '@modules/projects/infra/repositories/entiti
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
@@ -26,21 +27,38 @@ export class GetProjectUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ projectId, userId }: IRequest): Promise<IResponse> {
-    await this.verifyPermissions.verify({
+  async execute({ projectId, userId }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       projectId,
       userId,
       verifyPermissionTo: 'view',
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
     const projectReceived = await this.projectsRepository.findById(projectId)
-    if (!projectReceived) throw makeErrorProjectNotFound()
+    if (!projectReceived) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotFound(),
+      }
+    }
 
     const project: IClientProject = {
       ...projectReceived,
       features: getFeatures(projectReceived.features_using),
     }
 
-    return { project }
+    return {
+      ok: true,
+      data: {
+        project,
+      },
+    }
   }
 }

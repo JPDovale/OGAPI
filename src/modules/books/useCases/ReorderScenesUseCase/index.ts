@@ -11,6 +11,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
 import { makeErrorReorderValues } from '@shared/errors/books/makeErrorReorderValues'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -46,20 +47,48 @@ export class ReorderScenesUseCase {
     userId,
     sequenceFrom,
     sequenceTo,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
-    if (!book.capitules) throw makeErrorReorderValues()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
+    if (!book.capitules) {
+      return {
+        ok: false,
+        error: makeErrorReorderValues(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
     const capituleToUpdate = await this.capitulesRepository.findById(capituleId)
-    if (!capituleToUpdate) throw makeErrorCapituleNotFound()
-    if (!capituleToUpdate.scenes) throw makeErrorReorderValues()
+    if (!capituleToUpdate) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
+    if (!capituleToUpdate.scenes) {
+      return {
+        ok: false,
+        error: makeErrorReorderValues(),
+      }
+    }
 
     const indexOfSceneFrom = capituleToUpdate.scenes.findIndex(
       (scene) => scene.sequence === sequenceFrom,
@@ -75,7 +104,12 @@ export class ReorderScenesUseCase {
       sequenceFrom <= 0 ||
       sequenceTo <= 0
 
-    if (isInvalidSequenceTo) throw makeErrorReorderValues()
+    if (isInvalidSequenceTo) {
+      return {
+        ok: false,
+        error: makeErrorReorderValues(),
+      }
+    }
 
     let scenesReordered: IScene[] = []
 
@@ -138,6 +172,11 @@ export class ReorderScenesUseCase {
 
     const scenes = await this.capitulesRepository.listScenes(capituleId)
 
-    return { scenes }
+    return {
+      ok: true,
+      data: {
+        scenes,
+      },
+    }
   }
 }

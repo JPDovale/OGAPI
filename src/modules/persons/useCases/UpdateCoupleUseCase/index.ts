@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -42,22 +43,38 @@ export class UpdateCoupleUseCase {
     description,
     title,
     untilEnd,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const coupleToUpdate = await this.couplesRepository.findById(coupleId)
 
     if (!coupleToUpdate) {
-      throw makeErrorNotFound({
-        whatsNotFound: 'Casal',
-      })
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Casal',
+        }),
+      }
     }
 
     const updatedCouple = await this.couplesRepository.update({
@@ -69,8 +86,18 @@ export class UpdateCoupleUseCase {
       },
     })
 
-    if (!updatedCouple) throw makeErrorPersonNotUpdate()
+    if (!updatedCouple) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { couple: updatedCouple }
+    return {
+      ok: true,
+      data: {
+        couple: updatedCouple,
+      },
+    }
   }
 }

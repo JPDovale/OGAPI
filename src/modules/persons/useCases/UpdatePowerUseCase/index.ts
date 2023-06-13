@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -40,22 +41,39 @@ export class UpdatePowerUseCase {
     userId,
     description,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const powerToUpdate = await this.powersRepository.findById(powerId)
 
-    if (!powerToUpdate)
-      throw makeErrorNotFound({
-        whatsNotFound: 'Poder',
-      })
+    if (!powerToUpdate) {
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Poder',
+        }),
+      }
+    }
 
     const updatedPower = await this.powersRepository.update({
       powerId,
@@ -65,8 +83,18 @@ export class UpdatePowerUseCase {
       },
     })
 
-    if (!updatedPower) throw makeErrorPersonNotUpdate()
+    if (!updatedPower) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { power: updatedPower }
+    return {
+      ok: true,
+      data: {
+        power: updatedPower,
+      },
+    }
   }
 }

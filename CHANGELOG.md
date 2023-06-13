@@ -1,5 +1,11 @@
 # ogapi
 
+## 0.5.0
+
+### Minor Changes
+
+- 805b612: update responses types
+
 ## 0.4.0
 
 ### Minor Changes

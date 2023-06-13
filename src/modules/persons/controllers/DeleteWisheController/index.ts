@@ -15,12 +15,13 @@ export class DeleteWisheController {
     const { personId, wisheId } = deleteWisheParamsSchema.parse(req.params)
 
     const deleteWisheUseCase = container.resolve(DeleteWisheUseCase)
-    await deleteWisheUseCase.execute({
+    const response = await deleteWisheUseCase.execute({
       userId: id,
       personId,
       wisheId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

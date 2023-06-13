@@ -22,7 +22,19 @@ const defaultInclude: Prisma.PersonInclude = {
   },
   couples: {
     include: {
-      coupleWithPerson: true,
+      coupleWithPerson: {
+        select: {
+          person: {
+            select: {
+              id: true,
+              age: true,
+              name: true,
+              history: true,
+              image_url: true,
+            },
+          },
+        },
+      },
       comments: {
         include: {
           responses: {
@@ -316,7 +328,6 @@ export class PersonsPrismaRepository implements IPersonsRepository {
           key: 'project',
           objectId: person.project_id,
         }),
-
       ]).catch((err) => {
         throw err
       })

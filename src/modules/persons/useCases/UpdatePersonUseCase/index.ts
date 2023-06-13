@@ -9,6 +9,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorTimeLineNeedConfigurations } from '@shared/errors/timelines/makeErrorNeedConfigurations'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
@@ -57,17 +58,30 @@ export class UpdatePersonUseCase {
     bornMinute,
     bornMonth,
     bornSecond,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const personExite = await this.personsRepository.findById(personId)
-    if (!personExite) throw makeErrorPersonNotFound()
+    if (!personExite) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    const { project } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: personExite.project_id,
       verifyPermissionTo: 'edit',
       verifyFeatureInProject: ['persons'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project } = verification.data!
     const features = getFeatures(project.features_using)
 
     const { year } = this.dateProvider.getDateByTimestamp(
@@ -135,7 +149,12 @@ export class UpdatePersonUseCase {
         born_second: personBornDate.second.value,
       },
     })
-    if (!updatedPerson) throw makeErrorPersonNotUpdate()
+    if (!updatedPerson) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
     if (
       !updatedPerson.timeEventBorn?.timeEvent &&
@@ -146,7 +165,12 @@ export class UpdatePersonUseCase {
         (timeLine) => !timeLine.is_alternative,
       )
 
-      if (!mainTimeLineProject) throw makeErrorTimeLineNeedConfigurations()
+      if (!mainTimeLineProject) {
+        return {
+          ok: false,
+          error: makeErrorTimeLineNeedConfigurations(),
+        }
+      }
 
       await this.timeEventsRepository.create({
         happened_date: personBornDate.fullDate,
@@ -175,6 +199,11 @@ export class UpdatePersonUseCase {
       })
     }
 
-    return { person: updatedPerson }
+    return {
+      ok: true,
+      data: {
+        person: updatedPerson,
+      },
+    }
   }
 }

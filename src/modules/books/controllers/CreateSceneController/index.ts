@@ -46,7 +46,7 @@ export class CreateSceneController {
     )
 
     const createSceneUseCase = container.resolve(CreateSceneUseCase)
-    const { scene } = await createSceneUseCase.execute({
+    const response = await createSceneUseCase.execute({
       userId: id,
       bookId,
       capituleId,
@@ -55,6 +55,8 @@ export class CreateSceneController {
       persons,
     })
 
-    return res.status(201).json({ scene })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
+
+    return res.status(responseStatusCode).json(response)
   }
 }

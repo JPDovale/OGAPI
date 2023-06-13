@@ -9,6 +9,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorReorderValues } from '@shared/errors/books/makeErrorReorderValues'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -39,16 +40,34 @@ export class ReorderCapitulesUseCase {
     userId,
     sequenceFrom,
     sequenceTo,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
-    if (!book.capitules) throw makeErrorReorderValues()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
+    if (!book.capitules) {
+      return {
+        ok: false,
+        error: makeErrorReorderValues(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const indexOfCapituleFrom = book.capitules?.findIndex(
       (capitule) => capitule.sequence === sequenceFrom,
@@ -64,7 +83,12 @@ export class ReorderCapitulesUseCase {
       sequenceFrom <= 0 ||
       sequenceTo <= 0
 
-    if (isInvalidSequenceTo) throw makeErrorReorderValues()
+    if (isInvalidSequenceTo) {
+      return {
+        ok: false,
+        error: makeErrorReorderValues(),
+      }
+    }
 
     let capitulesReordered: ICapitule[] = []
 
@@ -127,6 +151,11 @@ export class ReorderCapitulesUseCase {
 
     // const capitules = await this.booksRepository.listCapitules(bookId)
 
-    return { capitules: [] }
+    return {
+      ok: true,
+      data: {
+        capitules: [],
+      },
+    }
   }
 }

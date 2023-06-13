@@ -1,6 +1,5 @@
 import { inject, injectable } from 'tsyringe'
 
-import { type IStructurePlotBook } from '@modules/books/infra/mongoose/entities/types/IPlotBook'
 import { IBooksRepository } from '@modules/books/infra/repositories/contracts/IBooksRepository'
 import { ICapitulesRepository } from '@modules/books/infra/repositories/contracts/ICapitulesRepository'
 import { IScenesRepository } from '@modules/books/infra/repositories/contracts/IScenesRepository'
@@ -11,13 +10,18 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
 import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpdate'
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
   bookId: string
   capituleId: string
   objective: string
-  structure: IStructurePlotBook
+  structure: {
+    act1: string
+    act2: string
+    act3: string
+  }
   persons: Array<{ id: string }>
 }
 
@@ -51,21 +55,41 @@ export class CreateSceneUseCase {
     objective,
     structure,
     persons,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    const { project, user } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const capituleToAddScene = await this.capitulesRepository.findById(
       capituleId,
     )
 
-    if (!capituleToAddScene) throw makeErrorCapituleNotFound()
+    if (!capituleToAddScene) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
     const numberOfScenesInCapitule = capituleToAddScene.scenes?.length ?? 0
 
@@ -81,7 +105,12 @@ export class CreateSceneUseCase {
       },
     })
 
-    if (!scene) throw makeErrorBookNotUpdate()
+    if (!scene) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     this.capitulesRepository
       .update({
@@ -91,7 +120,10 @@ export class CreateSceneUseCase {
         },
       })
       .catch((err) => {
-        throw err
+        return {
+          ok: false,
+          error: err,
+        }
       })
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
@@ -109,6 +141,11 @@ export class CreateSceneUseCase {
       } -> cenas' para ver mais informações.`,
     })
 
-    return { scene }
+    return {
+      ok: true,
+      data: {
+        scene,
+      },
+    }
   }
 }
