@@ -16,10 +16,11 @@ interface IPayload {
 
 export class EnsureAuthenticatedMiddleware {
   async verify(req: Request, res: Response, next: NextFunction): Promise<void> {
-    const token =
-      req.cookies['@og-token'] ?? req.headers?.cookies
-        ? JSON.parse(String(req.headers?.cookies)).token
-        : undefined
+    const token = req.cookies['@og-token']
+      ? req.cookies['@og-token']
+      : req.headers?.cookies
+      ? JSON.parse(String(req.headers?.cookies)).token
+      : undefined
 
     if (!token) {
       const response: IResolve = {

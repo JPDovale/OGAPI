@@ -6,6 +6,10 @@ import { RefreshTokenUseCase } from '@modules/accounts/useCases/RefreshTokenUseC
 export class RefreshTokenController {
   async handle(req: Request, res: Response): Promise<Response> {
     const token = req.cookies['@og-refresh-token']
+      ? req.cookies['@og-refresh-token']
+      : req.headers?.cookies
+      ? JSON.parse(String(req.headers?.cookies)).refreshToken
+      : undefined
 
     const refreshTokenUseCase = container.resolve(RefreshTokenUseCase)
     const response = await refreshTokenUseCase.execute({
