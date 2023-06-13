@@ -38,14 +38,15 @@ export class CreateValueController {
     )
 
     const createValuesUseCase = container.resolve(CreateValueUseCase)
-    const { value } = await createValuesUseCase.execute({
+    const response = await createValuesUseCase.execute({
       userId: id,
       personId,
       title,
       description,
       exceptions,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ value })
+    return res.status(responseStatusCode).json(response)
   }
 }

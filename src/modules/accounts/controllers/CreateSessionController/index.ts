@@ -18,13 +18,12 @@ export class CreateSessionController {
     const response = await createSessionUseCase.execute({
       email,
       password,
+      onApplication: '@og-Web',
     })
 
     const responsePartied = parserUserResponse(response)
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(responsePartied)
-    }
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
     res.cookie('@og-refresh-token', response.data?.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
@@ -42,6 +41,6 @@ export class CreateSessionController {
       secure: true,
     })
 
-    return res.status(201).json(responsePartied)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

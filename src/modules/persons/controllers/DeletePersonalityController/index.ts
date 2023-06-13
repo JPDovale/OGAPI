@@ -17,12 +17,13 @@ export class DeletePersonalityController {
     )
 
     const deletePersonalityUseCase = container.resolve(DeletePersonalityUseCase)
-    await deletePersonalityUseCase.execute({
+    const response = await deletePersonalityUseCase.execute({
       userId: id,
       personId,
       personalityId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

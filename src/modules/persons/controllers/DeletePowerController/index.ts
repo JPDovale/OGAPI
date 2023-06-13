@@ -15,12 +15,13 @@ export class DeletePowerController {
     const { personId, powerId } = deletePowerParamsSchema.parse(req.params)
 
     const deletePowerUseCase = container.resolve(DeletePowerUseCase)
-    await deletePowerUseCase.execute({
+    const response = await deletePowerUseCase.execute({
       userId: id,
       personId,
       powerId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

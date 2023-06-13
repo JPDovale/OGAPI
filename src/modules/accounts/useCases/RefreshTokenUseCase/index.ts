@@ -20,6 +20,7 @@ interface IPayload {
 
 interface IRequest {
   token: string
+  onApplication: string
 }
 
 interface IResponse {
@@ -40,7 +41,10 @@ export class RefreshTokenUseCase {
     private readonly userRepository: IUsersRepository,
   ) {}
 
-  async execute({ token }: IRequest): Promise<IResolve<IResponse>> {
+  async execute({
+    token,
+    onApplication,
+  }: IRequest): Promise<IResolve<IResponse>> {
     if (!token) {
       return {
         ok: false,
@@ -116,6 +120,7 @@ export class RefreshTokenUseCase {
       expires_date: expiresDate,
       refresh_token: refreshToken,
       user_id: userId,
+      application: onApplication,
     })
 
     const newToken = sign(

@@ -5,6 +5,7 @@ import { type IBook } from '@modules/books/infra/repositories/entities/IBook'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -25,18 +26,34 @@ export class GetBookUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ bookId, userId }: IRequest): Promise<IResponse> {
+  async execute({ bookId, userId }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
-      verifyPermissionTo: 'view',
+      verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
     return {
-      book,
+      ok: true,
+      data: {
+        book,
+      },
     }
   }
 }

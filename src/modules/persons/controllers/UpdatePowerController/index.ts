@@ -25,14 +25,15 @@ export class UpdatePowerController {
     const { description, title } = updatePowerBodySchema.parse(req.body)
 
     const updatePowerUseCase = container.resolve(UpdatePowerUseCase)
-    const { power } = await updatePowerUseCase.execute({
+    const response = await updatePowerUseCase.execute({
       userId: id,
       personId,
       powerId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ power })
+    return res.status(responseStatusCode).json(response)
   }
 }

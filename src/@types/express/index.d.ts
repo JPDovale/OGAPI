@@ -4,6 +4,7 @@ declare namespace Express {
     user: {
       id: string
       admin: boolean
+      onApplication?: string | string[]
     }
   }
 }

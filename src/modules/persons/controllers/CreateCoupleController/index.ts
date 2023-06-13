@@ -27,7 +27,7 @@ export class CreateCoupleController {
       createCoupleBodySchema.parse(req.body)
 
     const createCoupleUseCase = container.resolve(CreateCoupleUseCase)
-    const { couple, coupleWithPerson } = await createCoupleUseCase.execute({
+    const response = await createCoupleUseCase.execute({
       userId: id,
       personId,
       title,
@@ -35,7 +35,8 @@ export class CreateCoupleController {
       untilEnd,
       coupleId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ couple, coupleWithPerson })
+    return res.status(responseStatusCode).json(response)
   }
 }

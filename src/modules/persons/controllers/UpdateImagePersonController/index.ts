@@ -15,12 +15,13 @@ export class UpdateImagePersonController {
     const { file } = req
 
     const imageUpdateUseCase = container.resolve(UpdateImagePersonUseCase)
-    const { imageFilename, imageUrl } = await imageUpdateUseCase.execute({
+    const response = await imageUpdateUseCase.execute({
       userId: id,
       personId,
       file,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ imageFilename, imageUrl })
+    return res.status(responseStatusCode).json(response)
   }
 }

@@ -25,14 +25,15 @@ export class UpdateFearController {
     const { title, description } = updateFearBodySchema.parse(req.body)
 
     const updateFearUseCase = container.resolve(UpdateFearUseCase)
-    const { fear } = await updateFearUseCase.execute({
+    const response = await updateFearUseCase.execute({
       userId: id,
       personId,
       fearId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ fear })
+    return res.status(responseStatusCode).json(response)
   }
 }

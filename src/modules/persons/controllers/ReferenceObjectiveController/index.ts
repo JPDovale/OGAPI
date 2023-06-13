@@ -19,12 +19,13 @@ export class ReferenceObjectiveController {
     const referenceObjectiveUseCase = container.resolve(
       ReferenceObjectiveUseCase,
     )
-    await referenceObjectiveUseCase.execute({
+    const response = await referenceObjectiveUseCase.execute({
       userId: id,
       personId,
       refId: referenceId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

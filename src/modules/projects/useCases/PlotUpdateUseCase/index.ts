@@ -7,6 +7,7 @@ import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersPro
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   plot: IUpdatePlotDTO
@@ -31,12 +32,25 @@ export class PlotUpdateUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ plot, projectId, userId }: IRequest): Promise<IResponse> {
-    const { user, project } = await this.verifyPermissions.verify({
-      userId,
+  async execute({
+    plot,
+    projectId,
+    userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       projectId,
-      verifyPermissionTo: 'edit',
+      userId,
+      verifyPermissionTo: 'view',
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const updatedProject = await this.projectsRepository.update({
       projectId,
@@ -128,7 +142,12 @@ export class PlotUpdateUseCase {
       },
     })
 
-    if (!updatedProject) throw makeErrorProjectNotUpdate()
+    if (!updatedProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotUpdate(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project: updatedProject,
@@ -137,6 +156,11 @@ export class PlotUpdateUseCase {
       content: `${user.username} acabou de alterar o plot do projeto ${updatedProject.name}`,
     })
 
-    return { project: updatedProject }
+    return {
+      ok: true,
+      data: {
+        project: updatedProject,
+      },
+    }
   }
 }

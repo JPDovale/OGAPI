@@ -8,6 +8,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
 import { makeErrorImageNotFound } from '@shared/errors/useFull/makeErrorImageNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -34,14 +35,28 @@ export class DeleteImageUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ projectId, userId }: IRequest): Promise<IResponse> {
-    const { project, user } = await this.verifyPermissions.verify({
+  async execute({ projectId, userId }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId,
       verifyPermissionTo: 'edit',
     })
 
-    if (!project.image_filename) throw makeErrorImageNotFound()
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
+
+    if (!project.image_filename) {
+      return {
+        ok: false,
+        error: makeErrorImageNotFound(),
+      }
+    }
 
     const updatedProject = await this.projectsRepository.update({
       projectId,
@@ -51,7 +66,12 @@ export class DeleteImageUseCase {
       },
     })
 
-    if (!updatedProject) throw makeErrorProjectNotUpdate()
+    if (!updatedProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotUpdate(),
+      }
+    }
 
     await this.storageProvider.delete(project.image_filename, 'projects/images')
     await this.notifyUsersProvider.notifyUsersInOneProject({
@@ -61,6 +81,11 @@ export class DeleteImageUseCase {
       content: `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
     })
 
-    return { project: updatedProject }
+    return {
+      ok: true,
+      data: {
+        project: updatedProject,
+      },
+    }
   }
 }

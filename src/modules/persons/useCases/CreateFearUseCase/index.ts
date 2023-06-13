@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorAlreadyExistesWithName } from '@shared/errors/useFull/makeErrorAlreadyExistesWithName'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -38,25 +39,40 @@ export class CreateFearUseCase {
     personId,
     description,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
 
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
     const fearExistesToThiPerson = person.fears?.find(
       (fear) => fear.title.toLowerCase().trim() === title.toLowerCase().trim(),
     )
 
-    if (fearExistesToThiPerson)
-      throw makeErrorAlreadyExistesWithName({
-        whatExistes: 'um medo',
-      })
-
+    if (fearExistesToThiPerson) {
+      return {
+        ok: false,
+        error: makeErrorAlreadyExistesWithName({
+          whatExistes: 'um medo',
+        }),
+      }
+    }
     const fear = await this.fearsRepository.create(
       {
         title,
@@ -70,8 +86,18 @@ export class CreateFearUseCase {
       personId,
     )
 
-    if (!fear) throw makeErrorPersonNotUpdate()
+    if (!fear) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { fear }
+    return {
+      ok: true,
+      data: {
+        fear,
+      },
+    }
   }
 }

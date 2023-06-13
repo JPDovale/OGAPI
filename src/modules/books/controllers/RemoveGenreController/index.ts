@@ -15,12 +15,14 @@ export class RemoveGenreController {
     const { genreId, bookId } = removeGenreParamsSchema.parse(req.params)
 
     const removeGenreUseCase = container.resolve(RemoveGenreUseCase)
-    await removeGenreUseCase.execute({
+    const response = await removeGenreUseCase.execute({
       userId: id,
       genreId,
       bookId,
     })
 
-    return res.status(204).end()
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

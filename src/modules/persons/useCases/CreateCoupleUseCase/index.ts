@@ -9,6 +9,7 @@ import InjectableDependencies from '@shared/container/types'
 import { AppError } from '@shared/errors/AppError'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -44,38 +45,57 @@ export class CreateCoupleUseCase {
     description,
     untilEnd,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
     const personOfCouple = await this.personsRepository.findById(coupleId)
 
-    if (!person || !personOfCouple) throw makeErrorPersonNotFound()
+    if (!person || !personOfCouple) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
+
+    const response = await this.verifyPermissions.verify({
+      userId,
+      projectId: person.project_id,
+      verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
+    })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const personsSameProject = person.project_id === personOfCouple.project_id
 
     if (!personsSameProject) {
-      throw new AppError({
-        title: 'Error',
-        message: 'The person can not reference person of different projects',
-        statusCode: 409,
-      })
+      return {
+        ok: false,
+        error: new AppError({
+          title: 'Error',
+          message: 'The person can not reference person of different projects',
+          statusCode: 409,
+        }),
+      }
     }
-
-    await this.verifyPermissions.verify({
-      userId,
-      projectId: person.project_id,
-      verifyPermissionTo: 'edit',
-    })
 
     const alreadyExisteCoupleWithPersonToPerson = person.couples?.find(
       (couple) => couple.coupleWithPerson?.person_id === coupleId,
     )
 
     if (alreadyExisteCoupleWithPersonToPerson) {
-      throw new AppError({
-        title: 'Já existe uma casal relacionando esse personagens.',
-        message:
-          'Já existe uma casal relacionando esses personagens. Tente com outros personagens.',
-      })
+      return {
+        ok: false,
+        error: new AppError({
+          title: 'Já existe uma casal relacionando esse personagens.',
+          message:
+            'Já existe uma casal relacionando esses personagens. Tente com outros personagens.',
+        }),
+      }
     }
 
     const couple = await this.couplesRepository.create({
@@ -98,9 +118,22 @@ export class CreateCoupleUseCase {
       },
     })
 
-    if (!couple) throw makeErrorPersonNotUpdate()
-    if (!couple.coupleWithPerson) throw makeErrorPersonNotUpdate()
+    if (!couple) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
+    if (!couple.coupleWithPerson) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { couple, coupleWithPerson: couple.coupleWithPerson }
+    return {
+      ok: true,
+      data: { couple, coupleWithPerson: couple.coupleWithPerson },
+    }
   }
 }

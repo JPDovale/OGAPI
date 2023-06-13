@@ -153,6 +153,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
       select: {
         persons: true,
         books: true,
+        timeLines: true,
       },
     },
   }
@@ -382,6 +383,7 @@ export class ProjectsPrismaRepository implements IProjectsRepository {
                 avatar_url: true,
                 id: true,
                 username: true,
+                email: true,
               },
             },
           },

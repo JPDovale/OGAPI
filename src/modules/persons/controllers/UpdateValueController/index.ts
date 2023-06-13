@@ -25,14 +25,15 @@ export class UpdateValueController {
     const { description, title } = updateValueBodySchema.parse(req.body)
 
     const updateValueUseCase = container.resolve(UpdateValueUseCase)
-    const { value } = await updateValueUseCase.execute({
+    const response = await updateValueUseCase.execute({
       userId: id,
       personId,
       valueId,
       description,
       title,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json({ value })
+    return res.status(responseStatusCode).json(response)
   }
 }

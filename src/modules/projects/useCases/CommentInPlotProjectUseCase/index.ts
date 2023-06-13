@@ -6,6 +6,7 @@ import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersPro
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorCommentNotCreated } from '@shared/errors/projects/makeErrorCommentNotCreated'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -36,12 +37,21 @@ export class CommentInPlotProjectUseCase {
     projectId,
     to,
     userId,
-  }: IRequest): Promise<IResponse> {
-    const { project, user } = await this.verifyPermissions.verify({
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId,
       verifyPermissionTo: 'comment',
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const newComment = await this.commentsRepository.create(
       {
@@ -54,8 +64,12 @@ export class CommentInPlotProjectUseCase {
         key: 'project',
       },
     )
-
-    if (!newComment) throw makeErrorCommentNotCreated()
+    if (!newComment) {
+      return {
+        ok: false,
+        error: makeErrorCommentNotCreated(),
+      }
+    }
 
     const commentSentInto = newComment.to_unknown
     const commentContent = newComment.content
@@ -67,6 +81,11 @@ export class CommentInPlotProjectUseCase {
       content: `${user.username} comentou no projeto ${project.name} em |${commentSentInto}: ${commentContent}`,
     })
 
-    return { comment: newComment }
+    return {
+      ok: true,
+      data: {
+        comment: newComment,
+      },
+    }
   }
 }

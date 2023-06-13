@@ -6,6 +6,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -25,26 +26,46 @@ export class ReferenceValueUseCase {
     private readonly valuesRepository: IValuesRepository,
   ) {}
 
-  async execute({ personId, refId, userId }: IRequest): Promise<void> {
+  async execute({ personId, refId, userId }: IRequest): Promise<IResolve> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
 
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
     const valueToAddPerson = await this.valuesRepository.findById(refId)
 
-    if (!valueToAddPerson)
-      throw makeErrorNotFound({
-        whatsNotFound: 'Valor',
-      })
+    if (!valueToAddPerson) {
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Valor',
+        }),
+      }
+    }
 
     await this.valuesRepository.addPerson({
       personId: person.id,
       objectId: refId,
     })
+
+    return {
+      ok: true,
+    }
   }
 }

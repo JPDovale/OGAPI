@@ -5,6 +5,7 @@ import { INotifyUsersProvider } from '@shared/container/providers/NotifyUsersPro
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotFound } from '@shared/errors/books/makeErrorBookNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -25,15 +26,31 @@ export class RemoveGenreUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ userId, bookId, genreId }: IRequest): Promise<void> {
+  async execute({ userId, bookId, genreId }: IRequest): Promise<IResolve> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
 
-    const { project, user } = await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       projectId: book.project_id,
       userId,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
+
     await this.booksRepository.removeGenreOfBook(genreId, bookId)
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
@@ -46,5 +63,9 @@ export class RemoveGenreUseCase {
         project.name
       }. Acesse a aba 'Livros -> ${book.title}' para ver mais informações.`,
     })
+
+    return {
+      ok: true,
+    }
   }
 }

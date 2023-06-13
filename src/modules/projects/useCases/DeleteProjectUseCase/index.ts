@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
 import { makeErrorDeniedPermission } from '@shared/errors/useFull/makeErrorDeniedPermission'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   projectId: string
@@ -30,14 +31,29 @@ export class DeleteProjectUseCase {
     private readonly storageProvider: IStorageProvider,
   ) {}
 
-  async execute({ projectId, userId }: IRequest): Promise<void> {
+  async execute({ projectId, userId }: IRequest): Promise<IResolve> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const project = await this.projectsRepository.findById(projectId)
-    if (!project) throw makeErrorProjectNotFound()
+    if (!project) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotFound(),
+      }
+    }
 
-    if (project.user_id !== userId) throw makeErrorDeniedPermission()
+    if (project.user_id !== userId) {
+      return {
+        ok: false,
+        error: makeErrorDeniedPermission(),
+      }
+    }
 
     await this.projectsRepository.delete(projectId)
     await this.notifyUsersProvider.notifyUsersInOneProject({
@@ -52,6 +68,10 @@ export class DeleteProjectUseCase {
         project.image_filename,
         'projects/images',
       )
+    }
+
+    return {
+      ok: true,
     }
   }
 }

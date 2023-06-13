@@ -7,6 +7,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorBookNotCreated } from '@shared/errors/books/makeErrorBookNotCreated'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -49,21 +50,34 @@ export class CreateBookUseCase {
     isbn,
     words,
     writtenWords,
-  }: IRequest): Promise<IResponse> {
-    const { project, user } = await this.verifyPermissions.verify({
-      userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const verification = await this.verifyPermissions.verify({
       projectId,
+      userId,
       verifyPermissionTo: 'edit',
-      clearCache: true,
+      verifyFeatureInProject: ['books'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     const numbersOfBooksInProject = project._count?.books ?? 0
 
     if (
       numbersOfBooksInProject >= 1 &&
       user.subscription?.payment_status !== 'active'
-    )
-      throw makeErrorLimitFreeInEnd()
+    ) {
+      return {
+        ok: false,
+        error: makeErrorLimitFreeInEnd(),
+      }
+    }
 
     const newBook = await this.booksRepository.create({
       literary_genre: literaryGenre,
@@ -81,7 +95,12 @@ export class CreateBookUseCase {
       written_words: writtenWords,
     })
 
-    if (!newBook) throw makeErrorBookNotCreated()
+    if (!newBook) {
+      return {
+        ok: false,
+        error: makeErrorBookNotCreated(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
@@ -94,6 +113,11 @@ export class CreateBookUseCase {
       }. Acesse a aba 'Livros' para ver mais informações.`,
     })
 
-    return { book: newBook }
+    return {
+      ok: true,
+      data: {
+        book: newBook,
+      },
+    }
   }
 }

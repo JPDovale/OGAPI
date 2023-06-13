@@ -7,6 +7,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorCommentNotCreated } from '@shared/errors/projects/makeErrorCommentNotCreated'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import { mapperObjectsInPerson } from '@utils/mappers/mapperObjectsInPerson'
 
 interface IRequest {
@@ -85,15 +86,28 @@ export class CommentInPersonUseCase {
     content,
     toId,
     commentIn,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'comment',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
 
     const commentFactoredIn = factoryComment[mapperToCommentIn[commentIn]](
       toId,
@@ -108,8 +122,18 @@ export class CommentInPersonUseCase {
         personId,
       },
     })
-    if (!comment) throw makeErrorCommentNotCreated()
+    if (!comment) {
+      return {
+        ok: false,
+        error: makeErrorCommentNotCreated(),
+      }
+    }
 
-    return { comment }
+    return {
+      ok: true,
+      data: {
+        comment,
+      },
+    }
   }
 }

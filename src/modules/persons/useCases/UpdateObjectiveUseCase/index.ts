@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -42,24 +43,40 @@ export class UpdateObjectiveUseCase {
     description,
     title,
     itBeRealized,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const objectiveToUpdate = await this.objectivesRepository.findById(
       objectiveId,
     )
 
     if (!objectiveToUpdate) {
-      throw makeErrorNotFound({
-        whatsNotFound: 'Objetivo',
-      })
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Objetivo',
+        }),
+      }
     }
 
     const updatedObjetive = await this.objectivesRepository.update({
@@ -71,8 +88,18 @@ export class UpdateObjectiveUseCase {
       },
     })
 
-    if (!updatedObjetive) throw makeErrorPersonNotUpdate()
+    if (!updatedObjetive) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { objective: updatedObjetive }
+    return {
+      ok: true,
+      data: {
+        objective: updatedObjetive,
+      },
+    }
   }
 }

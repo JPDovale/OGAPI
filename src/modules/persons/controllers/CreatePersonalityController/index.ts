@@ -37,14 +37,15 @@ export class CreatePersonalityController {
       createPersonalityBodySchema.parse(req.body)
 
     const createPersonalityUseCase = container.resolve(CreatePersonalityUseCase)
-    const { personality } = await createPersonalityUseCase.execute({
+    const response = await createPersonalityUseCase.execute({
       userId: id,
       personId,
       title,
       description,
       consequences,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ personality })
+    return res.status(responseStatusCode).json(response)
   }
 }

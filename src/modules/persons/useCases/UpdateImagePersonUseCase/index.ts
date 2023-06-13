@@ -7,6 +7,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -32,17 +33,39 @@ export class UpdateImagePersonUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ file, personId, userId }: IRequest): Promise<IResponse> {
+  async execute({
+    file,
+    personId,
+    userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
 
-    if (!person) throw makeErrorPersonNotFound()
-    if (!file) throw makeErrorFileNotUploaded()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
+    if (!file) {
+      return {
+        ok: false,
+        error: makeErrorFileNotUploaded(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     if (person.image_filename) {
       await this.storageProvider.delete(person.image_filename, 'persons/images')
@@ -61,8 +84,11 @@ export class UpdateImagePersonUseCase {
     fs.rmSync(file.path)
 
     return {
-      imageFilename: file.filename,
-      imageUrl: url,
+      ok: true,
+      data: {
+        imageFilename: file.filename,
+        imageUrl: url,
+      },
     }
   }
 }

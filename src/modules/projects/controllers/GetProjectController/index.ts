@@ -2,6 +2,7 @@ import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
 import { z } from 'zod'
 
+import { ParserProjectResponse } from '@modules/projects/responses/parsers/ParserProjectResponse'
 import { GetProjectUseCase } from '@modules/projects/useCases/GetProjectUseCase'
 
 export class GetProjectController {
@@ -14,11 +15,18 @@ export class GetProjectController {
     const { projectId } = GetProjectControllerParamsSchema.parse(req.params)
 
     const getProjectUseCase = container.resolve(GetProjectUseCase)
-    const { project } = await getProjectUseCase.execute({
+    const response = await getProjectUseCase.execute({
       projectId,
       userId: id,
     })
 
-    return res.status(200).json({ project })
+    const parserProjectResponse = container.resolve(ParserProjectResponse)
+    const responsePartied = parserProjectResponse.parser(response)
+
+    if (response.error) {
+      return res.status(response.error.statusCode).json(responsePartied)
+    }
+
+    return res.status(200).json(responsePartied)
   }
 }

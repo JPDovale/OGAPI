@@ -24,13 +24,14 @@ export class CreateWisheController {
     const { title, description } = createWisheBodySchema.parse(req.body)
 
     const createWishesUseCase = container.resolve(CreateWisheUseCase)
-    const { wishe } = await createWishesUseCase.execute({
+    const response = await createWishesUseCase.execute({
       userId: id,
       personId,
       title,
       description,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 201
 
-    return res.status(201).json({ wishe })
+    return res.status(responseStatusCode).json(response)
   }
 }

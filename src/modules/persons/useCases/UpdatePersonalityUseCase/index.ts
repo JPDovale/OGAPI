@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotFound } from '@shared/errors/persons/makeErrorPersonNotFound'
 import { makeErrorPersonNotUpdate } from '@shared/errors/persons/makeErrorPersonNotUpdate'
 import { makeErrorNotFound } from '@shared/errors/useFull/makeErrorNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -40,24 +41,40 @@ export class UpdatePersonalityUseCase {
     userId,
     description,
     title,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const person = await this.personsRepository.findById(personId)
-    if (!person) throw makeErrorPersonNotFound()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotFound(),
+      }
+    }
 
-    await this.verifyPermissions.verify({
+    const verification = await this.verifyPermissions.verify({
       userId,
       projectId: person.project_id,
       verifyPermissionTo: 'edit',
+      verifyFeatureInProject: ['persons'],
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
 
     const personalityToUpdate = await this.personalitiesRepository.findById(
       personalityId,
     )
 
     if (!personalityToUpdate) {
-      throw makeErrorNotFound({
-        whatsNotFound: 'Característica de personalidade',
-      })
+      return {
+        ok: false,
+        error: makeErrorNotFound({
+          whatsNotFound: 'Característica de personalidade',
+        }),
+      }
     }
 
     const updatedPersonality = await this.personalitiesRepository.update({
@@ -68,8 +85,18 @@ export class UpdatePersonalityUseCase {
       },
     })
 
-    if (!updatedPersonality) throw makeErrorPersonNotUpdate()
+    if (!updatedPersonality) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotUpdate(),
+      }
+    }
 
-    return { personality: updatedPersonality }
+    return {
+      ok: true,
+      data: {
+        personality: updatedPersonality,
+      },
+    }
   }
 }

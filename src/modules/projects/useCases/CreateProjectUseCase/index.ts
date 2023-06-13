@@ -8,6 +8,7 @@ import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotCreated } from '@shared/errors/projects/makeErrorProjectNotCreated'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import { getListFeaturesInLine } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
@@ -44,9 +45,14 @@ export class CreateProjectUseCase {
     password,
     private: priv,
     timeLine,
-  }: IRequest): Promise<void> {
+  }: IRequest): Promise<IResolve> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const numberOfProjectsThisUser = user._count?.projects ?? 0
 
@@ -54,7 +60,10 @@ export class CreateProjectUseCase {
       numberOfProjectsThisUser >= 1 &&
       user.subscription?.payment_status !== 'active'
     ) {
-      throw makeErrorLimitFreeInEnd()
+      return {
+        ok: false,
+        error: makeErrorLimitFreeInEnd(),
+      }
     }
 
     const featuresListInLine = getListFeaturesInLine(features)
@@ -94,6 +103,15 @@ export class CreateProjectUseCase {
     })
 
     await this.usersRepository.removeCacheOfUser(userId)
-    if (!newProject) throw makeErrorProjectNotCreated()
+    if (!newProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotCreated(),
+      }
+    }
+
+    return {
+      ok: true,
+    }
   }
 }

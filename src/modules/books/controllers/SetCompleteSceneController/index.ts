@@ -23,7 +23,7 @@ export class SetCompleteSceneController {
     const { writtenWords } = setCompleteSceneBodySchema.parse(req.body)
 
     const setCompleteSceneUseCase = container.resolve(SetCompleteSceneUseCase)
-    const { bookWrittenWords, scene } = await setCompleteSceneUseCase.execute({
+    const response = await setCompleteSceneUseCase.execute({
       userId: id,
       bookId,
       capituleId,
@@ -31,6 +31,8 @@ export class SetCompleteSceneController {
       writtenWords,
     })
 
-    return res.status(200).json({ bookWrittenWords, scene })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }

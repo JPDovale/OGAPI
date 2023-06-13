@@ -3,13 +3,14 @@ import { inject, injectable } from 'tsyringe'
 import { IPersonsRepository } from '@modules/persons/infra/repositories/contracts/IPersonsRepository'
 import { type IPerson } from '@modules/persons/infra/repositories/entities/IPerson'
 import { ITimeEventsRepository } from '@modules/timelines/infra/repositories/contracts/ITimeEventsRepository'
-import { type ITimeLinePreview } from '@modules/timelines/infra/repositories/entities/ITimeLinePreview'
+import { type ITimeLine } from '@modules/timelines/infra/repositories/entities/ITimeLine'
 import { IDateProvider } from '@shared/container/providers/DateProvider/IDateProvider'
 import { IVerifyPermissionsService } from '@shared/container/services/verifyPermissions/IVerifyPermissions'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorPersonNotCreated } from '@shared/errors/persons/makeErrorPersonNotCreated'
 import { makeErrorTimeLineNeedConfigurations } from '@shared/errors/timelines/makeErrorNeedConfigurations'
 import { makeErrorLimitFreeInEnd } from '@shared/errors/useFull/makeErrorLimitFreeInEnd'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 interface IRequest {
@@ -58,22 +59,34 @@ export class CreatePersonUseCase {
     bornMinute,
     bornMonth,
     bornSecond,
-  }: IRequest): Promise<IResponse> {
-    const { project, user } = await this.verifyPermissions.verify({
+  }: IRequest): Promise<IResolve<IResponse>> {
+    const response = await this.verifyPermissions.verify({
       userId,
       projectId,
-      clearCache: true,
       verifyPermissionTo: 'edit',
       verifyFeatureInProject: ['persons'],
     })
+
+    if (response.error) {
+      return {
+        ok: false,
+        error: response.error,
+      }
+    }
+
+    const { project, user } = response.data!
 
     const numberOfPersonsInProject = project._count?.persons ?? 0
 
     if (
       numberOfPersonsInProject >= 10 &&
       user.subscription?.payment_status !== 'active'
-    )
-      throw makeErrorLimitFreeInEnd()
+    ) {
+      return {
+        ok: false,
+        error: makeErrorLimitFreeInEnd(),
+      }
+    }
 
     const { year } = this.dateProvider.getDateByTimestamp(
       Number(project.initial_date_timestamp),
@@ -96,14 +109,19 @@ export class CreatePersonUseCase {
     )
 
     const featuresInProject = getFeatures(project.features_using)
-    let mainTimeLine: ITimeLinePreview | undefined
+    let mainTimeLine: ITimeLine | undefined
 
     if (featuresInProject.timeLines && age !== null) {
       const mainTimeLineProject = project.timeLines?.find(
         (timeLine) => !timeLine.is_alternative,
       )
 
-      if (!mainTimeLineProject) throw makeErrorTimeLineNeedConfigurations()
+      if (!mainTimeLineProject) {
+        return {
+          ok: false,
+          error: makeErrorTimeLineNeedConfigurations(),
+        }
+      }
 
       mainTimeLine = mainTimeLineProject
     }
@@ -128,7 +146,12 @@ export class CreatePersonUseCase {
       born_second: personBornDate.second.value,
     })
 
-    if (!person) throw makeErrorPersonNotCreated()
+    if (!person) {
+      return {
+        ok: false,
+        error: makeErrorPersonNotCreated(),
+      }
+    }
 
     if (mainTimeLine) {
       await this.timeEventsRepository.create({
@@ -158,6 +181,11 @@ export class CreatePersonUseCase {
       })
     }
 
-    return { person }
+    return {
+      ok: true,
+      data: {
+        person,
+      },
+    }
   }
 }

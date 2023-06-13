@@ -7,6 +7,7 @@ import { makeErrorFeatureNotAddedOnProject } from '@shared/errors/projects/makeE
 import { makeErrorProjectNotFound } from '@shared/errors/projects/makeErrorProjectNotFound'
 import { makeErrorUserDoesPermissionToProject } from '@shared/errors/projects/makeErrorUserDoesPermissionToProject'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 import { getFeatures } from '@utils/application/dataTransformers/projects/features'
 
 import { type IVerifyPermissionsService } from '../IVerifyPermissions'
@@ -29,12 +30,22 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     verifyPermissionTo,
     clearCache = false,
     verifyFeatureInProject = [],
-  }: IRequestVerify): Promise<IResponseVerify> {
+  }: IRequestVerify): Promise<IResolve<IResponseVerify>> {
     const user = await this.usersRepository.findById(userId)
-    if (!user) throw makeErrorUserNotFound()
+    if (!user) {
+      return {
+        ok: false,
+        error: makeErrorUserNotFound(),
+      }
+    }
 
     const project = await this.projectsRepository.findById(projectId)
-    if (!project) throw makeErrorProjectNotFound()
+    if (!project) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotFound(),
+      }
+    }
 
     const usersWithPermissionToEdit = project.users_with_access_edit
     const usersWithPermissionToView = project.users_with_access_view
@@ -44,7 +55,12 @@ export class VerifyPermissions implements IVerifyPermissionsService {
     verifyFeatureInProject.map((featureToVerify) => {
       const featureIn = features[featureToVerify]
 
-      if (!featureIn) throw makeErrorFeatureNotAddedOnProject()
+      if (!featureIn) {
+        return {
+          ok: false,
+          error: makeErrorFeatureNotAddedOnProject(),
+        }
+      }
 
       return ''
     })
@@ -56,8 +72,12 @@ export class VerifyPermissions implements IVerifyPermissionsService {
             (u) => u.id === user.id,
           )
 
-          if (!userHasPermission)
-            throw makeErrorUserDoesPermissionToProject('editar')
+          if (!userHasPermission) {
+            return {
+              ok: false,
+              error: makeErrorUserDoesPermissionToProject('editar'),
+            }
+          }
 
           break
         }
@@ -69,8 +89,12 @@ export class VerifyPermissions implements IVerifyPermissionsService {
           const userHasPermissionToEdit =
             !!usersWithPermissionToEdit?.users.find((u) => u.id === user.id)
 
-          if (!userHasPermissionToComment && !userHasPermissionToEdit)
-            throw makeErrorUserDoesPermissionToProject('comentar')
+          if (!userHasPermissionToComment && !userHasPermissionToEdit) {
+            return {
+              ok: false,
+              error: makeErrorUserDoesPermissionToProject('comentar'),
+            }
+          }
 
           break
         }
@@ -90,8 +114,12 @@ export class VerifyPermissions implements IVerifyPermissionsService {
             !userHasPermissionView &&
             !userHasPermissionToEdit &&
             !userHasPermissionToComment
-          )
-            throw makeErrorUserDoesPermissionToProject('visualizar')
+          ) {
+            return {
+              ok: false,
+              error: makeErrorUserDoesPermissionToProject('visualizar'),
+            }
+          }
 
           break
         }
@@ -101,11 +129,6 @@ export class VerifyPermissions implements IVerifyPermissionsService {
       }
     }
 
-    const response: IResponseVerify = {
-      project,
-      user,
-    }
-
     if (clearCache) {
       await Promise.all([
         this.projectsRepository.removeProjectOfCache(projectId),
@@ -113,6 +136,12 @@ export class VerifyPermissions implements IVerifyPermissionsService {
       ])
     }
 
-    return response
+    return {
+      ok: true,
+      data: {
+        project,
+        user,
+      },
+    }
   }
 }

@@ -9,6 +9,7 @@ import { IVerifyPermissionsService } from '@shared/container/services/verifyPerm
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorProjectNotUpdate } from '@shared/errors/projects/makeErrorProjectNotUpdate'
 import { makeErrorFileNotUploaded } from '@shared/errors/useFull/makeErrorFileNotUploaded'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -36,14 +37,31 @@ export class ImageUpdateUseCase {
     private readonly verifyPermissions: IVerifyPermissionsService,
   ) {}
 
-  async execute({ file, projectId, userId }: IRequest): Promise<IResponse> {
-    if (!file) throw makeErrorFileNotUploaded()
-
-    const { project, user } = await this.verifyPermissions.verify({
-      userId,
+  async execute({
+    file,
+    projectId,
+    userId,
+  }: IRequest): Promise<IResolve<IResponse>> {
+    if (!file) {
+      return {
+        ok: false,
+        error: makeErrorFileNotUploaded(),
+      }
+    }
+    const verification = await this.verifyPermissions.verify({
       projectId,
-      verifyPermissionTo: 'edit',
+      userId,
+      verifyPermissionTo: 'view',
     })
+
+    if (verification.error) {
+      return {
+        ok: false,
+        error: verification.error,
+      }
+    }
+
+    const { project, user } = verification.data!
 
     if (project.image_filename) {
       await this.storageProvider.delete(
@@ -53,7 +71,6 @@ export class ImageUpdateUseCase {
     }
 
     const url = await this.storageProvider.upload(file, 'projects/images')
-
     const updatedProject = await this.projectsRepository.update({
       projectId,
       data: {
@@ -63,7 +80,12 @@ export class ImageUpdateUseCase {
     })
 
     fs.rmSync(file.path)
-    if (!updatedProject) throw makeErrorProjectNotUpdate()
+    if (!updatedProject) {
+      return {
+        ok: false,
+        error: makeErrorProjectNotUpdate(),
+      }
+    }
 
     await this.notifyUsersProvider.notifyUsersInOneProject({
       project,
@@ -72,6 +94,11 @@ export class ImageUpdateUseCase {
       content: `${user.username} acabou de alterar a imagem do projeto: ${project.name} `,
     })
 
-    return { project: updatedProject }
+    return {
+      ok: true,
+      data: {
+        project: updatedProject,
+      },
+    }
   }
 }

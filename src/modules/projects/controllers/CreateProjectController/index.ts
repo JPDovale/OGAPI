@@ -37,7 +37,7 @@ export class CreateProjectController {
     }
 
     const createProjectUseCase = container.resolve(CreateProjectUseCase)
-    await createProjectUseCase.execute({
+    const response = await createProjectUseCase.execute({
       userId: id,
       name,
       private: priv,
@@ -47,6 +47,10 @@ export class CreateProjectController {
       timeLine: timeLine ?? undefined,
     })
 
-    return res.status(201).end()
+    if (response.error) {
+      return res.status(response.error.statusCode).json(response)
+    }
+
+    return res.status(201).json(response)
   }
 }

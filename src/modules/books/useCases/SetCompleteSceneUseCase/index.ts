@@ -11,6 +11,7 @@ import { makeErrorBookNotUpdate } from '@shared/errors/books/makeErrorBookNotUpd
 import { makeErrorCapituleNotFound } from '@shared/errors/books/makeErrorCapituleNotFound'
 import { makeErrorSceneNotFound } from '@shared/errors/books/makeErrorSceneNotFound'
 import { makeInternalError } from '@shared/errors/useFull/makeInternalError'
+import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
   userId: string
@@ -47,10 +48,20 @@ export class SetCompleteSceneUseCase {
     capituleId,
     sceneId,
     writtenWords,
-  }: IRequest): Promise<IResponse> {
+  }: IRequest): Promise<IResolve<IResponse>> {
     const book = await this.booksRepository.findById(bookId)
-    if (!book) throw makeErrorBookNotFound()
-    if (!book.capitules) throw makeInternalError()
+    if (!book) {
+      return {
+        ok: false,
+        error: makeErrorBookNotFound(),
+      }
+    }
+    if (!book.capitules) {
+      return {
+        ok: false,
+        error: makeInternalError(),
+      }
+    }
 
     await this.verifyPermissions.verify({
       projectId: book.project_id,
@@ -59,10 +70,20 @@ export class SetCompleteSceneUseCase {
     })
 
     const capituleToUpdate = await this.capitulesRepository.findById(capituleId)
-    if (!capituleToUpdate) throw makeErrorCapituleNotFound()
+    if (!capituleToUpdate) {
+      return {
+        ok: false,
+        error: makeErrorCapituleNotFound(),
+      }
+    }
 
     const sceneToUpdate = await this.scenesRepository.findById(sceneId)
-    if (!sceneToUpdate) throw makeErrorSceneNotFound()
+    if (!sceneToUpdate) {
+      return {
+        ok: false,
+        error: makeErrorSceneNotFound(),
+      }
+    }
 
     const scene = await this.scenesRepository.update({
       sceneId,
@@ -71,7 +92,12 @@ export class SetCompleteSceneUseCase {
         written_words: writtenWords,
       },
     })
-    if (!scene) throw makeErrorBookNotUpdate()
+    if (!scene) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     const filteredScenes = capituleToUpdate.scenes?.filter(
       (scene) => scene.id !== sceneId,
@@ -88,7 +114,12 @@ export class SetCompleteSceneUseCase {
       },
     })
 
-    if (!capitule) throw makeErrorBookNotUpdate()
+    if (!capitule) {
+      return {
+        ok: false,
+        error: makeErrorBookNotUpdate(),
+      }
+    }
 
     const indexOfCapituleToUpdate = book.capitules?.findIndex(
       (capitule) => capitule.id === capituleId,
@@ -110,8 +141,11 @@ export class SetCompleteSceneUseCase {
     }
 
     return {
-      scene,
-      bookWrittenWords: wordsInBook,
+      ok: true,
+      data: {
+        scene,
+        bookWrittenWords: wordsInBook,
+      },
     }
   }
 }

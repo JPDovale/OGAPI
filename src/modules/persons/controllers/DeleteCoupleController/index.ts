@@ -15,12 +15,13 @@ export class DeleteCoupleController {
     const { personId, coupleId } = deleteCoupleParamsSchema.parse(req.params)
 
     const deleteCoupleUseCase = container.resolve(DeleteCoupleUseCase)
-    await deleteCoupleUseCase.execute({
+    const response = await deleteCoupleUseCase.execute({
       userId: id,
       personId,
       coupleId,
     })
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(204).end()
+    return res.status(responseStatusCode).json(response)
   }
 }

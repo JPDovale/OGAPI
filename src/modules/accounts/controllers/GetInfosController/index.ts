@@ -15,10 +15,8 @@ export class GetInfosController {
 
     const responsePartied = parserUserResponse(response)
 
-    if (response.error) {
-      return res.status(response.error.statusCode).json(responsePartied)
-    }
+    const responseStatusCode = response.error ? response.error.statusCode : 200
 
-    return res.status(200).json(responsePartied)
+    return res.status(responseStatusCode).json(responsePartied)
   }
 }

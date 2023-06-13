@@ -22,13 +22,15 @@ export class ReorderCapitulesController {
     )
 
     const reorderCapitulesUseCase = container.resolve(ReorderCapitulesUseCase)
-    const updatedBook = await reorderCapitulesUseCase.execute({
+    const response = await reorderCapitulesUseCase.execute({
       userId: id,
       bookId,
       sequenceFrom,
       sequenceTo,
     })
 
-    return res.status(200).json(updatedBook)
+    const responseStatusCode = response.error ? response.error.statusCode : 200
+
+    return res.status(responseStatusCode).json(response)
   }
 }
