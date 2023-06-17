@@ -1,27 +1,29 @@
 import { inject, injectable } from 'tsyringe'
 
-import { IRefreshTokenRepository } from '@modules/accounts/infra/repositories/contracts/IRefreshTokenRepository'
 import { IUsersRepository } from '@modules/accounts/infra/repositories/contracts/IUsersRepository'
+import { type IUser } from '@modules/accounts/infra/repositories/entities/IUser'
 import InjectableDependencies from '@shared/container/types'
 import { makeErrorUserNotFound } from '@shared/errors/users/makeErrorUserNotFound'
 import { type IResolve } from '@shared/infra/http/parsers/responses/types/IResponse'
 
 interface IRequest {
-  userId: string
+  id: string
+}
+
+interface IResponse {
+  user: IUser
 }
 
 @injectable()
-export class LogoutUseCase {
+export class GetUserUseCase {
   constructor(
-    @inject(InjectableDependencies.Repositories.RefreshTokenRepository)
-    private readonly refreshTokenRepository: IRefreshTokenRepository,
-
     @inject(InjectableDependencies.Repositories.UsersRepository)
     private readonly usersRepository: IUsersRepository,
   ) {}
 
-  async execute({ userId }: IRequest): Promise<IResolve> {
-    const user = await this.usersRepository.findById(userId)
+  async execute({ id }: IRequest): Promise<IResolve<IResponse>> {
+    const user = await this.usersRepository.findById(id)
+
     if (!user) {
       return {
         ok: false,
@@ -29,11 +31,11 @@ export class LogoutUseCase {
       }
     }
 
-    await this.refreshTokenRepository.deletePerUserId(userId)
-    await this.usersRepository.deleteSessionOfUser(userId)
-
     return {
       ok: true,
+      data: {
+        user,
+      },
     }
   }
 }

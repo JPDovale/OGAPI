@@ -11,20 +11,21 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(uuid())
-  id_customer       String?  @unique
+  id                String    @id @default(uuid())
+  id_customer       String?   @unique
   name              String
   username          String
-  email             String   @unique
+  email             String    @unique
+  email_verified    DateTime?
   password          String
-  avatar_url        String?  @db.VarChar(500)
+  avatar_url        String?   @db.VarChar(500)
   avatar_filename   String?
-  sex               String   @default("not-receipted")
-  age               String   @default("not-receipted")
-  admin             Boolean  @default(false)
-  is_social_login   Boolean  @default(false)
-  new_notifications Int      @default(0)
-  created_at        DateTime @default(now())
+  sex               String    @default("not-receipted")
+  age               String    @default("not-receipted")
+  admin             Boolean   @default(false)
+  is_social_login   Boolean   @default(false)
+  new_notifications Int       @default(0)
+  created_at        DateTime  @default(now())
 
   refreshTokens RefreshToken[]
 
@@ -48,8 +49,41 @@ model User {
   responsesInCommentsCreated ResponseComment[]
 
   subscription Subscription?
+  socialLogins Account[]
+  sessions     Session[]
 
   @@map("users")
+}
+
+model Account {
+  id                  String  @id @default(cuid())
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String? @db.Text
+  access_token        String? @db.Text
+  expires_at          Int?
+  token_type          String?
+  scope               String?
+  id_token            String? @db.LongText
+  session_state       String?
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+
+  @@unique([provider, provider_account_id])
+  @@map("Accounts")
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  session_token String?  @unique
+  expires       DateTime
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+
+  @@map("sessions")
 }
 
 model Subscription {
@@ -706,8 +740,8 @@ model TimeLine {
 
 model TimeEvent {
   id                        String   @id @unique @default(uuid())
-  title                     String
-  description               String
+  title                     String   @db.MediumText()
+  description               String   @db.LongText()
   happened_date_timestamp   String
   happened_year             String
   happened_year_time_christ String

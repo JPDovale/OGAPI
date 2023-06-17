@@ -1,8 +1,7 @@
 import { z } from 'zod'
 
-import { AppError } from '@shared/errors/AppError'
-
 import 'dotenv/config'
+import { AppError } from '@shared/errors/AppError'
 
 const envSchema = z.object({
   IS_DEV: z.coerce.boolean().default(false),
@@ -52,6 +51,8 @@ const envSchema = z.object({
 
   REDIS_HOST: z.string(),
   REDIS_PORT: z.coerce.number(),
+  KEY_TO_REQUEST: z.string(),
+  KEY_TO_PRIVATE_REQUEST: z.string(),
 })
 
 const _env = envSchema.safeParse(process.env)
