@@ -1,14 +1,18 @@
 import { inject, injectable } from 'tsyringe'
 
+import { type ICreateAccountDTO } from '@modules/accounts/dtos/ICreateAccountDTO'
 import { type ICreateManyUsersDTO } from '@modules/accounts/dtos/ICreateManyUsersDTO'
+import { type ICreateSessionDTO } from '@modules/accounts/dtos/ICreateSessionDTO'
 import { type ICreateUserDTO } from '@modules/accounts/dtos/ICreateUserDTO'
 import { type IUpdateUserDTO } from '@modules/accounts/dtos/IUpdateUserDTO'
-import { type User } from '@prisma/client'
+import { type Prisma, type User } from '@prisma/client'
 import { ICacheProvider } from '@shared/container/providers/CacheProvider/ICacheProvider'
 import InjectableDependencies from '@shared/container/types'
 import { prisma } from '@shared/infra/database/createConnection'
 
 import { type IUsersRepository } from '../../repositories/contracts/IUsersRepository'
+import { type IAccount } from '../../repositories/entities/IAccount'
+import { type ISession } from '../../repositories/entities/ISession'
 import {
   type IUserUnchecked,
   type IUser,
@@ -245,5 +249,85 @@ export class UsersPrismaRepository implements IUsersRepository {
     })
 
     return await user
+  }
+
+  async findByAccount(
+    provider: string,
+    providerAccountId: string,
+  ): Promise<IUser | null> {
+    const account = await prisma.account.findUnique({
+      where: {
+        provider_provider_account_id: {
+          provider,
+          provider_account_id: providerAccountId,
+        },
+      },
+      include: {
+        user: {
+          include: {
+            notifications: true,
+            subscription: true,
+            _count: {
+              select: {
+                projects: true,
+                notifications: true,
+                boxes: true,
+                books: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return account?.user ?? null
+  }
+
+  async createAccount(data: ICreateAccountDTO): Promise<IAccount | null> {
+    const account = await prisma.account.create({
+      data,
+    })
+
+    return account
+  }
+
+  async createSession(data: ICreateSessionDTO): Promise<ISession | null> {
+    const session = await prisma.session.create({
+      data,
+    })
+
+    return session
+  }
+
+  async findSessionByToken(sessionToken: string): Promise<ISession | null> {
+    const session = await prisma.session.findUnique({
+      where: {
+        session_token: sessionToken,
+      },
+    })
+
+    return session
+  }
+
+  async updateSession(
+    sessionToken: string,
+    data: Prisma.SessionUpdateInput,
+  ): Promise<ISession | null> {
+    const session = await prisma.session.update({
+      where: {
+        session_token: sessionToken,
+      },
+      data,
+    })
+
+    return session
+  }
+
+  async deleteSessionOfUser(userId: string): Promise<void> {
+    await prisma.session.deleteMany({
+      where: {
+        user_id: userId,
+      },
+    })
   }
 }

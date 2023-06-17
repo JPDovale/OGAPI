@@ -26,8 +26,6 @@ import { router } from '@shared/infra/http/routes'
 import docs from '../docs/swagger.json'
 import { RateLimiter } from './middlewares/limiter'
 
-import bodyParser from 'body-parser'
-
 const app = express()
 const appName = env.APP_NAME
 const appPort = env.APP_PORT
@@ -52,6 +50,8 @@ app.use(
       'Cache-Control',
       'Access-Control-Allow-Origin',
       'On-Application',
+      'Ms-Api-Key',
+      'Ms-Private-Api-Key',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     origin: [
@@ -67,13 +67,13 @@ app.use(
   }),
 )
 
-app.use((req, res, next) => {
-  if (req.originalUrl === '/api/products/stripe/webhooks') {
-    next()
-  } else {
-    bodyParser.json()(req, res, next)
-  }
-})
+// app.use((req, res, next) => {
+//   if (req.originalUrl === '/api/products/stripe/webhooks') {
+//     next()
+//   } else {
+//     bodyParser.json()(req, res, next)
+//   }
+// })
 
 if (env.NODE_ENV !== 'dev') {
   app.use(rateLimit.rete)

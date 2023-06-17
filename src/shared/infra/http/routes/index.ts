@@ -1,5 +1,6 @@
 import { Router } from 'express'
 
+import { VerifyApiKey } from '../middlewares/verifyApiKey'
 import { booksRoutes } from './books'
 import { boxesRoutes } from './boxes'
 import { personsRoutes } from './persons'
@@ -11,8 +12,11 @@ import { userRoutes } from './users'
 
 export const router = Router()
 
+const verifyApiKey = new VerifyApiKey()
+
+router.use(verifyApiKey.verify)
 router.get('/', (req, res) => {
-  return res.status(200).send('Hello :)')
+  res.send('hello world :)')
 })
 
 router.use('/products', productsRoutes)
