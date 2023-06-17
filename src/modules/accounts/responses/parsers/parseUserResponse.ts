@@ -59,6 +59,7 @@ export function parserUserResponse(
   if (!response.ok || !response.data?.user) return response
 
   const userResponse: IResponsePartied = {
+    ...response.data,
     user: parseUserData(response.data.user),
   }
 

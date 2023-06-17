@@ -22,7 +22,6 @@ export class CreateSessionController {
     })
 
     const responsePartied = parserUserResponse(response)
-
     const responseStatusCode = response.error ? response.error.statusCode : 201
 
     res.cookie('@og-refresh-token', response.data?.refreshToken, {
