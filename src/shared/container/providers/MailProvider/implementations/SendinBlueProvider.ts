@@ -54,7 +54,6 @@ export class SendinBlueProvider implements IMailProvider {
     try {
       await this.apiSendinblue.post('/smtp/email', emailData)
     } catch (err) {
-      console.log(err.response.data)
       throw new AppError({
         title: 'Error ao enviar email',
         message: 'Houve um erro interno ao tentar enviar o email',

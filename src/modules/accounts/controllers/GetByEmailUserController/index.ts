@@ -1,18 +1,22 @@
 import { type Request, type Response } from 'express'
 import { container } from 'tsyringe'
+import { z } from 'zod'
 
 import { parserUserResponse } from '@modules/accounts/responses/parsers/parseUserResponse'
-import { GetInfosUseCase } from '@modules/accounts/useCases/GetInfosUseCase'
+import { GetByEmailUserUseCase } from '@modules/accounts/useCases/GetByEmailUserUseCase'
 
-export class GetInfosController {
+export class GetByEmailUserController {
   async handle(req: Request, res: Response): Promise<Response> {
-    const { id } = req.user
-
-    const getInfosUseCase = container.resolve(GetInfosUseCase)
-    const response = await getInfosUseCase.execute({
-      userId: id,
+    const reqParamsParser = z.object({
+      email: z.string().email().optional(),
     })
 
+    const { email } = reqParamsParser.parse(req.params)
+
+    const getByEmailUserUseCase = container.resolve(GetByEmailUserUseCase)
+    const response = await getByEmailUserUseCase.execute({
+      email: email ?? '',
+    })
     const responsePartied = parserUserResponse(response)
     const responseStatusCode = response.error ? response.error.statusCode : 200
 
