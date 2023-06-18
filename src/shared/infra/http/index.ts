@@ -55,8 +55,6 @@ app.use(
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     origin: [
-      'https://www.ognare.com.br',
-      'https://ognare.com.br',
       'https://magiscrita.com',
       'https://www.magiscrita.com',
       'http://localhost',
