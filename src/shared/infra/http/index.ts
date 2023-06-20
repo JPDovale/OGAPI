@@ -40,6 +40,7 @@ app.use(
       'Accept',
       'Accept-Language',
       'Accept-Encoding',
+      'Access-Control-Request-Headers',
       'Origin',
       'Referer',
       'Cookie',
