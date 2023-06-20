@@ -33,31 +33,32 @@ const appPort = env.APP_PORT
 const rateLimit = new RateLimiter({ limit: 50, per: 'minutes' })
 
 app.use(
-  cors({
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Accept',
-      'Accept-Language',
-      'Accept-Encoding',
-      'Origin',
-      'Referer',
-      'Cookie',
-      'Sec-Fetch-Dest',
-      'Sec-Fetch-Mode',
-      'Sec-Fetch-Site',
-      'Pragma',
-      'Cache-Control',
-      'Access-Control-Allow-Origin',
-      'On-Application',
-      'Ms-Api-Key',
-      'Ms-Private-Api-Key',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    origin: ['https://magiscrita.com'],
-    preflightContinue: false,
-    credentials: true,
-  }),
+  cors(),
+  //   {
+  //   allowedHeaders: [
+  //     'Content-Type',
+  //     'Authorization',
+  //     'Accept',
+  //     'Accept-Language',
+  //     'Accept-Encoding',
+  //     'Origin',
+  //     'Referer',
+  //     'Cookie',
+  //     'Sec-Fetch-Dest',
+  //     'Sec-Fetch-Mode',
+  //     'Sec-Fetch-Site',
+  //     'Pragma',
+  //     'Cache-Control',
+  //     'Access-Control-Allow-Origin',
+  //     'On-Application',
+  //     'Ms-Api-Key',
+  //     'Ms-Private-Api-Key',
+  //   ],
+  //   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  //   origin: ['https://magiscrita.com'],
+  //   preflightContinue: false,
+  //   credentials: true,
+  // }
 )
 
 // app.use((req, res, next) => {
