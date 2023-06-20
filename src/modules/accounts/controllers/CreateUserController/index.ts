@@ -42,6 +42,7 @@ export class CreateUserController {
 
     const responseUserCreatedSession = await createSessionUseCase.execute({
       email: responseUserCreated.data!.user.email,
+      onApplication: '@og-Web',
       password,
     })
 

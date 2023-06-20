@@ -30,7 +30,7 @@ export class CreateSessionAdminController {
       maxAge: 1000 * 60 * 60 * 3, // 3 hours
       httpOnly: true,
       path: '/',
-      sameSite: 'none',
+      sameSite: false,
       secure: true,
     })
 
@@ -38,7 +38,7 @@ export class CreateSessionAdminController {
       maxAge: 1000 * 60 * 10, // 10 min
       httpOnly: true,
       path: '/',
-      sameSite: 'none',
+      sameSite: false,
       secure: true,
     })
 
