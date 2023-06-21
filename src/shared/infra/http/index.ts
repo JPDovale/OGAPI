@@ -61,6 +61,8 @@ app.use(
     origin: [
       'https://magiscrita.com',
       'https://magiscrita.com',
+      'https://ognare.com',
+      'https://ognare.com',
       'magiscrita.com',
       'www.magiscrita.com',
       'http://localhost:3000',
