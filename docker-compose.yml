@@ -30,3 +30,18 @@ services:
       - "og-cache"
     networks:
       - local-rede
+    
+  ms-app: 
+    build: ../../magiscrita.com/app
+    command: npm run dev
+    restart: always
+    env_file:
+      - ../../magiscrita.com/app/.env.local
+    ports: 
+      - 3000:3000
+    depends_on: 
+      - og-api
+    links: 
+      - "og-api"
+    networks:
+      - local-rede
