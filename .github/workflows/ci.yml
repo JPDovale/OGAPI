@@ -24,6 +24,8 @@ jobs:
 
       - run: npm run build
 
+      - run: rm -r node_modules
+
       - name: Deploy of application
         uses: easingthemes/ssh-deploy@main
         env:
